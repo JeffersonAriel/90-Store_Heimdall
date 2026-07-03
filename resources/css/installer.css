@@ -1,0 +1,134 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+body {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    min-height: 100vh;
+    color: #e2e8f0;
+}
+
+.installer-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.installer-logo {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.installer-card {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 20px;
+    padding: 40px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.installer-steps {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.installer-step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    transition: all 0.3s;
+}
+
+.step-dot.done     { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+.step-dot.active   { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; box-shadow: 0 0 16px rgba(99, 102, 241, 0.5); }
+.step-dot.pending  { background: rgba(71, 85, 105, 0.4); color: #64748b; border: 1px solid rgba(71, 85, 105, 0.5); }
+
+.step-line {
+    flex: 1;
+    height: 2px;
+    background: rgba(71, 85, 105, 0.3);
+    border-radius: 1px;
+    min-width: 16px;
+    max-width: 40px;
+}
+
+.step-line.done { background: linear-gradient(90deg, #10b981, #059669); }
+
+.installer-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    margin-top: 24px;
+}
+
+.installer-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.6);
+}
+
+.installer-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.form-input {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #e2e8f0;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-top: 6px;
+}
+
+.form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+.form-label { font-size: 13px; font-weight: 500; color: #94a3b8; }
+
+.check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+    font-size: 14px;
+}
+
+.check-ok   { color: #10b981; }
+.check-fail { color: #ef4444; }
+.check-warn { color: #f59e0b; }

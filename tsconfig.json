@@ -1,0 +1,33 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "jsx": "preserve",
+        "lib": ["ESNext", "DOM"],
+        "types": ["vite/client", "node"],
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["resources/js/*"],
+            "@erp/*": ["resources/js/erp/*"],
+            "@store/*": ["resources/js/store/*"],
+            "@modules/*": ["Modules/*"]
+        },
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "allowImportingTsExtensions": false,
+        "noEmit": true
+    },
+    "include": [
+        "resources/js/**/*",
+        "Modules/**/resources/js/**/*",
+        "vite.config.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "vendor",
+        "public"
+    ]
+}
