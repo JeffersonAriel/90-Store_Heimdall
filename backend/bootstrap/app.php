@@ -12,7 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'admin.auth'  => \App\Http\Middleware\AdminAuth::class,
+            'admin.only'  => \App\Http\Middleware\AdminOnly::class,
+            'admin.rbac'  => \App\Http\Middleware\AdminPermission::class,
+            'installed'   => \App\Http\Middleware\CheckInstalled::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleInertiaRequests::class,
+            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

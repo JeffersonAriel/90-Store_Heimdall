@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Models\Funcionario;
 
 return [
 
@@ -9,8 +10,8 @@ return [
     | Authentication Defaults
     |--------------------------------------------------------------------------
     |
-    | This option defines the default authentication "guard" and password
-    | reset "broker" for your application. You may change these values
+    | This option controls the default authentication "guard" and password
+    | reset options for your application. You may change these defaults
     | as required, but they're a perfect start for most applications.
     |
     */
@@ -42,6 +43,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'funcionarios',
+        ],
     ],
 
     /*
@@ -65,6 +70,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'funcionarios' => [
+            'driver' => 'eloquent',
+            'model' => Funcionario::class,
         ],
 
         // 'users' => [
