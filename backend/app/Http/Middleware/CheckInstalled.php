@@ -15,17 +15,16 @@ class CheckInstalled
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Se a rota for o próprio instalador, verifica se já está instalado para bloquear
+        // Se for uma requisição para a API ou console debug, ignora a validação de instalador
+        if ($request->is('api/*') || $request->is('_debugbar*')) {
+            return $next($request);
+        }
+
         $isInstallRoute = $request->is('install') || $request->is('install/*');
 
         try {
-            // Verifica se a tabela 'instalacao' existe e se possui registro de concluída
-            if (Schema::hasTable('instalacao')) {
-                $instalacao = DB::table('instalacao')->first();
-                $isInstalled = $instalacao && $instalacao->concluida;
-            } else {
-                $isInstalled = false;
-            }
+            // Verifica se a tabela 'instalacao' existe
+            $isInstalled = Schema::hasTable('instalacao') && DB::table('instalacao')->where('concluida', true)->exists();
         } catch (\Exception $e) {
             $isInstalled = false;
         }
@@ -37,7 +36,7 @@ class CheckInstalled
             return $next($request);
         }
 
-        // Se não estiver instalado e não estiver na rota de instalação, redireciona
+        // Se não estiver instalado e não estiver na rota de instalação, redireciona de forma segura
         if (!$isInstallRoute) {
             return redirect('/install');
         }
