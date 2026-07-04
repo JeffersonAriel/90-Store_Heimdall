@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ShippingController;
 use App\Http\Controllers\Admin\ApiConfigController;
 use App\Http\Controllers\Admin\ImportExportController;
 use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\MarketingController;
 
 // ─── ROTA DO INSTALADOR (Auto-desabilita após uso via middleware CheckInstalled) ───
 Route::middleware(['installed'])->group(function () {
@@ -90,8 +91,11 @@ Route::prefix('heimdall')->group(function () {
         });
 
         Route::get('/employees', function () { return 'Funcionários'; })->name('admin.employees.index');
-        Route::get('/marketing/coupons', function () { return 'Cupons'; })->name('admin.marketing.coupons');
-        Route::get('/marketing/points', function () { return 'Pontos'; })->name('admin.marketing.points');
-        Route::get('/marketing/referrals', function () { return 'Indicações'; })->name('admin.marketing.referrals');
+        Route::get('marketing/coupons', [MarketingController::class, 'couponsIndex'])->name('admin.marketing.coupons');
+        Route::post('marketing/coupons', [MarketingController::class, 'couponsStore'])->name('admin.marketing.coupons.store');
+        Route::patch('marketing/coupons/{id}/toggle', [MarketingController::class, 'couponsToggle'])->name('admin.marketing.coupons.toggle');
+
+        Route::get('marketing/points', [MarketingController::class, 'pointsIndex'])->name('admin.marketing.points');
+        Route::get('marketing/referrals', [MarketingController::class, 'referralsIndex'])->name('admin.marketing.referrals');
     });
 });
