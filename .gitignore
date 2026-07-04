@@ -1,21 +1,64 @@
-/node_modules
-/public/build
-/public/hot
-/public/storage
-/storage/*.key
-/vendor
-.env
-.env.backup
-.env.production
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
-auth.json
-npm-debug.log
-yarn-error.log
-/.fleet
-/.idea
-/.vscode
-storage/app/installed.lock
-/docker/nginx/ssl/*.pem
-/docker/nginx/ssl/*.key
+# ─── Laravel Backend ───────────────────────────────────────────
+backend/vendor/
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/storage/app/public/*
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/testing/*
+backend/storage/framework/views/*
+backend/storage/logs/*
+backend/bootstrap/cache/*
+backend/public/hot
+backend/public/storage
+
+# ─── Loja Vue (store) ──────────────────────────────────────────
+store/node_modules/
+store/dist/
+store/.env
+store/.env.local
+store/.env.production
+
+# ─── Node / npm (geral) ────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Build artifacts ───────────────────────────────────────────
+backend/public/build/
+*.map
+
+# ─── Sistema operacional ───────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ─── IDEs / Editores ───────────────────────────────────────────
+.idea/
+.vscode/settings.json
+*.sublime-project
+*.sublime-workspace
+.history/
+
+# ─── PHP / Composer ────────────────────────────────────────────
+*.phar
+composer.phar
+
+# ─── Testes ────────────────────────────────────────────────────
+backend/.phpunit.result.cache
+backend/coverage/
+
+# ─── Uploads e mídias de usuário ──────────────────────────────
+backend/storage/app/products/
+backend/storage/app/imports/
+backend/storage/app/exports/
+
+# ─── Scripts locais ────────────────────────────────────────────
+*.sh
+*.bat
+setup_local*
