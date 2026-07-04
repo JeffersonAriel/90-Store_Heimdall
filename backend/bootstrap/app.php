@@ -17,9 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.only'  => \App\Http\Middleware\AdminOnly::class,
             'admin.rbac'  => \App\Http\Middleware\AdminPermission::class,
             'installed'   => \App\Http\Middleware\CheckInstalled::class,
+            'log.access'  => \App\Http\Middleware\LogAccess::class,
         ]);
 
         $middleware->web(append: [
+            \App\Http\Middleware\BlockBannedIps::class, // Bloqueia IPs banidos
+            \App\Http\Middleware\LogAccess::class, // Logs automáticos de navegação
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
