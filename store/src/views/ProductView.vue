@@ -123,16 +123,23 @@
             <label>Calcule o Frete e Prazo</label>
             <div class="shipping-input-group">
               <input type="text" v-model="cep" placeholder="00000-000" class="input-field" maxlength="9" />
-              <button class="btn btn-outline" @click="calculateShipping">OK</button>
+              <button class="btn btn-outline" @click="calculateShipping" :disabled="shippingLoading">
+                {{ shippingLoading ? 'Calculando...' : 'OK' }}
+              </button>
             </div>
             <div v-if="shippingResult" class="shipping-result mt-4">
-              <div class="shipping-option">
-                <span>Padrão (Transportadora)</span>
-                <strong>Grátis (8 a 10 dias úteis)</strong>
+              <div v-if="shippingOptions.length > 0">
+                <div v-for="option in shippingOptions" :key="option.servico" class="shipping-option">
+                  <span>{{ option.servico }}</span>
+                  <strong v-if="option.a_combinar">A combinar</strong>
+                  <strong v-else>
+                    {{ parseFloat(option.valor) === 0 ? 'Grátis' : 'R$ ' + formatMoney(option.valor) }}
+                    <small>({{ option.prazo_dias }} {{ option.prazo_dias === 1 ? 'dia útil' : 'dias úteis' }})</small>
+                  </strong>
+                </div>
               </div>
-              <div class="shipping-option">
-                <span>Expresso (Sedex)</span>
-                <strong>R$ 29,90 (2 a 3 dias úteis)</strong>
+              <div v-else>
+                <p class="text-sm text-gray">Nenhuma opção de frete disponível para este CEP.</p>
               </div>
             </div>
           </div>
@@ -243,6 +250,8 @@ function getColorCode(colorName) {
 
 const cep = ref('')
 const shippingResult = ref(false)
+const shippingOptions = ref([])
+const shippingLoading = ref(false)
 
 useHead({
   title: () => `${product.value?.nome || 'Produto'} | 90+ Store`,
@@ -263,16 +272,17 @@ async function fetchProduct() {
   loading.value = true
   try {
     const slug = route.params.slug
-    const res = await axios.get(`/api/catalog?produto=${slug}`)
-    if (res.data.produtos && res.data.produtos.length > 0) {
-      product.value = res.data.produtos[0]
-      mainImage.value = product.value.foto_capa?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500'
+    const res = await axios.get(`/api/products/${slug}`)
+    if (res.data.success && res.data.produto) {
+      product.value = res.data.produto
+      mainImage.value = product.value.foto_capa?.url || product.value.fotos?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500'
       fetchRelated()
     } else {
       product.value = null
     }
   } catch (err) {
     console.error('Erro ao buscar produto', err)
+    product.value = null
   } finally {
     loading.value = false
   }
@@ -308,11 +318,34 @@ function addToCart() {
   window.dispatchEvent(new CustomEvent('open-cart-drawer'))
 }
 
-function calculateShipping() {
-  if (cep.value.length >= 8) {
-    shippingResult.value = true
-  } else {
-    alert('Digite um CEP válido')
+async function calculateShipping() {
+  const cleanCep = cep.value.replace(/\D/g, '')
+  if (cleanCep.length < 8) {
+    alert('Digite um CEP válido com 8 dígitos.')
+    return
+  }
+
+  shippingLoading.value = true
+  shippingResult.value = false
+  shippingOptions.value = []
+
+  try {
+    const res = await axios.post('/api/shipping/quote', {
+      cep: cleanCep,
+      peso_total: parseFloat(product.value.peso_kg || 0.3) * quantity.value
+    })
+    
+    if (res.data.success || Array.isArray(res.data.opcoes)) {
+      shippingOptions.value = res.data.opcoes || []
+      shippingResult.value = true
+    } else {
+      alert('Não foi possível calcular o frete para este CEP.')
+    }
+  } catch (error) {
+    console.error('Erro ao calcular frete:', error)
+    alert('Erro ao calcular o frete. Tente novamente.')
+  } finally {
+    shippingLoading.value = false
   }
 }
 

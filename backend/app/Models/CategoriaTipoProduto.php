@@ -17,6 +17,7 @@ class CategoriaTipoProduto extends Model
         'slug',
         'descricao',
         'icone',
+        'banner_path',
         'ordem',
         'ativo',
     ];

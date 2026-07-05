@@ -43,24 +43,60 @@
       <!-- Mega Menu -->
       <nav class="nav-menu">
         <div class="container">
-          <nav class="main-nav">
-            <div v-for="cat in categories" :key="cat.id" class="nav-item">
+          <ul class="menu-list">
+            <li v-for="cat in categories" :key="cat.id" class="menu-item" :class="{ 'has-dropdown': cat.children && cat.children.length > 0 }">
               <RouterLink :to="`/catalogo?categoria=${cat.slug}`" class="nav-link">{{ cat.nome }}</RouterLink>
               
-              <div class="mega-menu" v-if="cat.children && cat.children.length > 0">
-                <div class="mega-menu-content">
-                  <div class="mega-col">
-                    <h4>{{ cat.nome }}</h4>
-                    <ul>
-                      <li v-for="child in cat.children" :key="child.id">
-                        <RouterLink :to="`/catalogo?categoria=${child.slug}`">{{ child.nome }}</RouterLink>
-                      </li>
-                    </ul>
+              <div class="mega-dropdown" v-if="cat.children && cat.children.length > 0">
+                <div class="container mega-container-flex">
+                  <div class="dropdown-grid">
+                    <template v-for="child in cat.children" :key="child.id">
+                      <div v-for="(grandchild, idx) in child.children" :key="grandchild.id" class="dropdown-column" :class="{ 'has-divider': idx > 0 }">
+                        <h4>{{ grandchild.nome }}</h4>
+                        <ul class="grandchild-list">
+                          <li v-for="sub in grandchild.children.slice(0, 7)" :key="sub.id" class="grandchild-item">
+                            <RouterLink :to="`/catalogo?categoria=${sub.slug}`" class="grandchild-link-plain">
+                              {{ sub.nome }}
+                            </RouterLink>
+                          </li>
+                          <li v-if="grandchild.children.length > 7" class="ver-mais-li">
+                            <RouterLink :to="`/catalogo?categoria=${grandchild.slug}`" class="sub-grandchild-ver-mais">
+                              Ver Mais +
+                            </RouterLink>
+                          </li>
+                        </ul>
+                      </div>
+                    </template>
+                  </div>
+
+                  <!-- Right Side Promo Banner -->
+                  <div class="mega-promo-banner" 
+                       v-if="getMegaMenuBannerForCategory(cat.id)"
+                       :style="{ aspectRatio: (getMegaMenuBannerForCategory(cat.id).aspect_ratio || '4:3').replace(':', '/') }">
+                    <img :src="getMegaMenuBannerForCategory(cat.id).image_path" :alt="cat.nome" class="promo-img" />
+                    <div class="promo-content">
+                      <h5 v-if="getMegaMenuBannerForCategory(cat.id).title">{{ getMegaMenuBannerForCategory(cat.id).title }}</h5>
+                      <p v-if="getMegaMenuBannerForCategory(cat.id).subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-bottom: var(--spacing-2)">
+                        {{ getMegaMenuBannerForCategory(cat.id).subtitle }}
+                      </p>
+                      <a v-if="getMegaMenuBannerForCategory(cat.id).link_url" :href="getMegaMenuBannerForCategory(cat.id).link_url" class="btn btn-primary btn-sm promo-btn">
+                        Confira
+                      </a>
+                    </div>
+                  </div>
+                  <div class="mega-promo-banner" v-else-if="getPromoBanner(cat.slug)" style="aspect-ratio: 4/3">
+                    <img :src="getPromoBanner(cat.slug).image" :alt="cat.nome" class="promo-img" />
+                    <div class="promo-content">
+                      <h5>{{ cat.nome }}</h5>
+                      <RouterLink :to="`/catalogo?categoria=${cat.slug}`" class="btn btn-primary btn-sm promo-btn">
+                        Confira
+                      </RouterLink>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </nav>
+            </li>
+          </ul>
         </div>
       </nav>
 
@@ -167,12 +203,14 @@ const favoriteCount = computed(() => store.favorites?.length || 0)
 const isCartOpen = ref(false)
 const isFavoritesOpen = ref(false)
 const categories = ref([])
+const megaMenuBanners = ref([])
 const benefits = ref([])
 
 onMounted(async () => {
   try {
     const res = await axios.get('/api/store-settings')
     categories.value = res.data.categories || []
+    megaMenuBanners.value = res.data.megaMenuBanners || []
     benefits.value = res.data.benefits || []
   } catch (error) {
     console.error('Failed to load store settings', error)
@@ -182,6 +220,30 @@ onMounted(async () => {
     isCartOpen.value = true
   })
 })
+
+function getMegaMenuBannerForCategory(catId) {
+  return megaMenuBanners.value.find(b => b.category_id === catId);
+}
+
+function getPromoBanner(slug) {
+  const banners = {
+    'camisetas': {
+      image: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=400&auto=format&fit=crop',
+      title: 'Mantos de Seleções',
+      buttonText: 'Confira'
+    },
+    'calcados': {
+      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop',
+      title: 'Chuteiras Elite',
+      buttonText: 'Ver Coleção'
+    }
+  }
+  return banners[slug] || {
+    image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&auto=format&fit=crop',
+    title: 'Coleção Alta Performance',
+    buttonText: 'Aproveite'
+  }
+}
 </script>
 
 <style scoped>
@@ -299,79 +361,237 @@ onMounted(async () => {
 .nav-menu {
   background-color: var(--color-black-light);
   border-bottom: 1px solid var(--color-black-lighter);
+  position: relative;
 }
 
 .menu-list {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: var(--spacing-8);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .menu-item {
-  position: relative;
+  position: static;
+  list-style: none;
 }
 
-.menu-item > a {
+.menu-item > .nav-link {
   display: block;
-  padding: var(--spacing-3) var(--spacing-2);
+  padding: var(--spacing-4) 0;
   font-family: var(--font-title);
-  font-size: 1rem;
+  font-size: 0.95rem;
   text-transform: uppercase;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.5px;
+  color: var(--color-white);
 }
 
-.menu-item > a:hover {
+.menu-item > .nav-link:hover {
   color: var(--color-red);
 }
-
-.highlight > a { color: var(--color-white); }
-.highlight-red > a { color: var(--color-red); }
 
 /* Mega Dropdown */
 .mega-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
-  background-color: var(--color-black-light);
-  width: 100vw;
-  transform: translateX(-50%);
-  left: 50%;
-  padding: var(--spacing-6) 0;
-  border-top: 2px solid var(--color-red);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  width: 100%;
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(15px);
+  padding: var(--spacing-8) 0;
+  border-top: 3px solid var(--color-red);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
   opacity: 0;
   visibility: hidden;
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(10px);
   z-index: var(--z-dropdown);
 }
 
 .menu-item.has-dropdown:hover .mega-dropdown {
   opacity: 1;
   visibility: visible;
+  transform: translateY(0);
 }
 
-.dropdown-grid {
+.mega-container-flex {
   display: flex;
+  justify-content: space-between;
   gap: var(--spacing-8);
 }
 
+.dropdown-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-6);
+}
+
+.dropdown-column {
+  padding-left: var(--spacing-4);
+}
+
+.dropdown-column.has-divider {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .dropdown-column h4 {
-  color: var(--color-gray);
-  margin-bottom: var(--spacing-3);
-  font-size: 1rem;
-}
-
-.dropdown-column a {
-  display: block;
-  padding: var(--spacing-1) 0;
-  color: var(--color-white);
-  font-size: 0.9rem;
-}
-
-.dropdown-column a:hover {
   color: var(--color-red);
-  padding-left: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+  font-size: 0.8rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 800;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: var(--spacing-2);
+}
+
+.grandchild-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.grandchild-item {
+  margin-bottom: var(--spacing-4);
+}
+
+.grandchild-link {
+  display: block;
+  color: var(--color-white);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.grandchild-link:hover {
+  color: var(--color-red);
+  transform: translateX(4px);
+}
+
+.grandchild-link-plain {
+  display: block;
+  color: var(--color-gray);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 4px 0;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.grandchild-link-plain:hover {
+  color: var(--color-white);
+  padding-left: 4px;
+}
+
+.sub-grandchild-list {
+  list-style: none;
+  padding: 0;
+  margin-top: var(--spacing-2);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.sub-grandchild-link {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px 12px;
+  border-radius: var(--border-radius-full);
+  color: var(--color-gray);
+  font-size: 0.775rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.sub-grandchild-link:hover {
+  background: var(--color-red);
+  border-color: var(--color-red);
+  color: var(--color-white);
+  box-shadow: 0 4px 12px rgba(227, 6, 19, 0.35);
+  transform: translateY(-1px);
+}
+
+.ver-mais-li {
+  margin-top: var(--spacing-2);
+}
+
+.sub-grandchild-ver-mais {
+  font-size: 0.725rem;
+  font-weight: 700;
+  color: var(--color-red);
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: inline-block;
+  padding: 2px 0;
+}
+
+.sub-grandchild-ver-mais:hover {
+  color: var(--color-white);
+  text-shadow: 0 0 5px var(--color-red);
+}
+
+/* Mega Promo Banner */
+.mega-promo-banner {
+  width: 260px;
+  position: relative;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.mega-promo-banner .promo-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.mega-promo-banner:hover .promo-img {
+  transform: scale(1.05);
+}
+
+.mega-promo-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
+  z-index: 1;
+}
+
+.promo-content {
+  position: relative;
+  z-index: 2;
+  padding: var(--spacing-4);
+  width: 100%;
+}
+
+.promo-content h5 {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-white);
+  margin-bottom: var(--spacing-2);
+  text-transform: uppercase;
+}
+
+.promo-btn {
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 /* Benefits Bar */

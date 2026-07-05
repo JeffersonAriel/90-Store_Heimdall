@@ -30,12 +30,45 @@ class StoreApiController extends Controller
                 $q->where('ativo', true);
             }])
             ->when($request->input('categoria'), function ($query, $slug) {
-                $query->whereHas('categoria', function ($q) use ($slug) {
-                    $q->where('slug', $slug);
+                $category = CategoriaTipoProduto::where('slug', $slug)->first();
+                if ($category) {
+                    $categoryIds = CategoriaTipoProduto::where('id', $category->id)
+                        ->orWhere('parent_id', $category->id)
+                        ->pluck('id');
+                    $query->whereIn('categoria_id', $categoryIds);
+                }
+            })
+            ->when($request->input('marca'), function ($query, $marca) {
+                $query->where('marca', 'like', $marca);
+            })
+            ->when($request->input('min_price'), function ($query, $minPrice) {
+                $query->where(function ($q) use ($minPrice) {
+                    $q->where('preco_venda', '>=', $minPrice)
+                      ->orWhere('preco_desconto', '>=', $minPrice);
                 });
             })
-            ->orderBy('is_destaque', 'desc')
-            ->orderBy('id', 'desc')
+            ->when($request->input('max_price'), function ($query, $maxPrice) {
+                $query->where(function ($q) use ($maxPrice) {
+                    $q->where(function ($sub) use ($maxPrice) {
+                        $sub->where('tem_desconto', true)->where('preco_desconto', '<=', $maxPrice);
+                    })->orWhere(function ($sub) use ($maxPrice) {
+                        $sub->where('tem_desconto', false)->where('preco_venda', '<=', $maxPrice);
+                    });
+                });
+            })
+            ->when($request->input('sort'), function ($query, $sort) {
+                if ($sort === 'lowest_price') {
+                    $query->orderByRaw('CASE WHEN tem_desconto = 1 THEN preco_desconto ELSE preco_venda END ASC');
+                } elseif ($sort === 'highest_price') {
+                    $query->orderByRaw('CASE WHEN tem_desconto = 1 THEN preco_desconto ELSE preco_venda END DESC');
+                } elseif ($sort === 'newest') {
+                    $query->orderBy('id', 'desc');
+                } else {
+                    $query->orderBy('is_destaque', 'desc')->orderBy('id', 'desc');
+                }
+            }, function ($query) {
+                $query->orderBy('is_destaque', 'desc')->orderBy('id', 'desc');
+            })
             ->get();
 
         // Limpa custos confidenciais da resposta JSON da loja

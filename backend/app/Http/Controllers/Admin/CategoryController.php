@@ -32,6 +32,7 @@ class CategoryController extends Controller
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
             'icone' => 'nullable|string|max:60',
+            'banner_path' => 'nullable|string|max:2048',
             'ordem' => 'integer',
             'ativo' => 'boolean',
         ]);
@@ -54,6 +55,7 @@ class CategoryController extends Controller
             'nome' => 'required|string|max:255',
             'descricao' => 'nullable|string',
             'icone' => 'nullable|string|max:60',
+            'banner_path' => 'nullable|string|max:2048',
             'ordem' => 'integer',
             'ativo' => 'boolean',
         ]);

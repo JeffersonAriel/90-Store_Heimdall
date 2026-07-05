@@ -5,7 +5,7 @@
       <div v-for="(banner, index) in banners" :key="banner.id" 
            class="hero-slide" 
            :class="{ active: currentBannerIndex === index }"
-           :style="{ backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url('${banner.image_path}')` }">
+           :style="{ backgroundImage: `url('${banner.image_path}')` }">
         <div class="hero-content container">
           <span class="hero-badge animate-fade-in" v-if="banner.subtitle">{{ banner.subtitle }}</span>
           <h1 class="title-xl animate-fade-in" style="animation-delay: 0.2s" v-if="banner.title">{{ banner.title }}</h1>
@@ -53,11 +53,10 @@
     <section class="brands-section">
       <div class="container">
         <div class="brands-track">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg" alt="Adidas" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg" alt="Nike" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/e/ec/Lacoste_logo.svg" alt="Lacoste" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/d/df/New_Balance_logo.svg" alt="New Balance" />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/Under_Armour_logo.svg" alt="Under Armour" />
+          <RouterLink v-for="brand in brandsList" :key="brand.slug" :to="`/catalogo?marca=${brand.slug}`" :title="`Filtrar por ${brand.name}`">
+            <img v-if="!brand.error" :src="brand.logo" :alt="brand.name" @error="handleBrandImageError(brand)" />
+            <span v-else class="brand-text-fallback">{{ brand.name }}</span>
+          </RouterLink>
         </div>
       </div>
     </section>
@@ -118,6 +117,19 @@ const loading = ref(true)
 const quickViewProduct = ref(null)
 const currentBannerIndex = ref(0)
 let bannerInterval = null
+
+const brandsList = ref([
+  { name: 'Adidas', slug: 'adidas', logo: '/images/brands/adidas.svg', error: false },
+  { name: 'Nike', slug: 'nike', logo: '/images/brands/nike.svg', error: false },
+  { name: 'Puma', slug: 'puma', logo: '/images/brands/puma.svg', error: false },
+  { name: 'Lacoste', slug: 'lacoste', logo: '/images/brands/lacoste.svg', error: false },
+  { name: 'New Balance', slug: 'new balance', logo: '/images/brands/newbalance.svg', error: false },
+  { name: 'Under Armour', slug: 'under armour', logo: '/images/brands/underarmour.svg', error: false }
+])
+
+function handleBrandImageError(brand) {
+  brand.error = true
+}
 
 useHead({
   title: '90+ Store | Performance e Estilo',
@@ -227,6 +239,7 @@ onUnmounted(() => {
 .hero-content {
   max-width: 600px;
   z-index: 4;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.8);
 }
 
 .hero-badge {
@@ -346,16 +359,42 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   gap: var(--spacing-8);
+  flex-wrap: wrap;
+}
+
+.brands-track a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .brands-track img {
-  height: 40px;
-  filter: grayscale(100%) opacity(0.5);
+  height: 35px;
+  max-width: 110px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
   transition: var(--transition);
 }
 
 .brands-track img:hover {
-  filter: grayscale(0%) opacity(1);
+  filter: brightness(0) invert(1) drop-shadow(0 0 6px rgba(255,255,255,0.4));
+  transform: translateY(-2px);
+}
+
+.brand-text-fallback {
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--color-white);
+  opacity: 0.6;
+  transition: var(--transition);
+}
+
+.brand-text-fallback:hover {
+  opacity: 1;
+  color: var(--color-red);
 }
 
 /* Newsletter */

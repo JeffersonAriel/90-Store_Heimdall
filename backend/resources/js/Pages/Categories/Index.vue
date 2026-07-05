@@ -116,6 +116,11 @@
               <textarea v-model="form.descricao" class="form-textarea" rows="3" placeholder="Descrição opcional para SEO..."></textarea>
             </div>
 
+            <div class="form-group mb-4">
+              <label class="form-label">URL do Banner Promocional (Mega Menu)</label>
+              <input v-model="form.banner_path" type="text" class="form-input" placeholder="Ex: https://images.unsplash.com/... (Usado na coluna lateral do menu)" />
+            </div>
+
             <div class="grid-2 gap-4">
               <div class="form-group">
                 <label class="form-label">Ordem de exibição</label>
@@ -157,6 +162,7 @@ const form = ref({
   nome: '',
   descricao: '',
   icone: '',
+  banner_path: '',
   ordem: 0,
   ativo: true
 })
@@ -168,7 +174,7 @@ const rootCategories = computed(() => {
 function openCreateModal() {
   isEdit.value = false
   selectedId.value = null
-  form.value = { parent_id: null, nome: '', descricao: '', icone: '', ordem: 0, ativo: true }
+  form.value = { parent_id: null, nome: '', descricao: '', icone: '', banner_path: '', ordem: 0, ativo: true }
   showModal.value = true
 }
 
@@ -180,6 +186,7 @@ function openEditModal(category) {
     nome: category.nome,
     descricao: category.descricao,
     icone: category.icone,
+    banner_path: category.banner_path || '',
     ordem: category.ordem,
     ativo: !!category.ativo
   }

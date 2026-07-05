@@ -41,19 +41,9 @@
         <div class="filter-section">
           <h3 class="filter-title">Marcas</h3>
           <ul class="filter-list">
-            <li>
+            <li v-for="brand in ['Nike', 'Adidas', 'Puma', 'Lacoste', 'New Balance', 'Under Armour']" :key="brand">
               <label class="checkbox-label">
-                <input type="checkbox" v-model="filters.brands" value="nike" @change="applyFilters"> Nike
-              </label>
-            </li>
-            <li>
-              <label class="checkbox-label">
-                <input type="checkbox" v-model="filters.brands" value="adidas" @change="applyFilters"> Adidas
-              </label>
-            </li>
-            <li>
-              <label class="checkbox-label">
-                <input type="checkbox" v-model="filters.brands" value="puma" @change="applyFilters"> Puma
+                <input type="checkbox" v-model="filters.brands" :value="brand.toLowerCase()" @change="applyFilters"> {{ brand }}
               </label>
             </li>
           </ul>
@@ -169,14 +159,19 @@ onMounted(() => {
   if (route.query.genero) {
     filters.categories.push(route.query.genero)
   }
+  if (route.query.marca) {
+    filters.brands.push(route.query.marca.toLowerCase())
+  }
   fetchProducts()
 })
 
 // Re-fetch se a rota (query string) mudar via header
 watch(() => route.query, () => {
   filters.categories = []
+  filters.brands = []
   if (route.query.categoria) filters.categories.push(route.query.categoria)
   if (route.query.genero) filters.categories.push(route.query.genero)
+  if (route.query.marca) filters.brands.push(route.query.marca.toLowerCase())
   fetchProducts()
 })
 
@@ -186,6 +181,7 @@ async function fetchProducts() {
     // Montando a querystring baseada nos filtros
     let qs = '?'
     if (filters.categories.length) qs += `categoria=${filters.categories[0]}&`
+    if (filters.brands.length) qs += `marca=${filters.brands[0]}&`
     if (filters.sort) qs += `sort=${filters.sort}`
     
     // Na vida real passaríamos os arrays de marcas/categorias pro endpoint

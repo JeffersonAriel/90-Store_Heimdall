@@ -16,6 +16,12 @@ class StoreSettingsController extends Controller
             ->where('ativo', true)
             ->get(['slug', 'nome']);
         $banners = StoreBanner::where('is_active', true)
+            ->where('type', 'vitrine')
+            ->orderBy('order')
+            ->get();
+
+        $megaMenuBanners = StoreBanner::where('is_active', true)
+            ->where('type', 'megamenu')
             ->orderBy('order')
             ->get();
 
@@ -23,53 +29,44 @@ class StoreSettingsController extends Controller
             ->orderBy('order')
             ->get();
 
-        // Construir a árvore de categorias apenas com produtos
-        $allCategories = CategoriaTipoProduto::where('ativo', true)
-            ->with(['children' => function($q) {
-                $q->where('ativo', true);
-            }])
-            ->get();
-
-        $tree = [];
-        
-        foreach ($allCategories->whereNull('parent_id') as $parent) {
-            $children = [];
-            
-            foreach ($parent->children as $child) {
-                // Conta os produtos dessa categoria filha
-                $productsCount = \App\Models\Produto::where('categoria_id', $child->id)
-                    ->where('ativo', true)
-                    ->count();
-                    
-                if ($productsCount > 0) {
-                    $children[] = [
-                        'id' => $child->id,
-                        'nome' => $child->nome,
-                        'slug' => $child->slug,
-                    ];
-                }
-            }
-
-            // Conta os produtos da própria categoria pai (caso ela não tenha filhas mas tenha produtos diretamente)
-            $ownProductsCount = \App\Models\Produto::where('categoria_id', $parent->id)
-                ->where('ativo', true)
-                ->count();
-
-            if (count($children) > 0 || $ownProductsCount > 0) {
-                $tree[] = [
-                    'id' => $parent->id,
-                    'nome' => $parent->nome,
-                    'slug' => $parent->slug,
-                    'children' => $children
-                ];
-            }
-        }
+        $tree = $this->buildCategoryTree(null);
 
         return response()->json([
             'banners' => $banners,
+            'megaMenuBanners' => $megaMenuBanners,
             'benefits' => $benefits,
             'categories' => $tree,
             'paymentMethods' => $gateways
         ]);
+    }
+
+    private function buildCategoryTree($parentId = null)
+    {
+        $categories = CategoriaTipoProduto::where('parent_id', $parentId)
+            ->where('ativo', true)
+            ->orderBy('ordem')
+            ->get();
+
+        $tree = [];
+        foreach ($categories as $category) {
+            $children = $this->buildCategoryTree($category->id);
+
+            // Count products in this specific category
+            $ownProductsCount = \App\Models\Produto::where('categoria_id', $category->id)
+                ->where('ativo', true)
+                ->count();
+
+            // If it has active products or children with active products
+            if (count($children) > 0 || $ownProductsCount > 0) {
+                $tree[] = [
+                    'id' => $category->id,
+                    'nome' => $category->nome,
+                    'slug' => $category->slug,
+                    'banner_path' => $category->banner_path,
+                    'children' => $children
+                ];
+            }
+        }
+        return $tree;
     }
 }

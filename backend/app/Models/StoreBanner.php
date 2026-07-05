@@ -13,9 +13,17 @@ class StoreBanner extends Model
         'link_url',
         'order',
         'is_active',
+        'type',
+        'aspect_ratio',
+        'category_id',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public function category()
+    {
+        return $this->belongsTo(CategoriaTipoProduto::class, 'category_id');
+    }
 }

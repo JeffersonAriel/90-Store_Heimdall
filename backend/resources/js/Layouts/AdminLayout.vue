@@ -127,12 +127,64 @@
         <slot />
       </main>
     </div>
+
+    <!-- Alerts Panel (Drawer) -->
+    <transition name="slide-left">
+      <div v-if="showAlertsPanel" class="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true" style="position: fixed; inset: 0; z-index: 150; display: flex; justify-content: flex-end;">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 transition-opacity" style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);" @click="showAlertsPanel = false"></div>
+
+        <div class="pointer-events-auto w-screen max-w-md transform transition-all" style="position: relative; width: 400px; height: 100vh; background: var(--color-bg-card); border-left: 1px solid var(--color-border); box-shadow: -10px 0 25px -5px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
+          <div class="flex h-full flex-col py-6">
+            <!-- Header -->
+            <div class="px-6 flex items-center justify-between border-b pb-4" style="border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+              <h2 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2" style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                <span>🔔</span> Alertas Críticos
+              </h2>
+              <button @click="showAlertsPanel = false" class="btn-icon" style="padding: 4px;">
+                <XIcon style="width: 20px; height: 20px;" />
+              </button>
+            </div>
+
+            <!-- Content -->
+            <div class="relative flex-1 px-6 py-6" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto;">
+              <!-- Pending Orders Alert -->
+              <div v-if="$page.props.counts?.pendingOrders > 0" class="p-4 rounded-xl border flex flex-col gap-2" style="padding: 1rem; border-radius: 12px; background: var(--color-warning-bg); border: 1px solid rgba(217, 119, 6, 0.2); color: var(--color-warning); display: flex; flex-direction: column; gap: 0.5rem;">
+                <div class="flex items-center gap-2 font-bold" style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>📦</span> Pedidos Pendentes
+                </div>
+                <p class="text-sm" style="margin: 0; font-size: 0.875rem;">Existem <strong>{{ $page.props.counts.pendingOrders }}</strong> pedidos aguardando processamento.</p>
+                <Link :href="route('admin.orders.index')" @click="showAlertsPanel = false" class="text-xs underline font-bold mt-1 block" style="font-size: 0.75rem; text-decoration: underline; font-weight: 700; color: var(--color-warning); display: block; margin-top: 0.25rem;">
+                  Ir para Pedidos →
+                </Link>
+              </div>
+
+              <!-- Critical Stock Alert -->
+              <div v-if="$page.props.counts?.criticalStock > 0" class="p-4 rounded-xl border flex flex-col gap-2" style="padding: 1rem; border-radius: 12px; background: var(--color-danger-bg); border: 1px solid rgba(220, 38, 38, 0.2); color: var(--color-danger); display: flex; flex-direction: column; gap: 0.5rem;">
+                <div class="flex items-center gap-2 font-bold" style="font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                  <span>⚠️</span> Estoque Crítico
+                </div>
+                <p class="text-sm" style="margin: 0; font-size: 0.875rem;">Existem <strong>{{ $page.props.counts.criticalStock }}</strong> produtos com estoque abaixo do mínimo.</p>
+                <Link :href="route('admin.stock.index')" @click="showAlertsPanel = false" class="text-xs underline font-bold mt-1 block" style="font-size: 0.75rem; text-decoration: underline; font-weight: 700; color: var(--color-danger); display: block; margin-top: 0.25rem;">
+                  Verificar Estoque →
+                </Link>
+              </div>
+
+              <!-- No alerts -->
+              <div v-if="!hasAlerts" class="text-center py-12 text-gray-500" style="text-align: center; padding: 3rem 0; color: #9ca3af;">
+                🎉 Nenhum alerta crítico pendente!
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { router, usePage, Link } from '@inertiajs/vue3'
 import NavItem from '@/Components/UI/NavItem.vue'
 
 // Icons (inline SVG components)
@@ -284,5 +336,14 @@ function logout() {
 .sidebar-user-info {
   flex: 1;
   min-width: 0;
+}
+
+/* Drawer slide-in animation */
+.slide-left-enter-active, .slide-left-leave-active {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s linear;
+}
+.slide-left-enter-from, .slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
 }
 </style>

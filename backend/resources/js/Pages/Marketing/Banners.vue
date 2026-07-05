@@ -13,6 +13,7 @@
         <thead class="bg-gray-50 dark:bg-gray-700">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Imagem</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo / Proporção</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Título / Link</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ordem</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -22,7 +23,12 @@
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr v-for="banner in banners" :key="banner.id">
             <td class="px-6 py-4">
-              <img :src="banner.image_path" class="h-16 w-32 object-cover rounded" />
+              <img :src="banner.image_path" class="h-16 w-32 object-cover rounded" style="width: 120px; height: 60px; object-fit: cover;" />
+            </td>
+            <td class="px-6 py-4">
+              <div class="text-sm font-semibold capitalize text-gray-900 dark:text-white">{{ banner.type }}</div>
+              <div class="text-xs text-gray-500">Proporção: {{ banner.aspect_ratio }}</div>
+              <div v-if="banner.category" class="text-xs text-indigo-500 mt-1">Categoria: {{ banner.category.nome }}</div>
             </td>
             <td class="px-6 py-4">
               <div class="font-medium text-gray-900 dark:text-white">{{ banner.title || 'Sem título' }}</div>
@@ -45,64 +51,156 @@
     </div>
 
     <!-- Modal Form -->
-    <div v-if="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="closeModal"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <form @submit.prevent="submitForm">
-            <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" id="modal-title">
-                {{ form.id ? 'Editar Banner' : 'Novo Banner' }}
-              </h3>
+    <div v-if="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <div class="inline-block bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all" style="max-width: 550px; width: 100%; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);">
+        <form @submit.prevent="submitForm">
+          <div class="bg-white dark:bg-gray-800 px-6 pt-6 pb-4">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-6 pb-2" style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+              {{ form.id ? '⚡ Editar Banner' : '✨ Novo Banner' }}
+            </h3>
+            
+            <div class="space-y-4">
+              <!-- Preview de Imagem no topo do modal -->
+              <div v-if="form.image_path" class="mb-4">
+                <label class="block text-sm font-medium text-gray-400 mb-2">Pré-visualização</label>
+                <div :style="{ 
+                  aspectRatio: form.aspect_ratio.replace(':', '/'), 
+                  backgroundImage: `url(${form.image_path})`, 
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }" style="width: 100%; max-height: 180px;"></div>
+              </div>
+
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">URL da Imagem</label>
+                <input type="text" v-model="form.image_path" required class="form-input" placeholder="https://exemplo.com/imagem.jpg">
+                <p class="text-xs text-gray-500 mt-1">Insira a URL absoluta da imagem.</p>
+              </div>
               
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">URL da Imagem</label>
-                  <input type="text" v-model="form.image_path" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
-                  <p class="text-xs text-gray-500 mt-1">Insira a URL absoluta da imagem (ex: https://...). Upload será implementado depois.</p>
-                </div>
-                <div>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Título</label>
-                  <input type="text" v-model="form.title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                  <input type="text" v-model="form.title" class="form-input" placeholder="Ex: Cupom 10% OFF">
                 </div>
-                <div>
+                <div class="form-group">
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subtítulo</label>
-                  <input type="text" v-model="form.subtitle" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                  <input type="text" v-model="form.subtitle" class="form-input" placeholder="Ex: Use o cupom BEMVINDO">
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link de destino (URL)</label>
-                  <input type="text" v-model="form.link_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+              </div>
+
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Link de destino (URL)</label>
+                <input type="text" v-model="form.link_url" class="form-input" placeholder="Ex: /catalogo?categoria=camisetas">
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Banner</label>
+                  <select v-model="form.type" required class="form-select">
+                    <option value="vitrine">Vitrine (Carrossel Home)</option>
+                    <option value="megamenu">Mega Menu</option>
+                  </select>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ordem (Exibição)</label>
-                    <input type="number" v-model="form.order" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                    <select v-model="form.is_active" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
-                      <option :value="true">Ativo</option>
-                      <option :value="false">Inativo</option>
-                    </select>
-                  </div>
+                <div class="form-group">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Proporção da Imagem</label>
+                  <select v-model="form.aspect_ratio" required class="form-select">
+                    <option value="16:9">16:9 (Padrão Vitrine)</option>
+                    <option value="4:3">4:3 (Padrão Mega Menu)</option>
+                    <option value="1:1">1:1 (Quadrado)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div v-if="form.type === 'megamenu'" class="form-group">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Categoria Principal Vinculada</label>
+                <select v-model="form.category_id" required class="form-select">
+                  <option :value="null">Selecione uma categoria principal...</option>
+                  <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.nome }}</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="form-group">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ordem (Exibição)</label>
+                  <input type="number" v-model="form.order" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                  <select v-model="form.is_active" class="form-select">
+                    <option :value="true">Ativo</option>
+                    <option :value="false">Inativo</option>
+                  </select>
                 </div>
               </div>
             </div>
-            <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                Salvar
-              </button>
-              <button type="button" @click="closeModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 flex justify-end">
+            <button type="button" @click="closeModal" class="btn-cancel">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-save">
+              Salvar
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </AdminLayout>
 </template>
+
+<style scoped>
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+  color: #9ca3af;
+}
+.form-input, .form-select {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  background-color: #1f2937;
+  border: 1px solid #4b5563;
+  color: #ffffff;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+  margin-bottom: 0.5rem;
+  transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus {
+  border-color: #6366f1;
+  outline: none;
+}
+.btn-save {
+  background-color: #4f46e5;
+  color: white;
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.btn-save:hover {
+  background-color: #4338ca;
+}
+.btn-cancel {
+  background-color: transparent;
+  color: #d1d5db;
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #4b5563;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 0.75rem;
+}
+.btn-cancel:hover {
+  background-color: #374151;
+}
+</style>
 
 <script setup>
 import { ref } from 'vue';
@@ -111,6 +209,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 
 const props = defineProps({
   banners: Array,
+  categories: Array,
 });
 
 const isModalOpen = ref(false);
@@ -122,7 +221,10 @@ const form = useForm({
   image_path: '',
   link_url: '',
   order: 0,
-  is_active: true
+  is_active: true,
+  type: 'vitrine',
+  aspect_ratio: '16:9',
+  category_id: null
 });
 
 const openModal = (banner = null) => {
@@ -134,6 +236,9 @@ const openModal = (banner = null) => {
     form.link_url = banner.link_url;
     form.order = banner.order;
     form.is_active = banner.is_active;
+    form.type = banner.type || 'vitrine';
+    form.aspect_ratio = banner.aspect_ratio || '16:9';
+    form.category_id = banner.category_id || null;
   } else {
     form.reset();
   }

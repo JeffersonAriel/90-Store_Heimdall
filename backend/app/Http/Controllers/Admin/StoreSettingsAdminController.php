@@ -13,9 +13,11 @@ class StoreSettingsAdminController extends Controller
     // BANNERS
     public function bannersIndex()
     {
-        $banners = StoreBanner::orderBy('order')->get();
+        $banners = StoreBanner::with('category')->orderBy('order')->get();
+        $categories = \App\Models\CategoriaTipoProduto::whereNull('parent_id')->get();
         return Inertia::render('Marketing/Banners', [
-            'banners' => $banners
+            'banners' => $banners,
+            'categories' => $categories
         ]);
     }
 
@@ -27,7 +29,10 @@ class StoreSettingsAdminController extends Controller
             'image_path' => 'required|string',
             'link_url' => 'nullable|string',
             'order' => 'integer',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'type' => 'required|string|in:vitrine,megamenu',
+            'aspect_ratio' => 'required|string|in:16:9,4:3,1:1',
+            'category_id' => 'nullable|exists:categorias_tipo_produto,id',
         ]);
         StoreBanner::create($validated);
         return redirect()->back()->with('success', 'Banner criado com sucesso!');
@@ -42,7 +47,10 @@ class StoreSettingsAdminController extends Controller
             'image_path' => 'required|string',
             'link_url' => 'nullable|string',
             'order' => 'integer',
-            'is_active' => 'boolean'
+            'is_active' => 'boolean',
+            'type' => 'required|string|in:vitrine,megamenu',
+            'aspect_ratio' => 'required|string|in:16:9,4:3,1:1',
+            'category_id' => 'nullable|exists:categorias_tipo_produto,id',
         ]);
         $banner->update($validated);
         return redirect()->back()->with('success', 'Banner atualizado com sucesso!');
