@@ -92,7 +92,8 @@
           </div>
           <p class="footer-desc">A sua loja de artigos esportivos. Alta performance, estilo e as melhores marcas do mundo.</p>
           <div class="social-links">
-            <a href="#">Instagram</a>
+            <a href="https://www.instagram.com/sou90mais/" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://wa.me/5511945342493" target="_blank" rel="noopener noreferrer">WhatsApp</a>
             <a href="#">YouTube</a>
             <a href="#">TikTok</a>
           </div>
@@ -128,8 +129,17 @@
       </div>
       
       <div class="footer-bottom">
-        <div class="container">
-          <p>&copy; {{ new Date().getFullYear() }} 90+ Store. Todos os direitos reservados. CNPJ: 00.000.000/0001-00</p>
+        <div class="container footer-bottom-flex">
+          <p>&copy; {{ new Date().getFullYear() }} 90+ Store. Todos os direitos reservados. </p>
+          <div class="developer-info">
+            <span>Desenvolvido por: <strong>Jefferson Santos</strong></span>
+            <a href="https://www.linkedin.com/in/jefferson-ariel-santos/" target="_blank" rel="noopener noreferrer" title="LinkedIn" class="dev-link">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dev-icon"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            </a>
+            <a href="https://wa.me/5511940112438" target="_blank" rel="noopener noreferrer" title="WhatsApp" class="dev-link">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="dev-icon"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            </a>
+          </div>
         </div>
       </div>
     </footer>
@@ -450,9 +460,43 @@ onMounted(async () => {
 .footer-bottom {
   background-color: var(--color-black);
   padding: var(--spacing-4) 0;
-  text-align: center;
   color: var(--color-gray-dark);
   font-size: 0.8rem;
+  border-top: 1px solid var(--color-black-lighter);
+}
+
+.footer-bottom-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.developer-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.developer-info strong {
+  color: var(--color-white);
+}
+
+.dev-link {
+  color: var(--color-gray);
+  display: flex;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.dev-link:hover {
+  color: var(--color-red);
+}
+
+.dev-icon {
+  width: 16px;
+  height: 16px;
 }
 
 @media (max-width: 1024px) {
@@ -465,5 +509,9 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .benefits-grid { flex-wrap: wrap; justify-content: center; gap: var(--spacing-2); }
   .footer-grid { grid-template-columns: 1fr; }
+  .footer-bottom-flex {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 </style>
