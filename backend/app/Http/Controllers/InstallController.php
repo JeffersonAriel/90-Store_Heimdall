@@ -93,6 +93,9 @@ class InstallController extends Controller
                 'DB_PASSWORD'   => $request->driver === 'mysql' ? ($request->password ?? '') : '',
             ]);
 
+            // Gera a chave única do aplicativo caso não esteja definida
+            Artisan::call('key:generate', ['--force' => true]);
+
             // Limpa o cache de configuração do Laravel para ler os novos valores do .env
             Artisan::call('config:clear');
 
