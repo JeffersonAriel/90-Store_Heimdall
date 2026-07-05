@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\StoreApiController;
+use App\Http\Controllers\Api\StoreSettingsController;
 use App\Http\Controllers\Api\CustomerAuthController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\CheckoutController;
@@ -12,7 +13,8 @@ use App\Http\Controllers\Api\CheckoutController;
 |--------------------------------------------------------------------------
 */
 
-// ─── ENDPOINTS PÚBLICOS DA VITRINE ───
+// ─── ENDPOINTS PÚBLICOS DA VITRINE E LOJA ───
+Route::get('/store-settings', [StoreSettingsController::class, 'index']);
 Route::get('/catalog', [StoreApiController::class, 'getCatalog']);
 Route::get('/products/{slug}', [StoreApiController::class, 'getProductDetail']);
 Route::get('/cep/{cep}', [StoreApiController::class, 'lookupCep']);

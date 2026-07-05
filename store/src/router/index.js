@@ -9,7 +9,12 @@ const router = createRouter({
       component: () => import('@/views/HomeView.vue'),
     },
     {
-      path: '/produtos/:slug',
+      path: '/catalogo',
+      name: 'catalog',
+      component: () => import('@/views/CatalogView.vue'),
+    },
+    {
+      path: '/produto/:slug',
       name: 'product.detail',
       component: () => import('@/views/ProductView.vue'),
     },
@@ -38,8 +43,12 @@ const router = createRouter({
       path: '/minha-conta',
       name: 'account',
       component: () => import('@/views/AccountView.vue'),
-      meta: { requiresAuth: true },
     },
+    {
+      path: '/institucional/:slug',
+      name: 'static.page',
+      component: () => import('@/views/StaticPageView.vue'),
+    }
   ],
 })
 

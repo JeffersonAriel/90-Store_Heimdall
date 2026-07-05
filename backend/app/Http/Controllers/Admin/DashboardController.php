@@ -30,21 +30,23 @@ class DashboardController extends Controller
             'pedidos_pendentes' => DB::table('pedidos')
                 ->where('status', 'aguardando_pagamento')
                 ->count(),
-            'critico_estoque' => DB::table('variacoes_produto')
-                ->where('tipo_estoque', 'proprio')
-                ->whereRaw('estoque_quantidade <= estoque_critico')
+            'critico_estoque' => \App\Models\Produto::query()
+                ->select('produtos.id', 'produtos.estoque_critico')
+                ->join('variacoes_produto', 'produtos.id', '=', 'variacoes_produto.produto_id')
+                ->where('variacoes_produto.tipo_estoque', 'proprio')
+                ->groupBy('produtos.id', 'produtos.estoque_critico')
+                ->havingRaw('SUM(variacoes_produto.estoque_quantidade) <= produtos.estoque_critico')
+                ->get()
                 ->count(),
         ];
 
-        // Alertas de estoque crítico/mínimo
-        $alertasEstoque = DB::table('variacoes_produto as vp')
-            ->join('produtos as p', 'vp.produto_id', '=', 'p.id')
-            ->select('p.nome', 'vp.sku', 'vp.tamanho', 'vp.cor', 'vp.estoque_quantidade', 'vp.estoque_minimo', 'vp.estoque_critico')
-            ->where('vp.tipo_estoque', 'proprio')
-            ->where(function ($query) {
-                $query->whereRaw('vp.estoque_quantidade <= vp.estoque_minimo')
-                      ->orWhereRaw('vp.estoque_quantidade <= vp.estoque_critico');
-            })
+        // Alertas de estoque crítico (Global por produto)
+        $alertasEstoque = \App\Models\Produto::query()
+            ->select('produtos.id', 'produtos.nome', 'produtos.estoque_critico', DB::raw('SUM(variacoes_produto.estoque_quantidade) as estoque_total'))
+            ->join('variacoes_produto', 'produtos.id', '=', 'variacoes_produto.produto_id')
+            ->where('variacoes_produto.tipo_estoque', 'proprio')
+            ->groupBy('produtos.id', 'produtos.nome', 'produtos.estoque_critico')
+            ->havingRaw('SUM(variacoes_produto.estoque_quantidade) <= produtos.estoque_critico')
             ->limit(5)
             ->get();
 

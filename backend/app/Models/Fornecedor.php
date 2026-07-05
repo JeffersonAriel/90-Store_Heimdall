@@ -32,6 +32,7 @@ class Fornecedor extends Model
         'condicao_pagamento',
         'prazo_medio_dias',
         'observacoes',
+        'categorias_fornecidas',
         'ativo',
         'avaliacao_media',
     ];
@@ -40,6 +41,7 @@ class Fornecedor extends Model
         'ativo' => 'boolean',
         'avaliacao_media' => 'decimal:2',
         'prazo_medio_dias' => 'integer',
+        'categorias_fornecidas' => 'array',
     ];
 
     /**

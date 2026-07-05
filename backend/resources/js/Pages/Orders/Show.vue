@@ -1,0 +1,338 @@
+<template>
+  <AdminLayout title="Detalhes do Pedido">
+    <template #breadcrumb>
+      <span><Link :href="route('admin.orders.index')" class="text-brand">Pedidos</Link> / Detalhes #{{ order.id }}</span>
+    </template>
+
+    <div class="page-header mb-6">
+      <div>
+        <h1 class="page-title">📋 Pedido #{{ order.id }}</h1>
+        <p class="text-secondary mt-1">Status Atual: 
+          <span class="badge" :class="getStatusBadgeClass(order.status)">{{ getStatusLabel(order.status) }}</span>
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <a v-if="whatsapp_link !== '#'" :href="whatsapp_link" target="_blank" class="btn btn-primary">
+          💬 Enviar WhatsApp Manual
+        </a>
+      </div>
+    </div>
+
+    <!-- Layout Dividido em Colunas -->
+    <div class="grid-3 gap-6">
+      <!-- Coluna Principal (Itens, Valores e Historico) -->
+      <div class="col-span-2 flex flex-col gap-6">
+        <!-- Itens do Pedido -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📦 Itens Solicitados</h3>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Produto / Variação</th>
+                    <th>SKU</th>
+                    <th>Tipo</th>
+                    <th>Qtd</th>
+                    <th>Unitário</th>
+                    <th>Custo Unit.</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in order.itens" :key="item.id">
+                    <td>
+                      <strong>{{ item.produto ? item.produto.nome : 'Produto Removido' }}</strong>
+                      <div class="text-secondary" style="font-size:0.75rem;">Snapshot: {{ item.nome_produto_snapshot }}</div>
+                    </td>
+                    <td class="font-mono text-secondary">{{ item.sku_snapshot }}</td>
+                    <td>
+                      <span class="badge badge-secondary">{{ item.tipo_estoque_snapshot }}</span>
+                    </td>
+                    <td>{{ item.quantidade }}</td>
+                    <td>R$ {{ formatMoney(item.preco_venda_snapshot) }}</td>
+                    <td class="text-secondary">R$ {{ formatMoney(item.preco_custo_snapshot) }}</td>
+                    <td class="font-bold">R$ {{ formatMoney(item.preco_venda_snapshot * item.quantidade) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico de Status e Sequência Obrigatória -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🔄 Linha do Tempo e Ações do Pedido</h3>
+          </div>
+          <div class="card-body">
+            <!-- Botões de Ação Dinâmicos por Sequência -->
+            <div class="flex gap-3 mb-6 flex-wrap items-center" style="background: var(--color-bg-elevated); padding: 1rem; border-radius: var(--radius-md);">
+              <span class="font-bold mr-2">Ações de Status:</span>
+
+              <!-- Confirmação manual de pagamento -->
+              <button v-if="order.status === 'aguardando_pagamento'" @click="openConfirmPaymentModal" class="btn btn-primary">
+                💰 Confirmar Pagamento Pix Manual
+              </button>
+
+              <!-- Outros status (avanço obrigatório) -->
+              <button v-if="order.status === 'em_separacao'" @click="advanceStatus('em_envio')" class="btn btn-secondary">
+                🚚 Colocar em Rota de Envio
+              </button>
+              <button v-if="order.status === 'em_envio'" @click="openTrackingModal" class="btn btn-secondary">
+                📬 Informar Rastreio e Postar
+              </button>
+              <button v-if="order.status === 'enviado'" @click="advanceStatus('entregue')" class="btn btn-success">
+                ✅ Marcar como Entregue
+              </button>
+
+              <!-- Exceções aplicáveis a qualquer momento -->
+              <button v-if="order.status !== 'cancelado' && order.status !== 'entregue'" @click="advanceStatus('cancelado')" class="btn btn-danger">
+                🚫 Cancelar Pedido
+              </button>
+            </div>
+
+            <!-- Lista de Histórico -->
+            <div class="flex flex-col gap-4">
+              <div v-for="log in order.historico_status" :key="log.id" class="p-3" style="background: var(--color-bg-elevated); border-radius: var(--radius-md); border-left: 4px solid var(--color-brand);">
+                <div class="flex justify-between items-center">
+                  <strong class="text-brand">{{ getStatusLabel(log.status_novo) }}</strong>
+                  <span class="text-secondary" style="font-size:0.75rem;">{{ formatDate(log.created_at) }}</span>
+                </div>
+                <div class="text-secondary mt-1" style="font-size: 0.875rem;">{{ log.observacao || 'Nenhuma observação informada.' }}</div>
+                <div v-if="log.funcionario" class="text-muted mt-1" style="font-size: 0.75rem;">Registrado por: <strong>{{ log.funcionario.nome }}</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna Lateral (Cliente e Financeiro) -->
+      <div class="flex flex-col gap-6">
+        <!-- Cliente -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">👤 Informações do Cliente</h3>
+          </div>
+          <div class="card-body">
+            <div v-if="order.cliente">
+              <h4 class="font-bold" style="font-size: 1.125rem;">{{ order.cliente.nome_completo }}</h4>
+              <div class="text-secondary mt-2" style="font-size: 0.875rem;">
+                <strong>CPF:</strong> {{ order.cliente.cpf }} <br/>
+                <strong>E-mail:</strong> {{ order.cliente.email }} <br/>
+                <strong>Telefone:</strong> {{ order.cliente.telefone }} <br/>
+                <strong>WhatsApp:</strong> {{ order.cliente.whatsapp || 'Não informado' }}
+              </div>
+            </div>
+            <div v-else class="text-danger">Dados do cliente indisponíveis.</div>
+          </div>
+        </div>
+
+        <!-- Endereço de Entrega -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📍 Endereço de Entrega</h3>
+          </div>
+          <div class="card-body">
+            <div v-if="order.endereco" style="font-size: 0.875rem; line-height: 1.6;" class="text-secondary">
+              <strong>CEP:</strong> {{ order.endereco.cep }} <br/>
+              {{ order.endereco.logradouro }}, {{ order.endereco.numero }} {{ order.endereco.complemento || '' }} <br/>
+              {{ order.endereco.bairro }}, {{ order.endereco.cidade }} - {{ order.endereco.estado }} <br/>
+              <strong>Referência:</strong> {{ order.endereco.ponto_referencia || '—' }}
+            </div>
+            <div v-else class="text-secondary" style="font-size: 0.875rem;">Endereço direto do cadastro principal.</div>
+          </div>
+        </div>
+
+        <!-- DRE/Financeiro do Pedido -->
+        <div class="card" style="background: var(--color-bg-secondary); border-color: var(--color-brand);">
+          <div class="card-header">
+            <h3 class="card-title">📊 Resumo Financeiro (Snapshot)</h3>
+          </div>
+          <div class="card-body" style="font-size:0.875rem;">
+            <div class="flex justify-between p-2">
+              <span>Valor dos Itens:</span>
+              <span>R$ {{ formatMoney(order.total - order.valor_frete) }}</span>
+            </div>
+            <div class="flex justify-between p-2">
+              <span>Valor do Frete:</span>
+              <span>R$ {{ formatMoney(order.valor_frete) }}</span>
+            </div>
+            <hr style="border-color: var(--color-border);" />
+            <div class="flex justify-between p-2 font-bold" style="font-size: 1rem;">
+              <span>Total Pago:</span>
+              <span>R$ {{ formatMoney(order.total) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Rastreio e Postagem -->
+    <div v-if="showTrackingModal" class="modal-backdrop" @click.self="showTrackingModal = false">
+      <div class="modal-box">
+        <h2 class="modal-title">Código de Rastreamento (Postagem)</h2>
+        <form @submit.prevent="submitTracking">
+          <div class="form-group">
+            <label class="form-label">Código de Rastreio (Correios/Jadlog/Melhor Envio)</label>
+            <input v-model="trackingForm.codigo_rastreio" type="text" class="form-control" placeholder="Ex: QB123456789BR" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">URL de Rastreamento</label>
+            <input v-model="trackingForm.url_rastreio" type="text" class="form-control" placeholder="Ex: https://melhorenvio.com.br/rastreio/..." required />
+          </div>
+          <div class="flex gap-3 mt-6" style="justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" @click="showTrackingModal = false">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar e Postar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Confirmação de Pagamento manual -->
+    <div v-if="showPaymentModal" class="modal-backdrop" @click.self="showPaymentModal = false">
+      <div class="modal-box">
+        <h2 class="modal-title">Confirmar Recebimento de Pagamento Pix</h2>
+        <form @submit.prevent="submitPaymentConfirmation">
+          <div class="form-group">
+            <label class="form-label">Informações / Comprovante (Obrigatório)</label>
+            <textarea v-model="paymentForm.observacao" class="form-control" rows="3" placeholder="Ex: Pix confirmado na conta PJ Banco do Brasil às 14:32..." required></textarea>
+          </div>
+          <div class="flex gap-3 mt-6" style="justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" @click="showPaymentModal = false">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Confirmar e Liberar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </AdminLayout>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { router, Link } from '@inertiajs/vue3'
+import AdminLayout from '@/Layouts/AdminLayout.vue'
+
+const props = defineProps({
+  order: { type: Object, required: true },
+  whatsapp_link: { type: String, default: '#' }
+})
+
+const showTrackingModal = ref(false)
+const showPaymentModal = ref(false)
+
+const trackingForm = ref({
+  codigo_rastreio: '',
+  url_rastreio: ''
+})
+
+const paymentForm = ref({
+  observacao: ''
+})
+
+function advanceStatus(statusNovo) {
+  if (confirm(`Deseja alterar o status do pedido para ${getStatusLabel(statusNovo)}?`)) {
+    router.post(route('admin.orders.advance', props.order.id), {
+      status_novo: statusNovo,
+      observacao: `Avanço manual pelo atendente/funcionário para: ${getStatusLabel(statusNovo)}`
+    })
+  }
+}
+
+function openConfirmPaymentModal() {
+  paymentForm.value.observacao = ''
+  showPaymentModal.value = true
+}
+
+function submitPaymentConfirmation() {
+  router.post(route('admin.orders.confirm-payment', props.order.id), paymentForm.value, {
+    onSuccess: () => {
+      showPaymentModal.value = false
+    }
+  })
+}
+
+function openTrackingModal() {
+  trackingForm.value = { codigo_rastreio: '', url_rastreio: '' }
+  showTrackingModal.value = true
+}
+
+function submitTracking() {
+  router.post(route('admin.orders.advance', props.order.id), {
+    status_novo: 'enviado',
+    observacao: `Código de rastreio ${trackingForm.value.codigo_rastreio} cadastrado pelo atendente.`,
+    codigo_rastreio: trackingForm.value.codigo_rastreio,
+    url_rastreio: trackingForm.value.url_rastreio
+  }, {
+    onSuccess: () => {
+      showTrackingModal.value = false
+    }
+  })
+}
+
+function formatMoney(value) {
+  if (value === null || value === undefined) return '0,00'
+  return parseFloat(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleString('pt-BR')
+}
+
+function getStatusLabel(status) {
+  const map = {
+    'aguardando_pagamento': 'Aguardando Pagamento',
+    'em_separacao': 'Em Separação',
+    'em_envio': 'Em Envio',
+    'enviado': 'Enviado',
+    'entregue': 'Entregue',
+    'cancelado': 'Cancelado',
+    'devolvido': 'Devolvido'
+  }
+  return map[status] || status
+}
+
+function getStatusBadgeClass(status) {
+  switch (status) {
+    case 'aguardando_pagamento': return 'badge-warning'
+    case 'em_separacao': return 'badge-secondary'
+    case 'em_envio': return 'badge-secondary'
+    case 'enviado': return 'badge-primary'
+    case 'entregue': return 'badge-success'
+    case 'cancelado': return 'badge-danger'
+    default: return 'badge-secondary'
+  }
+}
+</script>
+
+<style scoped>
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal-box {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 1.5rem;
+}
+</style>

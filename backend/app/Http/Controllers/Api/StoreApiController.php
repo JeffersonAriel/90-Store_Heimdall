@@ -26,7 +26,7 @@ class StoreApiController extends Controller
     public function getCatalog(Request $request)
     {
         $products = Produto::where('ativo', true)
-            ->with(['categoria', 'fotoCapa', 'fotos', 'variacoes' => function ($q) {
+            ->with(['categoria', 'fotoCapa', 'fotos', 'fornecedor', 'variacoes' => function ($q) {
                 $q->where('ativo', true);
             }])
             ->when($request->input('categoria'), function ($query, $slug) {
@@ -63,7 +63,7 @@ class StoreApiController extends Controller
     {
         $product = Produto::where('slug', $slug)
             ->where('ativo', true)
-            ->with(['categoria', 'fotos', 'variacoes' => function ($q) {
+            ->with(['categoria', 'fotos', 'fornecedor', 'variacoes' => function ($q) {
                 $q->where('ativo', true);
             }, 'atributosValores.atributo'])
             ->firstOrFail();

@@ -5,6 +5,7 @@ use App\Http\Controllers\InstallController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\StoreSettingsAdminController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\OrderController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Admin\ApiConfigController;
 use App\Http\Controllers\Admin\ImportExportController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\MarketingController;
+use App\Http\Controllers\Admin\EmployeeController;
 
 // ─── ROTA DO INSTALADOR (Auto-desabilita após uso via middleware CheckInstalled) ───
 Route::middleware(['installed'])->group(function () {
@@ -90,12 +92,23 @@ Route::prefix('heimdall')->group(function () {
             Route::get('security/export-csv/{tipo}', [SecurityController::class, 'exportCsv'])->name('admin.security.export-csv');
         });
 
-        Route::get('/employees', function () { return 'Funcionários'; })->name('admin.employees.index');
+        Route::resource('employees', EmployeeController::class)->names('admin.employees');
         Route::get('marketing/coupons', [MarketingController::class, 'couponsIndex'])->name('admin.marketing.coupons');
         Route::post('marketing/coupons', [MarketingController::class, 'couponsStore'])->name('admin.marketing.coupons.store');
         Route::patch('marketing/coupons/{id}/toggle', [MarketingController::class, 'couponsToggle'])->name('admin.marketing.coupons.toggle');
 
         Route::get('marketing/points', [MarketingController::class, 'pointsIndex'])->name('admin.marketing.points');
         Route::get('marketing/referrals', [MarketingController::class, 'referralsIndex'])->name('admin.marketing.referrals');
+
+        // Configurações da Vitrine (Marketing)
+        Route::get('/vitrine/banners', [StoreSettingsAdminController::class, 'bannersIndex'])->name('admin.banners.index');
+        Route::post('/vitrine/banners', [StoreSettingsAdminController::class, 'bannersStore'])->name('admin.banners.store');
+        Route::put('/vitrine/banners/{id}', [StoreSettingsAdminController::class, 'bannersUpdate'])->name('admin.banners.update');
+        Route::delete('/vitrine/banners/{id}', [StoreSettingsAdminController::class, 'bannersDestroy'])->name('admin.banners.destroy');
+
+        Route::get('/vitrine/beneficios', [StoreSettingsAdminController::class, 'benefitsIndex'])->name('admin.benefits.index');
+        Route::post('/vitrine/beneficios', [StoreSettingsAdminController::class, 'benefitsStore'])->name('admin.benefits.store');
+        Route::put('/vitrine/beneficios/{id}', [StoreSettingsAdminController::class, 'benefitsUpdate'])->name('admin.benefits.update');
+        Route::delete('/vitrine/beneficios/{id}', [StoreSettingsAdminController::class, 'benefitsDestroy'])->name('admin.benefits.destroy');
     });
 });

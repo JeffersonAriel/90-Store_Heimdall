@@ -15,6 +15,7 @@ class FotoProduto extends Model
         'produto_id',
         'variacao_id',
         'url',
+        'cor',
         'ordem',
         'is_capa',
     ];

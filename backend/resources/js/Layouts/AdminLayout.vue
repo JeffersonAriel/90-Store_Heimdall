@@ -18,40 +18,42 @@
       <!-- Navigation -->
       <nav class="sidebar-nav">
         <!-- Dashboard -->
-        <NavItem :href="route('admin.dashboard')" icon="dashboard" label="Dashboard" :active="$page.url.startsWith('/admin/dashboard')" />
+        <NavItem :href="route('admin.dashboard')" icon="dashboard" label="Dashboard" :active="$page.url === '/heimdall' || $page.url.startsWith('/heimdall/dashboard')" />
 
         <!-- Catálogo -->
         <div class="nav-section-label">Catálogo</div>
-        <NavItem v-if="can('produtos', 'view')"     :href="route('admin.products.index')"    icon="products"    label="Produtos"    :active="$page.url.startsWith('/admin/products')" />
-        <NavItem v-if="can('fornecedores', 'view')" :href="route('admin.suppliers.index')"   icon="suppliers"   label="Fornecedores" :active="$page.url.startsWith('/admin/suppliers')" />
-        <NavItem v-if="can('produtos', 'view')"     :href="route('admin.categories.index')"  icon="categories"  label="Categorias"  :active="$page.url.startsWith('/admin/categories')" />
+        <NavItem v-if="can('produtos', 'view')"     :href="route('admin.products.index')"    icon="products"    label="Produtos"    :active="$page.url.startsWith('/heimdall/products')" />
+        <NavItem v-if="can('fornecedores', 'view')" :href="route('admin.suppliers.index')"   icon="suppliers"   label="Fornecedores" :active="$page.url.startsWith('/heimdall/suppliers')" />
+        <NavItem v-if="can('produtos', 'view')"     :href="route('admin.categories.index')"  icon="categories"  label="Categorias"  :active="$page.url.startsWith('/heimdall/categories')" />
 
         <!-- Operações -->
         <div class="nav-section-label">Operações</div>
-        <NavItem v-if="can('pedidos', 'view')"   :href="route('admin.orders.index')"   icon="orders"   label="Pedidos"  :active="$page.url.startsWith('/admin/orders')"  :badge="$page.props.counts?.pendingOrders" />
-        <NavItem v-if="can('estoque', 'view')"   :href="route('admin.stock.index')"    icon="stock"    label="Estoque"  :active="$page.url.startsWith('/admin/stock')"   :badge="$page.props.counts?.criticalStock" badge-type="danger" />
-        <NavItem v-if="can('financeiro', 'view')" :href="route('admin.financial.index')" icon="financial" label="Financeiro" :active="$page.url.startsWith('/admin/financial')" />
+        <NavItem v-if="can('pedidos', 'view')"   :href="route('admin.orders.index')"   icon="orders"   label="Pedidos"  :active="$page.url.startsWith('/heimdall/orders')"  :badge="$page.props.counts?.pendingOrders" />
+        <NavItem v-if="can('estoque', 'view')"   :href="route('admin.stock.index')"    icon="stock"    label="Estoque"  :active="$page.url.startsWith('/heimdall/stock')"   :badge="$page.props.counts?.criticalStock" badge-type="danger" />
+        <NavItem v-if="can('financeiro', 'view')" :href="route('admin.financial.index')" icon="financial" label="Financeiro" :active="$page.url.startsWith('/heimdall/financial')" />
 
         <!-- Configurações -->
         <div class="nav-section-label">Configurações</div>
-        <NavItem v-if="can('frete', 'view')"      :href="route('admin.shipping.index')"    icon="shipping"    label="Frete"       :active="$page.url.startsWith('/admin/shipping')" />
-        <NavItem v-if="can('api_config', 'view')" :href="route('admin.api-config.index')"  icon="api"         label="APIs"        :active="$page.url.startsWith('/admin/api-config')" />
-        <NavItem v-if="can('funcionarios', 'view')" :href="route('admin.employees.index')" icon="employees"   label="Funcionários" :active="$page.url.startsWith('/admin/employees')" />
+        <NavItem v-if="can('frete', 'view')"      :href="route('admin.shipping.index')"    icon="shipping"    label="Frete"       :active="$page.url.startsWith('/heimdall/shipping')" />
+        <NavItem v-if="can('api_config', 'view')" :href="route('admin.api-config.index')"  icon="api"         label="APIs"        :active="$page.url.startsWith('/heimdall/api-config')" />
+        <NavItem v-if="can('funcionarios', 'view')" :href="route('admin.employees.index')" icon="employees"   label="Funcionários" :active="$page.url.startsWith('/heimdall/employees')" />
 
-        <!-- Marketing -->
-        <div class="nav-section-label">Marketing</div>
-        <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.coupons')" icon="coupons" label="Cupons"  :active="$page.url.startsWith('/admin/marketing/coupons')" />
-        <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.points')"  icon="points"  label="Pontos"  :active="$page.url.startsWith('/admin/marketing/points')" />
-        <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.referrals')" icon="referrals" label="Indicações" :active="$page.url.startsWith('/admin/marketing/referrals')" />
+        <!-- Marketing & Vitrine -->
+        <div class="nav-section-label">Marketing & Vitrine</div>
+        <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.coupons')" icon="coupons" label="Cupons"  :active="$page.url.startsWith('/heimdall/marketing/coupons')" />
+        <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.points')"  icon="points"  label="Pontos"  :active="$page.url.startsWith('/heimdall/marketing/points')" />
+        <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.referrals')" icon="referrals" label="Indicações" :active="$page.url.startsWith('/heimdall/marketing/referrals')" />
+        <NavItem v-if="can('marketing', 'view')" :href="route('admin.banners.index')" icon="image" label="Banners Vitrine" :active="$page.url.startsWith('/heimdall/vitrine/banners')" />
+        <NavItem v-if="can('marketing', 'view')" :href="route('admin.benefits.index')" icon="star" label="Barra de Benefícios" :active="$page.url.startsWith('/heimdall/vitrine/beneficios')" />
 
         <!-- Import/Export -->
         <div class="nav-section-label">Ferramentas</div>
-        <NavItem v-if="can('importacao', 'view')" :href="route('admin.import-export.index')" icon="import" label="Import/Export" :active="$page.url.startsWith('/admin/import-export')" />
+        <NavItem v-if="can('importacao', 'view')" :href="route('admin.import-export.index')" icon="import" label="Import/Export" :active="$page.url.startsWith('/heimdall/import-export')" />
 
         <!-- Segurança — ADMIN ONLY -->
-        <template v-if="$page.props.auth.employee.is_admin">
+        <template v-if="$page.props.auth.employee?.is_admin">
           <div class="nav-section-label">Administração</div>
-          <NavItem :href="route('admin.security.index')" icon="security" label="Segurança & Logs" :active="$page.url.startsWith('/admin/security')" badge-type="warning" />
+          <NavItem :href="route('admin.security.index')" icon="security" label="Segurança & Logs" :active="$page.url.startsWith('/heimdall/security')" badge-type="warning" />
         </template>
       </nav>
 
@@ -87,6 +89,12 @@
         </div>
 
         <div class="topbar-actions" style="margin-left: auto; display:flex; align-items:center; gap:0.75rem;">
+          <!-- Theme toggle -->
+          <button class="btn-icon" @click="toggleTheme" title="Alternar Modo Claro/Escuro">
+            <span v-if="isDark" style="font-size: 1.25rem;">☀️</span>
+            <span v-else style="font-size: 1.25rem;">🌙</span>
+          </button>
+
           <!-- Global search -->
           <button class="btn-icon" title="Buscar">
             <SearchIcon />
@@ -123,7 +131,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import NavItem from '@/Components/UI/NavItem.vue'
 
@@ -142,12 +150,33 @@ const props = defineProps({
 const page = usePage()
 const sidebarOpen = ref(false)
 const showAlertsPanel = ref(false)
+const isDark = ref(false)
 
 const flash = computed(() => page.props.flash || {})
 
 const hasAlerts = computed(() => {
   const counts = page.props.counts || {}
   return counts.criticalStock > 0 || counts.pendingOrders > 0
+})
+
+// Toggle Theme
+function toggleTheme() {
+  isDark.value = !isDark.value
+  if (isDark.value) {
+    document.documentElement.classList.add('dark-mode')
+    localStorage.setItem('theme', 'dark')
+  } else {
+    document.documentElement.classList.remove('dark-mode')
+    localStorage.setItem('theme', 'light')
+  }
+}
+
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    isDark.value = true
+    document.documentElement.classList.add('dark-mode')
+  }
 })
 
 function can(module, action = 'view') {

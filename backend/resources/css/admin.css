@@ -7,49 +7,49 @@
 
 /* ─── CSS Custom Properties ─────────────────────────────────── */
 :root {
-  /* Colors — Dark theme (primary) */
-  --color-bg-primary:       #0d0d1a;
-  --color-bg-secondary:     #12122a;
-  --color-bg-card:          #1a1a35;
-  --color-bg-elevated:      #1f1f40;
-  --color-bg-input:         #16162e;
+  /* Colors — Light theme (Premium SaaS) */
+  --color-bg-primary:       #f8fafc; /* Slate 50 */
+  --color-bg-secondary:     #f1f5f9; /* Slate 100 */
+  --color-bg-card:          #ffffff;
+  --color-bg-elevated:      #ffffff;
+  --color-bg-input:         #f8fafc;
 
   /* Brand */
-  --color-brand:            #6366f1;
-  --color-brand-light:      #818cf8;
-  --color-brand-dark:       #4f46e5;
-  --color-brand-glow:       rgba(99, 102, 241, 0.15);
+  --color-brand:            #4f46e5; /* Indigo 600 */
+  --color-brand-light:      #818cf8; /* Indigo 400 */
+  --color-brand-dark:       #3730a3; /* Indigo 800 */
+  --color-brand-glow:       rgba(79, 70, 229, 0.15);
 
   /* Accent */
   --color-accent:           #f59e0b;
   --color-accent-light:     #fbbf24;
 
   /* Status */
-  --color-success:          #10b981;
+  --color-success:          #059669; /* Emerald 600 */
   --color-success-light:    #34d399;
-  --color-success-bg:       rgba(16, 185, 129, 0.1);
-  --color-warning:          #f59e0b;
-  --color-warning-bg:       rgba(245, 158, 11, 0.1);
-  --color-danger:           #ef4444;
+  --color-success-bg:       #d1fae5;
+  --color-warning:          #d97706; /* Amber 600 */
+  --color-warning-bg:       #fef3c7;
+  --color-danger:           #dc2626; /* Red 600 */
   --color-danger-light:     #f87171;
-  --color-danger-bg:        rgba(239, 68, 68, 0.1);
-  --color-info:             #3b82f6;
-  --color-info-bg:          rgba(59, 130, 246, 0.1);
+  --color-danger-bg:        #fee2e2;
+  --color-info:             #2563eb; /* Blue 600 */
+  --color-info-bg:          #dbeafe;
 
   /* Stock alerts */
-  --color-stock-ok:         #10b981;
-  --color-stock-min:        #f59e0b;
-  --color-stock-critical:   #ef4444;
+  --color-stock-ok:         #059669;
+  --color-stock-min:        #d97706;
+  --color-stock-critical:   #dc2626;
 
   /* Text */
-  --color-text-primary:     #f1f5f9;
-  --color-text-secondary:   #94a3b8;
-  --color-text-muted:       #64748b;
-  --color-text-disabled:    #475569;
+  --color-text-primary:     #0f172a; /* Slate 900 */
+  --color-text-secondary:   #475569; /* Slate 600 */
+  --color-text-muted:       #64748b; /* Slate 500 */
+  --color-text-disabled:    #94a3b8; /* Slate 400 */
 
   /* Borders */
-  --color-border:           rgba(255, 255, 255, 0.08);
-  --color-border-focus:     rgba(99, 102, 241, 0.5);
+  --color-border:           #e2e8f0; /* Slate 200 */
+  --color-border-focus:     rgba(79, 70, 229, 0.5);
 
   /* Sidebar */
   --sidebar-width:          260px;
@@ -57,10 +57,10 @@
   --topbar-height:          64px;
 
   /* Shadows */
-  --shadow-sm:   0 1px 2px 0 rgba(0, 0, 0, 0.5);
-  --shadow-md:   0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg:   0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.25);
+  --shadow-sm:   0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md:   0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg:   0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
 
   /* Transitions */
   --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -74,6 +74,30 @@
   --radius-xl:   16px;
   --radius-2xl:  24px;
   --radius-full: 9999px;
+}
+
+/* Dark Mode Variables */
+.dark-mode {
+  --color-bg-primary:       #0d0d1a;
+  --color-bg-secondary:     #12122a;
+  --color-bg-card:          #1a1a35;
+  --color-bg-elevated:      #1f1f40;
+  --color-bg-input:         #16162e;
+
+  --color-brand:            #6366f1;
+  --color-brand-light:      #818cf8;
+  --color-brand-dark:       #4f46e5;
+
+  --color-text-primary:     #f1f5f9;
+  --color-text-secondary:   #94a3b8;
+  --color-text-muted:       #64748b;
+  --color-text-disabled:    #475569;
+
+  --color-border:           rgba(255, 255, 255, 0.08);
+
+  --shadow-sm:   0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md:   0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg:   0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
 }
 
 /* ─── Reset & Base ──────────────────────────────────────────── */
@@ -321,6 +345,33 @@ a:hover { color: var(--color-brand); }
 .btn-sm  { padding: 0.375rem 0.75rem; font-size: 0.8125rem; }
 .btn-lg  { padding: 0.75rem 1.5rem; font-size: 1rem; }
 .btn-icon { padding: 0.5rem; border-radius: var(--radius-md); }
+
+/* ─── Cards ─────────────────────────────────────────────────── */
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
 
 /* ─── Inputs & Forms ────────────────────────────────────────── */
 .form-group {

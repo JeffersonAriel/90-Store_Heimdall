@@ -60,9 +60,13 @@ class SupplierController extends Controller
             'estado' => 'nullable|string|max:2',
             'condicao_pagamento' => 'nullable|string',
             'prazo_medio_dias' => 'nullable|integer|min:0',
+            'categorias_fornecidas' => 'nullable|array',
+            'categorias_fornecidas.*' => 'string|max:100',
             'observacoes' => 'nullable|string',
             'ativo' => 'boolean',
         ]);
+
+        $validated['prazo_medio_dias'] = $validated['prazo_medio_dias'] ?? 0;
 
         Fornecedor::create($validated);
 
@@ -97,9 +101,13 @@ class SupplierController extends Controller
             'estado' => 'nullable|string|max:2',
             'condicao_pagamento' => 'nullable|string',
             'prazo_medio_dias' => 'nullable|integer|min:0',
+            'categorias_fornecidas' => 'nullable|array',
+            'categorias_fornecidas.*' => 'string|max:100',
             'observacoes' => 'nullable|string',
             'ativo' => 'boolean',
         ]);
+
+        $validated['prazo_medio_dias'] = $validated['prazo_medio_dias'] ?? 0;
 
         $supplier->update($validated);
 
