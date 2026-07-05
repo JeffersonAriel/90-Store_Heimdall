@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # 1. Roteamento para o Backend/API (Laravel)
+    
+    # Se estiver no link temporário (~jeff2892)
+    RewriteCond %{REQUEST_URI} ^/~jeff2892/
+    RewriteRule ^(heimdall|install|api|build|storage)(/.*)?$ /~jeff2892/backend/public/$1$2 [L,PT]
+
+    # Se estiver no domínio próprio (raiz)
+    RewriteCond %{REQUEST_URI} !^/~jeff2892/
+    RewriteRule ^(heimdall|install|api|build|storage)(/.*)?$ backend/public/$1$2 [L]
+
+    # 2. Roteamento do E-commerce (Vue Single Page Application)
+    RewriteRule ^index\.html$ - [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . index.html [L]
+</IfModule>
