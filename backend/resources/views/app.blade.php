@@ -7,6 +7,7 @@
 
         {{-- Inertia page title --}}
         <title inertia>Heimdall | 90-Store</title>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
         {{-- Fonts --}}
         <link rel="preconnect" href="https://fonts.googleapis.com">
