@@ -54,6 +54,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'asset_url' => env('ASSET_URL', (isset($_SERVER['HTTP_HOST']) && isset($_SERVER['SCRIPT_NAME'])) ? (str_contains($_SERVER['SCRIPT_NAME'], '/index.php') ? str_replace('/index.php', '', $_SERVER['SCRIPT_NAME']) : '') : null),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
