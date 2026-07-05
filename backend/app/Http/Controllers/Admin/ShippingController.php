@@ -13,9 +13,11 @@ class ShippingController extends Controller
     public function index()
     {
         $freteRegra = FreteRegra::where('ativo', true)->first();
+        $apisFrete = \App\Models\ApiConfiguracao::where('tipo', 'frete')->get();
         
         return Inertia::render('Shipping/Index', [
-            'freteRegra' => $freteRegra
+            'freteRegra' => $freteRegra,
+            'apisFrete' => $apisFrete
         ]);
     }
 
@@ -32,6 +34,7 @@ class ShippingController extends Controller
             'cep_origem' => 'required|string|max:10',
             'lat_origem' => 'required|numeric',
             'lng_origem' => 'required|numeric',
+            'servicos_locais_json' => 'nullable|string',
         ]);
 
         $regra->update($validated);

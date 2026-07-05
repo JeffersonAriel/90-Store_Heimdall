@@ -146,6 +146,23 @@
           </div>
         </div>
 
+        <!-- Alerta: Frete a Combinar -->
+        <div v-if="freteACombinar" class="card" style="border-color: #f59e0b; background: rgba(245,158,11,0.08);">
+          <div class="card-header">
+            <h3 class="card-title" style="color: #f59e0b;">⚠️ Frete Local - A Combinar</h3>
+          </div>
+          <div class="card-body">
+            <p class="text-secondary" style="font-size: 0.875rem; margin-bottom: 1rem;">Este pedido optou por entrega local (Uber Moto / Metrô). O valor do frete está como <strong>R$ 0,00</strong>. Após combinar com o cliente, preencha o valor abaixo para atualizar o faturamento.</p>
+            <form @submit.prevent="submitFreteACombinar" class="flex gap-3 items-end">
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label">Valor do Frete (R$)</label>
+                <input v-model.number="freteForm.valor" type="number" step="0.01" min="0" class="form-control" placeholder="Ex: 18.50" required />
+              </div>
+              <button type="submit" class="btn btn-primary">Confirmar Frete</button>
+            </form>
+          </div>
+        </div>
+
         <!-- DRE/Financeiro do Pedido -->
         <div class="card" style="background: var(--color-bg-secondary); border-color: var(--color-brand);">
           <div class="card-header">
@@ -222,6 +239,16 @@ const props = defineProps({
 
 const showTrackingModal = ref(false)
 const showPaymentModal = ref(false)
+const showFreteModal = ref(false)
+
+// Detecta se este pedido tem frete a combinar (valor 0 + observação marcada + status ainda não confirmado)
+const freteACombinar = computed(() => {
+  return props.order.valor_frete == 0
+    && props.order.observacoes
+    && props.order.observacoes.includes('FRETE A COMBINAR')
+})
+
+const freteForm = ref({ valor: 0 })
 
 const trackingForm = ref({
   codigo_rastreio: '',
@@ -231,6 +258,13 @@ const trackingForm = ref({
 const paymentForm = ref({
   observacao: ''
 })
+
+function submitFreteACombinar() {
+  if (!confirm(`Confirmar valor do frete em R$ ${Number(freteForm.value.valor).toFixed(2).replace('.', ',')}?`)) return
+  router.patch(route('admin.orders.update-frete', props.order.id), {
+    valor_frete: freteForm.value.valor
+  })
+}
 
 function advanceStatus(statusNovo) {
   if (confirm(`Deseja alterar o status do pedido para ${getStatusLabel(statusNovo)}?`)) {

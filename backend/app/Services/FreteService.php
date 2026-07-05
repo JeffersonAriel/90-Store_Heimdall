@@ -35,20 +35,20 @@ class FreteService
                 $coordenadas['lng']
             );
 
-            // Se estiver dentro do raio (ex: 50km) de São Miguel Paulista, adiciona Uber Flash e 99 Entregas
+            // Se estiver dentro do raio configurado (ex: 50km) da origem, adiciona os serviços locais cadastrados (ex: Uber Moto, Metrô)
             if ($distancia <= $regras->raio_km_local) {
-                $options[] = [
-                    'servico' => 'Uber Flash (Entrega Local)',
-                    'prazo_dias' => 1,
-                    'valor' => $this->calcularTarifaLocal('uber_flash', $distancia),
-                    'tipo' => 'local'
-                ];
-                $options[] = [
-                    'servico' => '99 Entregas (Entrega Local)',
-                    'prazo_dias' => 1,
-                    'valor' => $this->calcularTarifaLocal('99entregas', $distancia),
-                    'tipo' => 'local'
-                ];
+                if ($regras->servicos_locais_json) {
+                    $servicos = json_decode($regras->servicos_locais_json, true) ?? [];
+                    foreach ($servicos as $servico) {
+                        $options[] = [
+                            'servico'    => $servico['nome'] . ' (Entrega Local)',
+                            'prazo_dias' => 1,
+                            'valor'      => 0,          // Valor a combinar após o pedido
+                            'a_combinar' => true,       // Flag que dispara aviso no front-end
+                            'tipo'       => 'local',
+                        ];
+                    }
+                }
             }
         }
 

@@ -109,19 +109,27 @@ class CheckoutController extends Controller
                 }
             }
 
-            $total = max(0, ($subtotal - $descontoCupom) + $request->frete_valor);
+            // Frete local (a combinar) salva com valor 0 para ser preenchido depois no painel
+            $freteACombinar = $request->boolean('frete_a_combinar', false);
+            $freteValorSalvo = $freteACombinar ? 0 : $request->frete_valor;
+
+            $total = max(0, ($subtotal - $descontoCupom) + $freteValorSalvo);
+
+            $obsBase = $freteACombinar
+                ? "Frete selecionado: {$request->frete_servico} | ⚠️ FRETE A COMBINAR - contatar cliente para confirmar valor"
+                : "Frete selecionado: {$request->frete_servico}";
 
             // 3. Cria o pedido
             $order = Pedido::create([
-                'cliente_id' => $cliente->id,
-                'endereco_id' => $enderecoId,
-                'cupom_id' => $cupom?->id,
-                'status' => 'aguardando_pagamento',
-                'subtotal' => $subtotal,
-                'desconto_cupom' => $descontoCupom,
-                'valor_frete' => $request->frete_valor,
-                'total' => $total,
-                'observacoes' => "Frete selecionado: {$request->frete_servico}",
+                'cliente_id'    => $cliente->id,
+                'endereco_id'   => $enderecoId,
+                'cupom_id'      => $cupom?->id,
+                'status'        => 'aguardando_pagamento',
+                'subtotal'      => $subtotal,
+                'desconto_cupom'=> $descontoCupom,
+                'valor_frete'   => $freteValorSalvo,
+                'total'         => $total,
+                'observacoes'   => $obsBase,
             ]);
 
             // 4. Salva itens com snapshot imutável e reserva estoque próprio

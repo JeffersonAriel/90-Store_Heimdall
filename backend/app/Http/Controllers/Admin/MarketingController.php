@@ -80,7 +80,7 @@ class MarketingController extends Controller
     public function referralsIndex()
     {
         $referrals = DB::table('indicacoes')
-            ->join('clientes as c1', 'indicacoes.cliente_indicator_id', '=', 'c1.id')
+            ->join('clientes as c1', 'indicacoes.cliente_indicador_id', '=', 'c1.id')
             ->leftJoin('clientes as c2', 'indicacoes.cliente_indicado_id', '=', 'c2.id')
             ->select(
                 'indicacoes.*',

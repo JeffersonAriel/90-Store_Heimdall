@@ -137,10 +137,20 @@
                 <input type="radio" v-model="checkoutData.shipping" :value="opt.servico" />
                 <div class="shipping-info">
                   <strong>{{ opt.servico }}</strong>
-                  <span>{{ opt.valor === 0 ? 'Grátis' : formatCurrency(opt.valor) }} - Entrega em {{ opt.prazo_dias }} dia(s)</span>
+                  <span>
+                    <template v-if="opt.a_combinar">A combinar após o pedido</template>
+                    <template v-else-if="opt.valor === 0">Grátis</template>
+                    <template v-else>{{ formatCurrency(opt.valor) }}</template>
+                    - Entrega em {{ opt.prazo_dias }} dia(s)
+                  </span>
                 </div>
               </label>
               
+              <div v-if="selectedShippingOpt?.a_combinar" class="alert alert-info mt-3 mb-2" style="background: var(--color-bg-elevated); padding: 12px; border-radius: 6px; font-size: 0.875rem;">
+                <i class="fas fa-info-circle text-brand mr-2"></i>
+                Entraremos em contato com você via WhatsApp após a conclusão do pedido para confirmar o valor exato da entrega local.
+              </div>
+
               <div v-if="shippingOptions.length === 0" class="text-gray text-center my-4">
                 Nenhuma opção de frete encontrada para este CEP.
               </div>
@@ -153,7 +163,9 @@
             <button class="btn btn-primary mt-6 w-full" @click="currentStep = 4" :disabled="shippingOptions.length === 0">Ir para Pagamento</button>
           </div>
           <div class="step-summary" v-show="currentStep > 3">
-            {{ checkoutData.shipping }} ({{ formatCurrency(shippingCost) }})
+            {{ checkoutData.shipping }}
+            <span v-if="selectedShippingOpt?.a_combinar">(A combinar)</span>
+            <span v-else>({{ formatCurrency(shippingCost) }})</span>
           </div>
         </div>
 
@@ -223,7 +235,11 @@
             </div>
             <div class="summary-line">
               <span>Frete</span>
-              <span>{{ shippingCost === 0 ? 'Grátis' : formatCurrency(shippingCost) }}</span>
+              <span>
+                <template v-if="selectedShippingOpt?.a_combinar">A combinar</template>
+                <template v-else-if="shippingCost === 0">Grátis</template>
+                <template v-else>{{ formatCurrency(shippingCost) }}</template>
+              </span>
             </div>
             <div class="summary-line text-red" v-if="checkoutData.paymentMethod === 'pix'">
               <span>Desconto PIX (5%)</span>
@@ -386,9 +402,12 @@ const pixDiscount = computed(() => {
   return 0
 })
 
+const selectedShippingOpt = computed(() => {
+  return shippingOptions.value.find(o => o.servico === checkoutData.shipping)
+})
+
 const shippingCost = computed(() => {
-  const opt = shippingOptions.value.find(o => o.servico === checkoutData.shipping)
-  return opt ? opt.valor : 0
+  return selectedShippingOpt.value ? selectedShippingOpt.value.valor : 0
 })
 
 const cartTotal = computed(() => {
@@ -416,6 +435,7 @@ async function finalizeOrder() {
     gateway: checkoutData.paymentMethod,
     frete_valor: shippingCost.value,
     frete_servico: checkoutData.shipping,
+    frete_a_combinar: selectedShippingOpt.value?.a_combinar || false,
     itens: itens
   }
 

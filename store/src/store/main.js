@@ -10,6 +10,7 @@ export const useStore = defineStore('main', {
     shippingQuote: null,
     activeGateway: 'mercadopago',
     appliedCoupon: null,
+    favorites: JSON.parse(localStorage.getItem('store_favorites')) || [],
   }),
 
   getters: {
@@ -103,6 +104,19 @@ export const useStore = defineStore('main', {
       this.token = null
       this.user = null
       localStorage.removeItem('store_auth_token')
+    },
+
+    toggleFavorite(product) {
+      if (!this.favorites) {
+        this.favorites = []
+      }
+      const index = this.favorites.findIndex(item => item.id === product.id)
+      if (index >= 0) {
+        this.favorites.splice(index, 1)
+      } else {
+        this.favorites.push(product)
+      }
+      localStorage.setItem('store_favorites', JSON.stringify(this.favorites))
     }
   }
 })

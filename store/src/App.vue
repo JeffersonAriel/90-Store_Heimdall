@@ -15,10 +15,27 @@
         </div>
 
         <div class="header-actions">
-          <button class="action-btn" title="Favoritos">❤️</button>
-          <RouterLink to="/minha-conta" class="action-btn" title="Minha Conta">👤</RouterLink>
+          <button class="action-btn" title="Favoritos" @click="isFavoritesOpen = true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <span class="badge-count" v-if="favoriteCount > 0">{{ favoriteCount }}</span>
+          </button>
+          
+          <RouterLink to="/minha-conta" class="action-btn" title="Minha Conta">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </RouterLink>
+          
           <button class="action-btn cart-btn" title="Carrinho" @click="isCartOpen = true">
-            🛒 <span class="cart-count" v-if="cartCount > 0">{{ cartCount }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <span class="badge-count" v-if="cartCount > 0">{{ cartCount }}</span>
           </button>
         </div>
       </div>
@@ -119,6 +136,9 @@
 
     <!-- Cart Drawer -->
     <CartDrawer :is-open="isCartOpen" @close="isCartOpen = false" />
+    
+    <!-- Favorites Drawer -->
+    <FavoritesDrawer :is-open="isFavoritesOpen" @close="isFavoritesOpen = false" />
   </div>
 </template>
 
@@ -127,12 +147,15 @@ import { ref, computed, onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import axios from 'axios'
 import CartDrawer from './components/CartDrawer.vue'
+import FavoritesDrawer from './components/FavoritesDrawer.vue'
 import { useStore } from './store/main'
 
 const store = useStore()
 const cartCount = computed(() => store.cart.reduce((total, item) => total + item.quantidade, 0))
+const favoriteCount = computed(() => store.favorites?.length || 0)
 
 const isCartOpen = ref(false)
+const isFavoritesOpen = ref(false)
 const categories = ref([])
 const benefits = ref([])
 
@@ -231,24 +254,31 @@ onMounted(async () => {
 
 .action-btn {
   color: var(--color-white);
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-2);
+  transition: var(--transition);
 }
 
 .action-btn:hover {
   color: var(--color-red);
 }
 
-.cart-count {
+.badge-count {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: -4px;
+  right: -4px;
   background-color: var(--color-red);
   color: var(--color-white);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: bold;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
