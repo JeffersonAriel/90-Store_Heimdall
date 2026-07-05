@@ -1,5 +1,5 @@
 # ─── Laravel Backend ───────────────────────────────────────────
-backend/vendor/
+# backend/vendor/
 backend/.env
 backend/.env.backup
 backend/.env.production

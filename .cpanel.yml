@@ -3,8 +3,8 @@ deployment:
   tasks:
     # 1. Envia a Loja (Vite) para a raiz do site (public_html)
     - export DEPLOYPATH=/home1/jeff2892/public_html/
-    - /bin/cp -rf store/dist/* $DEPLOYPATH
+    - /bin/cp -rf store/dist/. $DEPLOYPATH
     
     # 2. Cria a pasta da API/Admin e envia todo o backend para lá (public_html/backend)
     - /bin/mkdir -p $DEPLOYPATH/backend
-    - /bin/cp -rf backend/* $DEPLOYPATH/backend
+    - /bin/cp -rf backend/. $DEPLOYPATH/backend
