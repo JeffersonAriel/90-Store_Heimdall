@@ -93,6 +93,19 @@ class InstallController extends Controller
                 'DB_PASSWORD'   => $request->driver === 'mysql' ? ($request->password ?? '') : '',
             ]);
 
+            // Altera a configuração em memória dinamicamente para o processo atual rodar as migrações no banco certo
+            config([
+                'database.default' => $request->driver,
+                "database.connections.{$request->driver}.host" => $request->driver === 'mysql' ? $request->host : '',
+                "database.connections.{$request->driver}.port" => $request->driver === 'mysql' ? $request->port : '',
+                "database.connections.{$request->driver}.database" => $request->database,
+                "database.connections.{$request->driver}.username" => $request->driver === 'mysql' ? $request->username : '',
+                "database.connections.{$request->driver}.password" => $request->driver === 'mysql' ? ($request->password ?? '') : '',
+            ]);
+
+            // Força o Laravel a recriar a conexão com as novas configurações em memória
+            DB::purge($request->driver);
+
             // Gera a chave única do aplicativo caso não esteja definida
             Artisan::call('key:generate', ['--force' => true]);
 
