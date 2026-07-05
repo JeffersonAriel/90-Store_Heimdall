@@ -1,7 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+const getBaseUrl = () => {
+  const path = window.location.pathname
+  if (path.includes('/~jeff2892')) {
+    return '/~jeff2892/'
+  }
+  return '/'
+}
+
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(getBaseUrl()),
   routes: [
     {
       path: '/',
