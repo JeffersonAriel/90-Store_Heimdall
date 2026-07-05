@@ -169,7 +169,7 @@
         </div>
 
         <div class="actions mt-6">
-          <a href="/heimdall/login" class="btn btn-primary w-full">Acessar Painel Heimdall</a>
+          <a :href="`${basePath}/heimdall/login`" class="btn btn-primary w-full">Acessar Painel Heimdall</a>
         </div>
       </div>
     </div>

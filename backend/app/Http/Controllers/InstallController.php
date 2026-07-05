@@ -21,7 +21,7 @@ class InstallController extends Controller
             if (Schema::hasTable('instalacao')) {
                 $instalacao = DB::table('instalacao')->first();
                 if ($instalacao && $instalacao->concluida) {
-                    return redirect('/heimdall/login')->with('error', 'O sistema já está instalado.');
+                    return redirect()->route('admin.login')->with('error', 'O sistema já está instalado.');
                 }
             }
         } catch (\Exception $e) {
