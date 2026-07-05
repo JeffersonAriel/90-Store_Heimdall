@@ -16,8 +16,9 @@
       <div class="col-span-2 flex flex-col gap-6">
         <!-- Pagamentos -->
         <div class="card">
-          <div class="card-header">
+          <div class="card-header flex justify-between items-center">
             <h3 class="card-title">💳 Gateways de Pagamento (Múltiplos e Plugáveis)</h3>
+            <button @click="openCreateModal" class="btn btn-outline btn-sm">+ Novo Gateway</button>
           </div>
           <div class="card-body flex flex-col gap-4">
             <div v-for="api in paymentApis" :key="api.id" class="api-item p-4" style="background: var(--color-bg-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
@@ -35,6 +36,7 @@
                     <span style="font-size: 0.875rem;">Ativo</span>
                   </label>
                   <button @click="editApi(api)" class="btn btn-secondary btn-sm">Configurar</button>
+                  <button @click="deleteApi(api)" class="btn btn-outline btn-sm text-red" title="Remover" v-if="!['mercadopago','pagseguro','stripe'].includes(api.slug)">Excluir</button>
                 </div>
               </div>
             </div>
@@ -60,45 +62,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Configurações de Frete Geral -->
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">🚚 Regras de Frete Local & Melhor Envio</h3>
-        </div>
-        <div class="card-body">
-          <form v-if="freteRegra" @submit.prevent="saveShippingRules">
-            <div class="form-group">
-              <label class="form-label">Frete Grátis a partir de (R$)</label>
-              <input v-model.number="shippingForm.valor_minimo_gratis" type="number" step="0.01" class="form-control" required />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Raio Máximo de Entrega Local (Km)</label>
-              <input v-model.number="shippingForm.raio_km_local" type="number" class="form-control" required />
-              <small class="text-secondary">Raio a partir de São Miguel Paulista (SP) para habilitar Uber/99.</small>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">CEP Origem (Faturamento)</label>
-              <input v-model="shippingForm.cep_origem" type="text" class="form-control" required />
-            </div>
-
-            <div class="grid-2 gap-4">
-              <div class="form-group">
-                <label class="form-label">Latitude Origem</label>
-                <input v-model.number="shippingForm.lat_origem" type="number" step="0.000001" class="form-control" required />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Longitude Origem</label>
-                <input v-model.number="shippingForm.lng_origem" type="number" step="0.000001" class="form-control" required />
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-full mt-4">Salvar Regras de Frete</button>
-          </form>
-        </div>
-      </div>
     </div>
 
     <!-- Modal Configurações de Credenciais -->
@@ -120,15 +83,58 @@
             </label>
           </div>
 
-          <!-- Campos Dinâmicos conforme chaves do json -->
-          <div v-for="key in Object.keys(activeApiCreds)" :key="key" class="form-group">
+          <!-- Campos Dinâmicos (Para gateways nativos com template) -->
+          <div v-if="hasTemplate" v-for="t in activeApiTemplate" :key="t.campo" class="form-group mb-4">
+            <label class="form-label">{{ t.label }}</label>
+            <input v-model="apiConfigForm.credenciais[t.campo]" :type="t.tipo === 'password' ? 'password' : 'text'" class="form-control" placeholder="Inserir..." :required="t.obrigatorio" />
+          </div>
+
+          <!-- Campos Dinâmicos (Para gateways manuais sem template) -->
+          <div v-if="!hasTemplate" v-for="key in Object.keys(apiConfigForm.credenciais)" :key="key" class="form-group mb-4">
             <label class="form-label text-capitalize">{{ key.replace('_', ' ') }}</label>
-            <input v-model="apiConfigForm.credenciais[key]" type="text" class="form-control" placeholder="Inserir chave/token..." required />
+            <input v-model="apiConfigForm.credenciais[key]" type="text" class="form-control" placeholder="Inserir valor..." required />
           </div>
 
           <div class="flex gap-3 mt-6" style="justify-content: flex-end;">
             <button type="button" class="btn btn-secondary" @click="showConfigModal = false">Cancelar</button>
             <button type="submit" class="btn btn-primary">Salvar Credenciais</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Modal Criar Nova API -->
+    <div v-if="showCreateModal" class="modal-backdrop" @click.self="showCreateModal = false">
+      <div class="modal-box">
+        <h2 class="modal-title">Adicionar Nova Integração</h2>
+        <form @submit.prevent="createApi">
+          <div class="form-group mb-4">
+            <label class="form-label">Nome da Integração</label>
+            <input v-model="createForm.nome" type="text" class="form-control" placeholder="Ex: PIX Manual, Cielo, etc" required />
+          </div>
+          
+          <div class="form-group mb-4">
+            <label class="form-label">Identificador Único (Slug)</label>
+            <input v-model="createForm.slug" type="text" class="form-control" placeholder="Ex: pix_manual" required />
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="form-label">Tipo de Integração</label>
+            <select v-model="createForm.tipo" class="form-control" required>
+              <option value="gateway">Pagamento</option>
+              <option value="frete">Frete (Transportadora)</option>
+              <option value="cep">Busca de CEP</option>
+            </select>
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="form-label">Campos Necessários (separados por vírgula)</label>
+            <input v-model="createForm.campos_str" type="text" class="form-control" placeholder="Ex: chave_pix, token, public_key" required />
+            <small class="text-secondary mt-1 block">Estes campos serão solicitados ao configurar a integração.</small>
+          </div>
+
+          <div class="flex gap-3 mt-6" style="justify-content: flex-end;">
+            <button type="button" class="btn btn-secondary" @click="showCreateModal = false">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Cadastrar</button>
           </div>
         </form>
       </div>
@@ -147,9 +153,10 @@ const props = defineProps({
 })
 
 const showConfigModal = ref(false)
+const showCreateModal = ref(false)
 const activeApi = ref(null)
 
-const paymentApis = computed(() => props.apis.filter(a => a.tipo === 'pagamento'))
+const paymentApis = computed(() => props.apis.filter(a => a.tipo === 'gateway'))
 const cepApis = computed(() => props.apis.filter(a => a.tipo === 'cep'))
 
 const apiConfigForm = ref({
@@ -163,21 +170,43 @@ const activeApiCreds = computed(() => {
   return JSON.parse(activeApi.value.credenciais_json)
 })
 
-const shippingForm = ref({
-  valor_minimo_gratis: props.freteRegra?.valor_minimo_gratis || 0,
-  raio_km_local: props.freteRegra?.raio_km_local || 0,
-  cep_origem: props.freteRegra?.cep_origem || '',
-  lat_origem: props.freteRegra?.lat_origem || 0,
-  lng_origem: props.freteRegra?.lng_origem || 0,
+const createForm = ref({
+  nome: '',
+  slug: '',
+  tipo: 'gateway',
+  campos_str: ''
 })
+
+
+
+const activeApiTemplate = computed(() => {
+  if (!activeApi.value || !activeApi.value.template_campos_json) return []
+  const templateStr = activeApi.value.template_campos_json
+  return typeof templateStr === 'string' ? JSON.parse(templateStr) : templateStr
+})
+
+const hasTemplate = computed(() => activeApiTemplate.value.length > 0)
 
 function editApi(api) {
   activeApi.value = api
   const creds = JSON.parse(api.credenciais_json || '{}')
+  const formCreds = { ...creds }
+  
+  // Se for API nativa e não tem credenciais salvas, inicializa com vazio baseado no template
+  let template = []
+  if (api.template_campos_json) {
+    template = typeof api.template_campos_json === 'string' ? JSON.parse(api.template_campos_json) : api.template_campos_json
+    template.forEach(t => {
+      if (formCreds[t.campo] === undefined) {
+        formCreds[t.campo] = ''
+      }
+    })
+  }
+
   apiConfigForm.value = {
     ativo: !!api.ativo,
     sandbox: !!api.sandbox,
-    credenciais: { ...creds }
+    credenciais: formCreds
   }
   showConfigModal.value = true
 }
@@ -199,8 +228,35 @@ function toggleApi(api) {
   })
 }
 
-function saveShippingRules() {
-  router.put(route('admin.shipping.update', props.freteRegra.id), shippingForm.value)
+
+
+function openCreateModal() {
+  createForm.value = { nome: '', slug: '', tipo: 'gateway', campos_str: 'chave_pix' }
+  showCreateModal.value = true
+}
+
+function createApi() {
+  const camposArr = createForm.value.campos_str.split(',').map(s => s.trim()).filter(s => s)
+  const credenciais = {}
+  camposArr.forEach(c => { credenciais[c] = '' })
+
+  router.post(route('admin.api-config.store'), {
+    nome: createForm.value.nome,
+    slug: createForm.value.slug,
+    tipo: createForm.value.tipo,
+    ativo: true,
+    credenciais: credenciais
+  }, {
+    onSuccess: () => {
+      showCreateModal.value = false
+    }
+  })
+}
+
+function deleteApi(api) {
+  if (confirm(`Tem certeza que deseja excluir o gateway ${api.nome}?`)) {
+    router.delete(route('admin.api-config.destroy', api.slug))
+  }
 }
 </script>
 

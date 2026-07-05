@@ -12,6 +12,9 @@ class StoreSettingsController extends Controller
 {
     public function index()
     {
+        $gateways = \App\Models\ApiConfiguracao::where('tipo', 'gateway')
+            ->where('ativo', true)
+            ->get(['slug', 'nome']);
         $banners = StoreBanner::where('is_active', true)
             ->orderBy('order')
             ->get();
@@ -65,7 +68,8 @@ class StoreSettingsController extends Controller
         return response()->json([
             'banners' => $banners,
             'benefits' => $benefits,
-            'categories' => $tree
+            'categories' => $tree,
+            'paymentMethods' => $gateways
         ]);
     }
 }

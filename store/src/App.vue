@@ -16,7 +16,7 @@
 
         <div class="header-actions">
           <button class="action-btn" title="Favoritos">❤️</button>
-          <RouterLink to="/login" class="action-btn" title="Minha Conta">👤</RouterLink>
+          <RouterLink to="/minha-conta" class="action-btn" title="Minha Conta">👤</RouterLink>
           <button class="action-btn cart-btn" title="Carrinho" @click="isCartOpen = true">
             🛒 <span class="cart-count" v-if="cartCount > 0">{{ cartCount }}</span>
           </button>

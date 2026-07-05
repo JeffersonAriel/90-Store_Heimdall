@@ -2,18 +2,18 @@
   <div class="account-view container">
     <div class="account-header">
       <h1 class="title-lg">MINHA CONTA</h1>
-      <p class="subtitle">Bem-vindo(a) de volta, João Teste!</p>
+      <p class="subtitle">Bem-vindo(a) de volta{{ store.user ? ', ' + store.user.nome_completo.split(' ')[0] : '' }}!</p>
     </div>
 
     <div class="account-layout">
       <!-- Sidebar / Tabs -->
       <aside class="account-sidebar">
         <nav class="account-nav">
-          <button class="nav-btn" :class="{ active: currentTab === 'dashboard' }" @click="currentTab = 'dashboard'">Painel</button>
-          <button class="nav-btn" :class="{ active: currentTab === 'pedidos' }" @click="currentTab = 'pedidos'">Meus Pedidos</button>
-          <button class="nav-btn" :class="{ active: currentTab === 'enderecos' }" @click="currentTab = 'enderecos'">Endereços</button>
-          <button class="nav-btn" :class="{ active: currentTab === 'pontos' }" @click="currentTab = 'pontos'">Pontos & Fidelidade</button>
-          <button class="nav-btn" :class="{ active: currentTab === 'cupons' }" @click="currentTab = 'cupons'">Meus Cupons</button>
+          <button class="nav-btn" :class="{ active: currentTab === 'dashboard' }" @click="setTab('dashboard')">Painel</button>
+          <button class="nav-btn" :class="{ active: currentTab === 'pedidos' }" @click="setTab('pedidos')">Meus Pedidos</button>
+          <button class="nav-btn" :class="{ active: currentTab === 'enderecos' }" @click="setTab('enderecos')">Endereços</button>
+          <button class="nav-btn" :class="{ active: currentTab === 'pontos' }" @click="setTab('pontos')">Pontos & Fidelidade</button>
+          <button class="nav-btn" :class="{ active: currentTab === 'cupons' }" @click="setTab('cupons')">Meus Cupons</button>
           <button class="nav-btn text-red" @click="logout">Sair</button>
         </nav>
       </aside>
@@ -47,22 +47,22 @@
           
           <h3 class="title-sm mt-8 mb-4">Dados Cadastrais</h3>
           <form class="profile-form">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4" v-if="store.user">
               <div class="input-group">
                 <label class="input-label">Nome Completo</label>
-                <input type="text" value="João Teste" class="input-field" />
+                <input type="text" :value="store.user.nome_completo" class="input-field" disabled />
               </div>
               <div class="input-group">
                 <label class="input-label">CPF</label>
-                <input type="text" value="123.***.***-00" class="input-field" disabled />
+                <input type="text" :value="store.user.cpf" class="input-field" disabled />
               </div>
               <div class="input-group">
                 <label class="input-label">E-mail</label>
-                <input type="email" value="teste@email.com" class="input-field" />
+                <input type="email" :value="store.user.email" class="input-field" disabled />
               </div>
               <div class="input-group">
                 <label class="input-label">Telefone</label>
-                <input type="text" value="(11) 99999-9999" class="input-field" />
+                <input type="text" :value="store.user.telefone" class="input-field" disabled />
               </div>
             </div>
             <button type="submit" class="btn btn-outline mt-4">Salvar Alterações</button>
@@ -73,35 +73,38 @@
         <div v-if="currentTab === 'pedidos'" class="tab-pane">
           <h2 class="title-md mb-6">Histórico de Pedidos</h2>
           
-          <div class="order-list">
-            <div class="order-card">
+          <div v-if="loadingOrders" class="text-center py-8">
+             <span class="loading-spinner"></span>
+             <p class="text-gray mt-2">Buscando seus pedidos...</p>
+          </div>
+          <div v-else-if="orders.length === 0" class="text-center py-8 text-gray">
+             Nenhum pedido encontrado.
+          </div>
+          <div v-else class="order-list">
+            <div v-for="order in orders" :key="order.id" class="order-card mb-4">
               <div class="order-header">
                 <div>
-                  <strong>Pedido #99201</strong>
-                  <span class="order-date">10/10/2025</span>
+                  <strong>Pedido #{{ order.id }}</strong>
+                  <span class="order-date">{{ formatDate(order.created_at) }}</span>
                 </div>
-                <div class="order-total">R$ 899,90</div>
+                <div class="order-total">{{ formatCurrency(order.total) }}</div>
               </div>
               <div class="order-body">
-                <p>Status: <span class="status text-red">Aguardando Pagamento PIX</span></p>
-                <div class="mt-4">
-                  <button class="btn btn-primary" @click="$router.push('/checkout')">PAGAR AGORA</button>
+                <p>Status: <span class="status font-bold" :class="getStatusClass(order.status)">{{ formatStatus(order.status) }}</span></p>
+                
+                <div class="mt-4 border-t border-dark pt-4">
+                  <div v-for="item in order.itens" :key="item.id" class="flex items-center mb-3">
+                    <img :src="item.produto?.foto_capa || 'https://via.placeholder.com/60'" class="w-12 h-12 object-cover rounded mr-4 bg-dark" />
+                    <div class="flex-1">
+                      <p class="font-bold text-sm">{{ item.produto?.nome }}</p>
+                      <p class="text-gray text-xs">Tamanho: {{ item.variacao?.tamanho }} | {{ item.quantidade }}x {{ formatCurrency(item.preco_unitario) }}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div class="order-card mt-4">
-              <div class="order-header">
-                <div>
-                  <strong>Pedido #88120</strong>
-                  <span class="order-date">01/09/2025</span>
-                </div>
-                <div class="order-total">R$ 349,90</div>
-              </div>
-              <div class="order-body">
-                <p>Status: <span class="status text-green">Entregue</span></p>
-                <div class="mt-4">
-                  <button class="btn btn-outline">Ver Recibo</button>
+                <div class="mt-4 flex gap-4">
+                  <button v-if="order.status === 'aguardando_pagamento'" class="btn btn-primary" @click="payNow(order.id)">PAGAR AGORA</button>
+                  <button class="btn btn-outline" @click="viewOrderDetails(order.id)">Ver Detalhes</button>
                 </div>
               </div>
             </div>
@@ -191,14 +194,103 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useStore } from '@/store/main'
+import axios from 'axios'
 import { useHead } from '@vueuse/head'
 
 useHead({ title: 'Minha Conta | 90+ Store' })
 
 const router = useRouter()
+const route = useRoute()
+const store = useStore()
 const currentTab = ref('dashboard')
+
+const orders = ref([])
+const loadingOrders = ref(false)
+
+onMounted(() => {
+  if (!store.isAuthenticated) {
+    router.push('/login')
+    return
+  }
+  
+  if (route.query.tab) {
+    setTab(route.query.tab)
+  }
+})
+
+function setTab(tabName) {
+  currentTab.value = tabName
+  if (tabName === 'pedidos' && orders.value.length === 0) {
+     fetchOrders()
+  }
+}
+
+async function fetchOrders() {
+  loadingOrders.value = true
+  try {
+    const res = await axios.get('/api/orders', {
+      headers: { Authorization: `Bearer ${store.token}` }
+    })
+    orders.value = res.data.pedidos
+  } catch (err) {
+    console.error("Erro ao buscar pedidos", err)
+  } finally {
+    loadingOrders.value = false
+  }
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(date)
+}
+
+function formatCurrency(value) {
+  return 'R$ ' + Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function formatStatus(status) {
+  const labels = {
+    'aguardando_pagamento': 'Aguardando Pagamento',
+    'pago': 'Pagamento Aprovado',
+    'em_separacao': 'Em Separação',
+    'enviado': 'Enviado',
+    'entregue': 'Entregue',
+    'cancelado': 'Cancelado'
+  }
+  return labels[status] || status
+}
+
+function getStatusClass(status) {
+  return {
+    'text-red': status === 'aguardando_pagamento' || status === 'cancelado',
+    'text-green': status === 'pago' || status === 'enviado' || status === 'entregue',
+    'text-yellow': status === 'em_separacao'
+  }
+}
+
+async function payNow(orderId) {
+  try {
+    const res = await axios.get('/api/orders/pix-key', {
+      headers: { Authorization: `Bearer ${store.token}` }
+    })
+    const chave = res.data.chave_pix
+    if (chave) {
+      alert(`Para pagar o Pedido #${orderId}, faça um PIX para a chave:\n\n${chave}\n\nApós o pagamento, o administrador confirmará seu pedido!`)
+    } else {
+      alert("No momento o pagamento deve ser combinado diretamente com a loja. Entre em contato.")
+    }
+  } catch(e) {
+    alert("Não foi possível carregar as opções de pagamento no momento.")
+  }
+}
+
+function viewOrderDetails(id) {
+  alert("Detalhes do pedido " + id + " em breve!")
+}
 
 function logout() {
   alert('Você saiu da sua conta.')

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\StoreSettingsController;
 use App\Http\Controllers\Api\CustomerAuthController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\CustomerOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +35,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/addresses', [AddressController::class, 'index']);
     Route::post('/addresses', [AddressController::class, 'store']);
     Route::delete('/addresses/{id}', [AddressController::class, 'destroy']);
+
+    // Pedidos
+    Route::get('/orders/pix-key', [CustomerOrderController::class, 'pixKey']);
+    Route::get('/orders', [CustomerOrderController::class, 'index']);
+    Route::get('/orders/{id}', [CustomerOrderController::class, 'show']);
 
     // Checkout de compras
     Route::post('/checkout', [CheckoutController::class, 'checkout']);

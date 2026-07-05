@@ -29,8 +29,14 @@ class CheckoutController extends Controller
     public function checkout(Request $request)
     {
         $request->validate([
-            'endereco_id' => 'required|exists:enderecos_cliente,id',
-            'gateway' => 'required|in:mercadopago,pagseguro,stripe',
+            'endereco_id' => 'nullable|exists:enderecos_cliente,id',
+            'cep' => 'required_without:endereco_id|string',
+            'logradouro' => 'required_without:endereco_id|string',
+            'numero' => 'required_without:endereco_id|string',
+            'bairro' => 'required_without:endereco_id|string',
+            'cidade' => 'required_without:endereco_id|string',
+            'estado' => 'required_without:endereco_id|string',
+            'gateway' => 'required|string',
             'cupom_codigo' => 'nullable|string',
             'itens' => 'required|array|min:1',
             'itens.*.variacao_id' => 'required|exists:variacoes_produto,id',
@@ -41,13 +47,23 @@ class CheckoutController extends Controller
 
         $cliente = $request->user();
 
-        // Valida propriedade do endereço
-        $address = $cliente->enderecos()->where('id', $request->endereco_id)->first();
-        if (!$address) {
-            return response()->json(['success' => false, 'message' => 'Endereço inválido para este cliente.'], 400);
+        $enderecoId = $request->endereco_id;
+        if (!$enderecoId) {
+            // Cria endereço se não enviou ID
+            $address = $cliente->enderecos()->create([
+                'cep' => $request->cep,
+                'logradouro' => $request->logradouro,
+                'numero' => $request->numero,
+                'complemento' => $request->complemento,
+                'bairro' => $request->bairro,
+                'cidade' => $request->cidade,
+                'estado' => $request->estado,
+                'is_principal' => !$cliente->enderecos()->exists()
+            ]);
+            $enderecoId = $address->id;
         }
 
-        $order = DB::transaction(function () use ($request, $cliente) {
+        $order = DB::transaction(function () use ($request, $cliente, $enderecoId) {
             $subtotal = 0;
             $itensDetalhados = [];
 
@@ -98,7 +114,7 @@ class CheckoutController extends Controller
             // 3. Cria o pedido
             $order = Pedido::create([
                 'cliente_id' => $cliente->id,
-                'endereco_id' => $request->endereco_id,
+                'endereco_id' => $enderecoId,
                 'cupom_id' => $cupom?->id,
                 'status' => 'aguardando_pagamento',
                 'subtotal' => $subtotal,
@@ -129,37 +145,50 @@ class CheckoutController extends Controller
             return $order;
         });
 
-        // 5. Integração com o Gateway para gerar o Pix de forma síncrona
-        $pixResult = $this->gatewayService->createPixPayment($request->gateway, $order->id, $order->total);
-
-        if ($pixResult['success']) {
-            // Cria o registro na tabela pagamentos contendo data de expiração da reserva de estoque
-            DB::table('pagamentos')->insert([
-                'pedido_id' => $order->id,
-                'gateway' => $request->gateway,
-                'gateway_id_externo' => $pixResult['payment_id'],
-                'metodo' => 'pix',
-                'status' => 'pendente',
-                'valor' => $order->total,
-                'payload_json' => json_encode($pixResult),
-                'expires_at' => $pixResult['expires_at'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        // Tratamento para PIX Manual
+        if ($request->gateway === 'pix_manual') {
+            $apiPix = \App\Models\ApiConfiguracao::where('slug', 'pix_manual')->first();
+            $chavePix = '';
+            if ($apiPix && $apiPix->credenciais_json) {
+                $creds = json_decode($apiPix->credenciais_json, true);
+                // Pega o valor do campo 'chave_pix' ou simplesmente o primeiro valor cadastrado nas credenciais
+                $chavePix = $creds['chave_pix'] ?? reset($creds) ?? '';
+            }
 
             return response()->json([
                 'success' => true,
                 'pedido_id' => $order->id,
                 'total' => $order->total,
-                'qr_code' => $pixResult['qr_code'],
-                'qr_code_base64' => $pixResult['qr_code_base64'],
-                'expires_at' => $pixResult['expires_at']
+                'pix_manual' => true,
+                'chave_pix' => $chavePix,
             ]);
         }
 
+        // Mock Gateway Payment Success para prosseguir o fluxo sem gateway real configurado (Demo - Cartão)
+        DB::table('pagamentos')->insert([
+            'pedido_id' => $order->id,
+            'gateway' => $request->gateway,
+            'gateway_id_externo' => 'demo_' . uniqid(),
+            'metodo' => 'credit',
+            'status' => 'pago', // Mock como pago para testar fluxo feliz na demo
+            'valor' => $order->total,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Atualiza status do pedido
+        $order->update(['status' => 'pago']);
+        DB::table('historico_status_pedido')->insert([
+            'pedido_id' => $order->id,
+            'status_novo' => 'pago',
+            'observacao' => 'Pagamento aprovado via Checkout Demo.',
+            'created_at' => now(),
+        ]);
+
         return response()->json([
-            'success' => false,
-            'message' => 'O pedido foi criado, mas houve uma falha ao gerar o Pix de pagamento no gateway externo.'
-        ], 500);
+            'success' => true,
+            'pedido_id' => $order->id,
+            'total' => $order->total,
+        ]);
     }
 }

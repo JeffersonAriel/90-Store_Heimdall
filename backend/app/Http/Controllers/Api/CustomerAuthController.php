@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 
 class CustomerAuthController extends Controller
 {
@@ -19,6 +20,7 @@ class CustomerAuthController extends Controller
     {
         $request->validate([
             'nome_completo' => 'required|string|max:255',
+            'nome_social' => 'nullable|string|max:255',
             'cpf' => [
                 'required',
                 'string',
@@ -29,20 +31,26 @@ class CustomerAuthController extends Controller
                     }
                 }
             ],
-            'data_nascimento' => 'nullable|date',
+            'data_nascimento' => 'required|date',
             'email' => 'required|email|max:255|unique:clientes,email',
             'password' => 'required|string|min:8|confirmed',
-            'telefone' => 'nullable|string|max:20',
-            'whatsapp' => 'nullable|string|max:20',
+            'telefone' => 'required|string|max:20',
+            'is_whatsapp' => 'nullable|boolean',
+            
+            // Campos de Endereço
+            'cep' => 'required|string|max:10',
+            'logradouro' => 'required|string|max:255',
+            'numero' => 'required|string|max:20',
+            'complemento' => 'nullable|string|max:100',
+            'bairro' => 'required|string|max:255',
+            'cidade' => 'required|string|max:255',
+            'estado' => 'required|string|max:2',
+            'ponto_referencia' => 'nullable|string|max:255',
         ]);
 
         $cpfLimpo = preg_replace('/[^0-9]/', '', $request->cpf);
 
         // Verifica CPF duplicado
-        // Como o CPF é salvo encriptado, precisamos buscar ou validar de forma segura.
-        // Uma alternativa segura de busca por correspondência exata para dados encriptados
-        // sem expor a chave é descriptografar localmente em coleções pequenas, ou usar hashes de busca (Blind Index).
-        // Para SQLite local, buscaremos descriptografando
         $exists = Cliente::all()->contains(function ($cliente) use ($cpfLimpo) {
             return preg_replace('/[^0-9]/', '', $cliente->cpf) === $cpfLimpo;
         });
@@ -53,17 +61,36 @@ class CustomerAuthController extends Controller
             ]);
         }
 
-        $cliente = Cliente::create([
-            'nome_completo' => $request->nome_completo,
-            'cpf' => $cpfLimpo, // Cast 'encrypted' do Model cuida do AES-256 automaticamente
-            'data_nascimento' => $request->data_nascimento,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'telefone' => $request->telefone,
-            'whatsapp' => $request->whatsapp,
-            'ativo' => true,
-            'referral_code' => strtoupper(\Illuminate\Support\Str::random(8)),
-        ]);
+        $cliente = null;
+
+        DB::transaction(function () use ($request, $cpfLimpo, &$cliente) {
+            $cliente = Cliente::create([
+                'nome_completo' => $request->nome_completo,
+                'nome_social' => $request->nome_social,
+                'cpf' => $cpfLimpo,
+                'data_nascimento' => $request->data_nascimento,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'telefone' => $request->telefone,
+                'whatsapp' => $request->is_whatsapp ? $request->telefone : null,
+                'ativo' => true,
+                'referral_code' => strtoupper(\Illuminate\Support\Str::random(8)),
+            ]);
+
+            EnderecoCliente::create([
+                'cliente_id' => $cliente->id,
+                'apelido' => 'Principal',
+                'cep' => preg_replace('/[^0-9]/', '', $request->cep),
+                'logradouro' => $request->logradouro,
+                'numero' => $request->numero,
+                'complemento' => $request->complemento,
+                'bairro' => $request->bairro,
+                'cidade' => $request->cidade,
+                'estado' => $request->estado,
+                'ponto_referencia' => $request->ponto_referencia,
+                'is_principal' => true,
+            ]);
+        });
 
         $token = $cliente->createToken('store_auth_token')->plainTextToken;
 
@@ -73,6 +100,7 @@ class CustomerAuthController extends Controller
             'cliente' => [
                 'id' => $cliente->id,
                 'nome_completo' => $cliente->nome_completo,
+                'nome_social' => $cliente->nome_social,
                 'email' => $cliente->email,
             ]
         ], 201);
@@ -134,7 +162,7 @@ class CustomerAuthController extends Controller
      */
     public function profile(Request $request)
     {
-        $cliente = $request->user();
+        $cliente = $request->user()->load('enderecos');
         return response()->json([
             'success' => true,
             'cliente' => [
@@ -146,6 +174,7 @@ class CustomerAuthController extends Controller
                 'whatsapp' => $cliente->whatsapp,
                 'pontos_saldo' => $cliente->pontos_saldo,
                 'referral_code' => $cliente->referral_code,
+                'enderecos' => $cliente->enderecos,
             ]
         ]);
     }

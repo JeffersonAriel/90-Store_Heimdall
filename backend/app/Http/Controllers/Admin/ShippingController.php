@@ -6,12 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\FreteRegra;
 use Illuminate\Http\Request;
 
+use Inertia\Inertia;
+
 class ShippingController extends Controller
 {
     public function index()
     {
-        // A listagem está integrada ao ApiConfigController.php para simplificar a view do painel central
-        return redirect()->route('admin.api-config.index');
+        $freteRegra = FreteRegra::where('ativo', true)->first();
+        
+        return Inertia::render('Shipping/Index', [
+            'freteRegra' => $freteRegra
+        ]);
     }
 
     /**

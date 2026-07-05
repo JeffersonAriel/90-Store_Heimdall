@@ -43,6 +43,7 @@ const router = createRouter({
       path: '/minha-conta',
       name: 'account',
       component: () => import('@/views/AccountView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/institucional/:slug',
@@ -55,7 +56,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('store_auth_token')
   if (to.meta.requiresAuth && !token) {
-    next({ name: 'login' })
+    next({ name: 'login', query: { redirect: to.fullPath } })
   } else {
     next()
   }

@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Cliente extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'clientes';
 
     protected $fillable = [
         'nome_completo',
+        'nome_social',
         'cpf',
         'data_nascimento',
         'email',

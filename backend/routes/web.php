@@ -77,7 +77,9 @@ Route::prefix('heimdall')->group(function () {
         Route::put('shipping/{id}', [ShippingController::class, 'update'])->name('admin.shipping.update');
 
         Route::get('api-config', [ApiConfigController::class, 'index'])->name('admin.api-config.index');
+        Route::post('api-config', [ApiConfigController::class, 'store'])->name('admin.api-config.store');
         Route::put('api-config/{slug}', [ApiConfigController::class, 'update'])->name('admin.api-config.update');
+        Route::delete('api-config/{slug}', [ApiConfigController::class, 'destroy'])->name('admin.api-config.destroy');
 
         Route::get('import-export', [ImportExportController::class, 'index'])->name('admin.import-export.index');
         Route::get('import-export/template/{tipo}', [ImportExportController::class, 'downloadTemplate'])->name('admin.import-export.template');

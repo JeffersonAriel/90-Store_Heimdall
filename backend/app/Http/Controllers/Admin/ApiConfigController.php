@@ -67,4 +67,40 @@ class ApiConfigController extends Controller
 
         return back()->with('success', "Configurações da API {$api->nome} salvas com sucesso!");
     }
+
+    /**
+     * Cadastra um novo Gateway manual ou API
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:100',
+            'slug' => 'required|string|max:100|unique:apis_configuracao,slug',
+            'tipo' => 'required|in:gateway,cep,frete',
+            'ativo' => 'boolean',
+            'credenciais' => 'required|array',
+        ]);
+
+        ApiConfiguracao::create([
+            'nome' => $request->nome,
+            'slug' => $request->slug,
+            'tipo' => $request->tipo,
+            'ativo' => $request->input('ativo', true),
+            'sandbox' => false,
+            'credenciais_json' => $request->credenciais, // mutator handle encryption
+        ]);
+
+        return back()->with('success', "Gateway {$request->nome} adicionado com sucesso!");
+    }
+
+    /**
+     * Exclui um Gateway cadastrado manualmente
+     */
+    public function destroy(string $slug)
+    {
+        $api = ApiConfiguracao::where('slug', $slug)->firstOrFail();
+        $api->delete();
+
+        return back()->with('success', "Gateway {$api->nome} removido com sucesso!");
+    }
 }

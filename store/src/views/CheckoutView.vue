@@ -34,16 +34,17 @@
         </div>
       </div>
 
-      <div class="payment-instructions mt-8" v-if="checkoutData.paymentMethod === 'pix'">
+      <div class="payment-instructions mt-8" v-if="pixManualData">
         <h3>Instruções para PIX</h3>
-        <p class="mt-2">Escaneie o QR Code ou copie a chave Pix abaixo.</p>
-        <div class="pix-box mt-4">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" width="150" alt="QR Code Pix" />
-          <input type="text" value="00020126580014br.gov.bcb.pix0136..." class="input-field mt-4 w-full text-center" readonly />
+        <p class="mt-2">Escaneie o QR Code ou copie a Chave Pix abaixo.</p>
+        <div class="pix-box mt-4 flex flex-col items-center">
+          <img :src="`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixManualData)}`" width="200" alt="QR Code Pix" />
+          <input type="text" :value="pixManualData" class="input-field mt-4 w-full text-center" readonly @click="$event.target.select()" />
+          <small class="text-secondary mt-2">Dica: Selecione a opção "Pagar com Chave Pix" no seu banco e cole a chave acima.</small>
         </div>
       </div>
 
-      <RouterLink to="/" class="btn btn-primary mt-8">VOLTAR PARA A LOJA</RouterLink>
+      <RouterLink to="/minha-conta?tab=pedidos" class="btn btn-primary mt-8 w-full text-center block">VER MEUS PEDIDOS</RouterLink>
     </div>
 
     <!-- Fluxo de Checkout (5 Etapas) -->
@@ -115,7 +116,7 @@
                   <input type="text" v-model="checkoutData.cidade" class="input-field" required />
                 </div>
               </div>
-              <button type="submit" class="btn btn-primary mt-6 w-full">Ir para Opções de Frete</button>
+              <button type="submit" class="btn btn-primary mt-6 w-full" @click.prevent="advanceToShipping">Ir para Opções de Frete</button>
             </form>
           </div>
           <div class="step-summary" v-show="currentStep > 2">
@@ -131,27 +132,28 @@
             <button v-if="currentStep > 3" class="edit-btn" @click="currentStep = 3">Editar</button>
           </div>
           <div class="step-body" v-show="currentStep === 3">
-            <div class="shipping-options">
-              <label class="shipping-label" :class="{'selected': checkoutData.shipping === 'pac'}">
-                <input type="radio" v-model="checkoutData.shipping" value="pac" />
+            <div class="shipping-options" v-if="!loadingShipping">
+              <label v-for="(opt, index) in shippingOptions" :key="index" class="shipping-label mt-2" :class="{'selected': checkoutData.shipping === opt.servico}">
+                <input type="radio" v-model="checkoutData.shipping" :value="opt.servico" />
                 <div class="shipping-info">
-                  <strong>Padrão (Melhor Envio)</strong>
-                  <span>Grátis - Entrega em 8 a 10 dias</span>
+                  <strong>{{ opt.servico }}</strong>
+                  <span>{{ opt.valor === 0 ? 'Grátis' : formatCurrency(opt.valor) }} - Entrega em {{ opt.prazo_dias }} dia(s)</span>
                 </div>
               </label>
               
-              <label class="shipping-label mt-2" :class="{'selected': checkoutData.shipping === 'sedex'}">
-                <input type="radio" v-model="checkoutData.shipping" value="sedex" />
-                <div class="shipping-info">
-                  <strong>Expresso (Sedex)</strong>
-                  <span>R$ 29,90 - Entrega em 2 a 3 dias</span>
-                </div>
-              </label>
+              <div v-if="shippingOptions.length === 0" class="text-gray text-center my-4">
+                Nenhuma opção de frete encontrada para este CEP.
+              </div>
             </div>
-            <button class="btn btn-primary mt-6 w-full" @click="currentStep = 4">Ir para Pagamento</button>
+            <div v-else class="text-center my-4">
+              <span class="loading-spinner"></span>
+              <p class="text-gray mt-2">Cotando opções de frete...</p>
+            </div>
+            
+            <button class="btn btn-primary mt-6 w-full" @click="currentStep = 4" :disabled="shippingOptions.length === 0">Ir para Pagamento</button>
           </div>
           <div class="step-summary" v-show="currentStep > 3">
-            {{ checkoutData.shipping === 'pac' ? 'Padrão (Grátis)' : 'Expresso (R$ 29,90)' }}
+            {{ checkoutData.shipping }} ({{ formatCurrency(shippingCost) }})
           </div>
         </div>
 
@@ -164,17 +166,16 @@
           </div>
           <div class="step-body" v-show="currentStep === 4">
             <div class="payment-methods">
-              <label class="payment-label" :class="{'selected': checkoutData.paymentMethod === 'pix'}">
-                <input type="radio" v-model="checkoutData.paymentMethod" value="pix" />
-                <span>PIX (5% OFF)</span>
+              <label v-for="(gateway, index) in paymentOptions" :key="index" class="payment-label mt-2" :class="{'selected': checkoutData.paymentMethod === gateway.slug}">
+                <input type="radio" v-model="checkoutData.paymentMethod" :value="gateway.slug" />
+                <span>{{ gateway.nome }} {{ gateway.slug === 'pix' ? '(5% OFF)' : '' }}</span>
               </label>
-              <label class="payment-label mt-2" :class="{'selected': checkoutData.paymentMethod === 'credit'}">
-                <input type="radio" v-model="checkoutData.paymentMethod" value="credit" />
-                <span>Cartão de Crédito</span>
-              </label>
+              <div v-if="paymentOptions.length === 0" class="text-gray text-center my-4">
+                Nenhum método de pagamento disponível no momento.
+              </div>
             </div>
             
-            <div v-if="checkoutData.paymentMethod === 'credit'" class="credit-card-form mt-4">
+            <div v-if="checkoutData.paymentMethod !== 'pix' && checkoutData.paymentMethod" class="credit-card-form mt-4">
               <div class="input-group">
                 <label class="input-label">Número do Cartão</label>
                 <input type="text" class="input-field" placeholder="0000 0000 0000 0000" />
@@ -191,10 +192,10 @@
               </div>
             </div>
 
-            <button class="btn btn-primary mt-6 w-full" @click="currentStep = 5">Revisar Pedido</button>
+            <button class="btn btn-primary mt-6 w-full" @click="currentStep = 5" :disabled="!checkoutData.paymentMethod">Revisar Pedido</button>
           </div>
           <div class="step-summary" v-show="currentStep > 4">
-            {{ checkoutData.paymentMethod === 'pix' ? 'PIX' : 'Cartão de Crédito' }}
+            {{ paymentOptions.find(p => p.slug === checkoutData.paymentMethod)?.nome || 'Pagamento' }}
           </div>
         </div>
       </div>
@@ -205,31 +206,32 @@
           <h3 class="filter-title">RESUMO DO PEDIDO</h3>
           
           <div class="cart-items-mini">
-            <div class="cart-item-mini">
-              <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100" />
+            <div class="cart-item-mini" v-for="item in store.cart" :key="item.variacao.id">
+              <img :src="item.produto.foto_capa || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100'" />
               <div class="mini-details">
-                <p>Chuteira Nike Mercurial</p>
-                <span>1x R$ 899,90</span>
+                <p>{{ item.produto.nome }} ({{ item.variacao.tamanho }} / {{ item.variacao.cor }})</p>
+                <span>{{ item.quantidade }}x {{ formatCurrency(item.produto.tem_desconto ? item.produto.preco_desconto : item.produto.preco_venda) }}</span>
               </div>
             </div>
+            <div v-if="store.cart.length === 0" class="text-center text-gray my-4">Seu carrinho está vazio.</div>
           </div>
 
           <div class="summary-lines mt-4">
             <div class="summary-line">
               <span>Subtotal</span>
-              <span>R$ 899,90</span>
+              <span>{{ formatCurrency(cartSubtotal) }}</span>
             </div>
             <div class="summary-line">
               <span>Frete</span>
-              <span>{{ checkoutData.shipping === 'pac' ? 'Grátis' : 'R$ 29,90' }}</span>
+              <span>{{ shippingCost === 0 ? 'Grátis' : formatCurrency(shippingCost) }}</span>
             </div>
             <div class="summary-line text-red" v-if="checkoutData.paymentMethod === 'pix'">
-              <span>Desconto PIX</span>
-              <span>- R$ 44,99</span>
+              <span>Desconto PIX (5%)</span>
+              <span>- {{ formatCurrency(pixDiscount) }}</span>
             </div>
             <div class="summary-line total mt-4">
               <span>TOTAL</span>
-              <span>R$ {{ calculateTotal() }}</span>
+              <span>{{ formatCurrency(cartTotal) }}</span>
             </div>
           </div>
 
@@ -244,49 +246,196 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useHead } from '@vueuse/head'
+import { useStore } from '@/store/main'
+import axios from 'axios'
 
 useHead({ title: 'Checkout | 90+ Store' })
 
+const store = useStore()
+
 const currentStep = ref(1)
 const orderSuccess = ref(false)
+const pixManualData = ref(null)
 const orderNumber = ref('')
 
 const checkoutData = reactive({
-  email: 'teste@email.com',
-  name: 'João Teste',
-  cpf: '123.456.789-00',
+  email: '',
+  name: '',
+  cpf: '',
   cep: '',
   rua: '',
   numero: '',
+  complemento: '',
   bairro: '',
   cidade: '',
-  shipping: 'pac',
+  estado: '',
+  shipping: '',
   paymentMethod: 'pix'
 })
 
-// Simulação de busca de CEP (via API Heimdall)
-async function fetchAddress() {
-  if (checkoutData.cep.length >= 8) {
-    // mock response
-    checkoutData.rua = 'Av. Paulista'
-    checkoutData.bairro = 'Bela Vista'
-    checkoutData.cidade = 'São Paulo'
+const shippingOptions = ref([])
+const paymentOptions = ref([])
+const loadingShipping = ref(false)
+
+onMounted(async () => {
+  try {
+    const res = await axios.get('/api/store-settings')
+    paymentOptions.value = res.data.paymentMethods || []
+    
+    // Auto-select PIX if available
+    const hasPix = paymentOptions.value.find(p => p.slug === 'pix')
+    if (hasPix) checkoutData.paymentMethod = 'pix'
+    else if (paymentOptions.value.length > 0) checkoutData.paymentMethod = paymentOptions.value[0].slug
+  } catch (err) {
+    console.error("Erro ao carregar configurações de pagamento")
+  }
+})
+
+async function advanceToShipping() {
+  currentStep.value = 3
+  const cleanCep = checkoutData.cep.replace(/\D/g, '')
+  
+  if (cleanCep.length >= 8) {
+     loadingShipping.value = true
+     try {
+       // Peso mockado fixo ou pegando do carrinho. (Aqui enviando 1kg mock)
+       const res = await axios.post('/api/shipping/quote', { cep: cleanCep, peso_total: 1 })
+       shippingOptions.value = res.data.opcoes || []
+       
+       if (shippingOptions.value.length > 0) {
+          // Seleciona a primeira opção por padrão se estiver vazio
+          if (!checkoutData.shipping) {
+             checkoutData.shipping = shippingOptions.value[0].servico
+          }
+       }
+     } catch (err) {
+       console.error("Erro ao cotar frete", err)
+     } finally {
+       loadingShipping.value = false
+     }
   }
 }
 
-function calculateTotal() {
-  let subtotal = 899.90
-  if (checkoutData.shipping === 'sedex') subtotal += 29.90
-  if (checkoutData.paymentMethod === 'pix') subtotal -= 44.99 // 5% discount
-  return subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+// Atualizar dados se o usuário for carregado depois (ou já estiver no store)
+import { watch } from 'vue'
+watch(() => store.user, (user) => {
+  if (user) {
+    checkoutData.email = user.email || ''
+    checkoutData.name = user.nome_completo || ''
+    // Formatar CPF 000.000.000-00 se vier do banco só números
+    let c = user.cpf || ''
+    if (c.length === 11) {
+      c = c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
+    }
+    checkoutData.cpf = c
+    
+    // Puxar o primeiro endereço salvo (Principal)
+    if (user.enderecos && user.enderecos.length > 0) {
+      const end = user.enderecos[0]
+      let zip = end.cep || ''
+      if (zip.length === 8) zip = zip.replace(/(\d{5})(\d{3})/, "$1-$2")
+      
+      checkoutData.cep = zip
+      checkoutData.rua = end.logradouro || ''
+      checkoutData.numero = end.numero || ''
+      checkoutData.complemento = end.complemento || ''
+      checkoutData.bairro = end.bairro || ''
+      checkoutData.cidade = end.cidade || ''
+      checkoutData.estado = end.estado || ''
+    }
+  }
+}, { immediate: true })
+
+// (Removido import repetido)// Busca real de CEP com axios
+async function fetchAddress() {
+  const cleanCep = checkoutData.cep.replace(/\D/g, '')
+  if (cleanCep.length !== 8) return
+
+  try {
+    const res = await axios.get(`https://brasilapi.com.br/api/cep/v1/${cleanCep}`, { timeout: 4000 })
+    checkoutData.rua = res.data.street || ''
+    checkoutData.bairro = res.data.neighborhood || ''
+    checkoutData.cidade = res.data.city || ''
+    checkoutData.estado = res.data.state || ''
+  } catch (err) {
+    console.warn("BrasilAPI falhou, tentando ViaCEP no Checkout...")
+    try {
+      const res2 = await axios.get(`https://viacep.com.br/ws/${cleanCep}/json/`, { timeout: 4000 })
+      if (!res2.data.erro) {
+        checkoutData.rua = res2.data.logradouro || ''
+        checkoutData.bairro = res2.data.bairro || ''
+        checkoutData.cidade = res2.data.localidade || ''
+        checkoutData.estado = res2.data.uf || ''
+      }
+    } catch (err2) {
+      console.error("Falha em ambas APIs de CEP")
+    }
+  }
 }
 
-function finalizeOrder() {
-  orderNumber.value = Math.floor(Math.random() * 100000)
-  orderSuccess.value = true
-  window.scrollTo(0, 0)
+const cartSubtotal = computed(() => {
+  return store.cartSubtotal
+})
+
+const pixDiscount = computed(() => {
+  if (checkoutData.paymentMethod === 'pix' || checkoutData.paymentMethod === 'mercadopago') {
+    return cartSubtotal.value * 0.05
+  }
+  return 0
+})
+
+const shippingCost = computed(() => {
+  const opt = shippingOptions.value.find(o => o.servico === checkoutData.shipping)
+  return opt ? opt.valor : 0
+})
+
+const cartTotal = computed(() => {
+  return cartSubtotal.value + shippingCost.value - pixDiscount.value
+})
+
+function formatCurrency(value) {
+  return 'R$ ' + Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+async function finalizeOrder() {
+  const itens = store.cart.map(item => ({
+    variacao_id: item.variacao.id,
+    quantidade: item.quantidade
+  }))
+
+  const payload = {
+    cep: checkoutData.cep,
+    logradouro: checkoutData.rua,
+    numero: checkoutData.numero,
+    complemento: checkoutData.complemento || '',
+    bairro: checkoutData.bairro,
+    cidade: checkoutData.cidade,
+    estado: checkoutData.estado,
+    gateway: checkoutData.paymentMethod,
+    frete_valor: shippingCost.value,
+    frete_servico: checkoutData.shipping,
+    itens: itens
+  }
+
+  try {
+    const res = await axios.post('/api/checkout', payload, {
+      headers: { Authorization: `Bearer ${store.token}` }
+    })
+    
+    orderNumber.value = res.data.pedido_id
+    if (res.data.pix_manual) {
+      pixManualData.value = res.data.chave_pix
+    }
+    orderSuccess.value = true
+    store.clearCart()
+    window.scrollTo(0, 0)
+  } catch (err) {
+    console.error("Erro no checkout", err)
+    const msg = err.response?.data?.message || 'Erro ao processar pedido. Verifique os dados e tente novamente.'
+    alert("Falha no pagamento: " + msg)
+  }
 }
 </script>
 

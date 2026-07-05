@@ -121,6 +121,11 @@ class OrderController extends Controller
             return '#';
         }
 
+        // Garante que o DDI 55 só seja adicionado se não estiver presente
+        if (!str_starts_with($whats, '55') || strlen($whats) < 12) {
+            $whats = '55' . $whats;
+        }
+
         $mensagem = "Olá, {$order->cliente->nome_completo}! Seu pedido #{$order->id} na 90-Store ";
 
         if ($order->status === 'aguardando_pagamento') {
@@ -135,6 +140,6 @@ class OrderController extends Controller
             $mensagem .= "teve seu status atualizado para: " . strtoupper($order->status);
         }
 
-        return "https://wa.me/55{$whats}?text=" . urlencode($mensagem);
+        return "https://wa.me/{$whats}?text=" . urlencode($mensagem);
     }
 }
