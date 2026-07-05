@@ -197,11 +197,13 @@ const connectionSuccess = ref(false)
 const connectionMsg = ref('')
 const runningSetup = ref(false)
 
+const basePath = window.location.pathname.replace(/\/install$/, '')
+
 async function testConnection() {
   testingConnection.value = true
   connectionMsg.value = ''
   try {
-    const res = await axios.post('/install/test', formDB.value)
+    const res = await axios.post(`${basePath}/install/test`, formDB.value)
     connectionSuccess.value = true
     connectionMsg.value = res.data.message
   } catch (err) {
@@ -216,7 +218,7 @@ async function runSetup() {
   runningSetup.value = true
   connectionMsg.value = ''
   try {
-    const res = await axios.post('/install/setup', formDB.value)
+    const res = await axios.post(`${basePath}/install/setup`, formDB.value)
     connectionMsg.value = res.data.message
     // Espera 1.5s para transição visual suave
     setTimeout(() => {
@@ -248,7 +250,7 @@ async function createAdmin() {
   creatingAdmin.value = true
   adminMsg.value = ''
   try {
-    await axios.post('/install/admin', formAdmin.value)
+    await axios.post(`${basePath}/install/admin`, formAdmin.value)
     currentStep.value = 4
   } catch (err) {
     adminMsg.value = err.response?.data?.message || 'Erro ao criar o administrador.'

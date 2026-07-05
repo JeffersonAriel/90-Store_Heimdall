@@ -136,7 +136,7 @@
     ]
   },
   "resources/js/Pages/Install/Wizard.vue": {
-    "file": "assets/Wizard-C2hEZxXG.js",
+    "file": "assets/Wizard-CccuZZsN.js",
     "name": "Wizard",
     "src": "resources/js/Pages/Install/Wizard.vue",
     "isDynamicEntry": true,
@@ -318,7 +318,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-APNyxkLN.js",
+    "file": "assets/app-C5_VsjPe.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
