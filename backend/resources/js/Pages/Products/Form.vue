@@ -531,9 +531,10 @@ function submitForm() {
   }
   
   if (isEdit.value) {
-    form.put(route('admin.products.update', props.product.id), {
-      forceFormData: true, // Necessário para enviar arquivos via PUT
-    });
+    form.transform((data) => ({
+      ...data,
+      _method: 'PUT',
+    })).post(route('admin.products.update', props.product.id));
   } else {
     form.post(route('admin.products.store'));
   }
