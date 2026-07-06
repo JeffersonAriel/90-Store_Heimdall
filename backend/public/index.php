@@ -17,14 +17,15 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
-$request = Request::capture();
-
 // Corrige o roteamento quando acessado via URL amigável em subpastas do cPanel
 $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
 $scriptDir = preg_replace('/\/index\.php$/', '', $scriptName);
 $appBase = preg_replace('/\/backend\/public$/', '', $scriptDir);
-if ($scriptDir && strpos($request->getRequestUri(), $scriptDir) !== 0) {
-    $request->setBaseUrl($appBase);
+if ($scriptDir && strpos($_SERVER['REQUEST_URI'] ?? '', $scriptDir) !== 0) {
+    $_SERVER['SCRIPT_NAME'] = $appBase . '/index.php';
+    $_SERVER['PHP_SELF'] = $appBase . '/index.php';
 }
+
+$request = Request::capture();
 
 $app->handleRequest($request);
