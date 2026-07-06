@@ -8,6 +8,16 @@
       <div class="card-body">
         <form @submit.prevent="submitForm">
           
+          <!-- Alerta de Erros de Validação -->
+          <div v-if="Object.keys(form.errors).length > 0" class="mb-6 p-4 rounded-lg text-sm" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;">
+            <div class="font-bold mb-2 flex items-center gap-2">
+              <span>⚠️</span> Por favor, corrija os seguintes erros para salvar:
+            </div>
+            <ul class="list-disc pl-5">
+              <li v-for="(error, field) in form.errors" :key="field">{{ error }}</li>
+            </ul>
+          </div>
+          
           <!-- 1. IDENTIFICAÇÃO -->
           <div class="card mb-6">
             <div class="card-header">
