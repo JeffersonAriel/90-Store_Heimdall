@@ -171,6 +171,7 @@
 import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
+import axios from 'axios'
 
 const props = defineProps({
   history: { type: Array, required: true }
@@ -198,14 +199,12 @@ async function uploadFile() {
   formData.append('file', selectedFile.value)
 
   try {
-    const response = await fetch(route('admin.import-export.upload'), {
-      method: 'POST',
-      body: formData,
+    const response = await axios.post(route('admin.import-export.upload'), formData, {
       headers: {
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        'Content-Type': 'multipart/form-data'
       }
     })
-    const data = await response.json()
+    const data = response.data
     if (data.success) {
       preview.value = data.preview
       importId.value = data.import_id
@@ -213,7 +212,8 @@ async function uploadFile() {
       alert(data.message || 'Erro ao processar a planilha.')
     }
   } catch (error) {
-    alert('Erro de conexão ou tamanho de arquivo excedido.')
+    const errMsg = error.response?.data?.message || 'Erro de conexão ou tamanho de arquivo excedido.'
+    alert(errMsg)
   } finally {
     loading.value = false
   }
@@ -224,15 +224,10 @@ async function confirmImport() {
   loading.value = true
 
   try {
-    const response = await fetch(route('admin.import-export.confirm'), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-      },
-      body: JSON.stringify({ import_id: importId.value })
+    const response = await axios.post(route('admin.import-export.confirm'), {
+      import_id: importId.value
     })
-    const data = await response.json()
+    const data = response.data
     if (data.success) {
       alert(data.message)
       preview.value = null
@@ -241,7 +236,8 @@ async function confirmImport() {
       alert(data.message)
     }
   } catch (error) {
-    alert('Erro ao confirmar a importação.')
+    const errMsg = error.response?.data?.message || 'Erro ao confirmar a importação.'
+    alert(errMsg)
   } finally {
     loading.value = false
   }
