@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\Storage;
 
 class ImportExportController extends Controller
 {
@@ -86,7 +87,7 @@ class ImportExportController extends Controller
             $file = $request->file('file');
             $path = $file->store('imports');
 
-            $fullPath = storage_path('app/' . $path);
+            $fullPath = Storage::path($path);
 
             $previewData = $this->importService->preview($fullPath, $request->tipo);
 
