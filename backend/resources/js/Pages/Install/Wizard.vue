@@ -198,7 +198,7 @@ const connectionMsg = ref('')
 const runningSetup = ref(false)
 
 const basePath = window.location.pathname.replace(/\/install$/, '')
-const logoUrl = `${basePath}/logo-heimdall-dark.png?v=3`
+const logoUrl = `${basePath}/logo-heimdall-dark.png?v=4`
 
 async function testConnection() {
   testingConnection.value = true

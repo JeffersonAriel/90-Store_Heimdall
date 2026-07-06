@@ -260,7 +260,7 @@ function logout() {
 const basePath = typeof window !== 'undefined' && window.location.pathname.includes('/~jeff2892') ? '/~jeff2892' : ''
 const logoUrl = computed(() => {
   const file = isDark.value ? 'logo-heimdall.png' : 'logo-heimdall-dark.png'
-  return `${basePath}/${file}?v=3`
+  return `${basePath}/${file}?v=4`
 })
 </script>
 
