@@ -129,6 +129,29 @@ class OrderController extends Controller
     }
 
     /**
+     * Atualiza o valor do frete local a combinar
+     */
+    public function updateFrete(Request $request, int $id)
+    {
+        $request->validate([
+            'valor_frete' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            DB::transaction(function () use ($id, $request) {
+                $order = Pedido::findOrFail($id);
+                $order->valor_frete = $request->valor_frete;
+                $order->total = max(0, ($order->subtotal - $order->desconto_cupom - $order->desconto_pontos) + $request->valor_frete);
+                $order->save();
+            });
+
+            return back()->with('success', 'Valor do frete atualizado e total recalculado com sucesso!');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
      * WhatsApp manual com mensagem pré-formatada contendo o status ou rastreio
      */
     private function generateWhatsAppLink(Pedido $order): string

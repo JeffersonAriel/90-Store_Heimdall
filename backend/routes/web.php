@@ -64,6 +64,7 @@ Route::prefix('heimdall')->group(function () {
         Route::resource('orders', OrderController::class)->names('admin.orders');
         Route::post('orders/{order}/advance', [OrderController::class, 'advanceStatus'])->name('admin.orders.advance');
         Route::post('orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('admin.orders.confirm-payment');
+        Route::patch('orders/{order}/update-frete', [OrderController::class, 'updateFrete'])->name('admin.orders.update-frete');
 
         Route::get('stock', [StockController::class, 'index'])->name('admin.stock.index');
         Route::post('stock/{id}/adjust', [StockController::class, 'adjust'])->name('admin.stock.adjust');
