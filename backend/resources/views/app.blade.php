@@ -7,7 +7,7 @@
 
         {{-- Inertia page title --}}
         <title inertia>Heimdall | 90-Store</title>
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
         {{-- Fonts --}}
         <link rel="preconnect" href="https://fonts.googleapis.com">
