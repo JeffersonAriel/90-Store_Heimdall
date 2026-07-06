@@ -194,6 +194,14 @@ class SecurityController extends Controller
                 '--class' => 'PerfilPermissaoSeeder',
                 '--force' => true
             ]);
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'CategorySeeder',
+                '--force' => true
+            ]);
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'SportsCategorySeeder',
+                '--force' => true
+            ]);
             $seederOutput = \Illuminate\Support\Facades\Artisan::output();
 
             return back()->with('success', 'Banco de dados e permissões atualizados com sucesso! Detalhes: ' . trim($migrateOutput) . ' | ' . trim($seederOutput));

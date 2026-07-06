@@ -230,34 +230,59 @@ class CategorySeeder extends Seeder
             $atributosData = $catData['atributos'] ?? [];
             unset($catData['atributos']);
 
-            $catId = DB::table('categorias_tipo_produto')->insertGetId(array_merge($catData, [
-                'parent_id'  => null,
-                'ativo'      => true,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]));
+            $existingCat = DB::table('categorias_tipo_produto')
+                ->where('slug', $catData['slug'])
+                ->whereNull('parent_id')
+                ->first();
 
-            // Insere atributos da categoria
+            if ($existingCat) {
+                $catId = $existingCat->id;
+            } else {
+                $catId = DB::table('categorias_tipo_produto')->insertGetId(array_merge($catData, [
+                    'parent_id'  => null,
+                    'ativo'      => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]));
+            }
+
+            // Insere atributos da categoria se não existirem
             foreach ($atributosData as $atribOrdem => $atribData) {
                 $opcoes = $atribData['opcoes'] ?? [];
                 unset($atribData['opcoes']);
 
-                $atribId = DB::table('atributos_categoria')->insertGetId(array_merge($atribData, [
-                    'categoria_id' => $catId,
-                    'ordem'        => $atribOrdem,
-                    'created_at'   => $now,
-                    'updated_at'   => $now,
-                ]));
+                $existingAtrib = DB::table('atributos_categoria')
+                    ->where('categoria_id', $catId)
+                    ->where('nome', $atribData['nome'])
+                    ->first();
 
-                // Insere opções do atributo
+                if ($existingAtrib) {
+                    $atribId = $existingAtrib->id;
+                } else {
+                    $atribId = DB::table('atributos_categoria')->insertGetId(array_merge($atribData, [
+                        'categoria_id' => $catId,
+                        'ordem'        => $atribOrdem,
+                        'created_at'   => $now,
+                        'updated_at'   => $now,
+                    ]));
+                }
+
+                // Insere opções do atributo se não existirem
                 foreach ($opcoes as $opcOrdem => $opcaoValor) {
-                    DB::table('opcoes_atributo')->insert([
-                        'atributo_id' => $atribId,
-                        'valor'       => $opcaoValor,
-                        'ordem'       => $opcOrdem,
-                        'created_at'  => $now,
-                        'updated_at'  => $now,
-                    ]);
+                    $existingOption = DB::table('opcoes_atributo')
+                        ->where('atributo_id', $atribId)
+                        ->where('valor', $opcaoValor)
+                        ->first();
+
+                    if (!$existingOption) {
+                        DB::table('opcoes_atributo')->insert([
+                            'atributo_id' => $atribId,
+                            'valor'       => $opcaoValor,
+                            'ordem'       => $opcOrdem,
+                            'created_at'  => $now,
+                            'updated_at'  => $now,
+                        ]);
+                    }
                 }
             }
         }
