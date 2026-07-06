@@ -58,18 +58,28 @@
       </nav>
 
       <!-- Sidebar Footer -->
-      <div class="sidebar-footer">
-        <div class="sidebar-user">
-          <div class="sidebar-user-avatar">
+      <div class="sidebar-footer" style="position: relative; padding: 0.75rem 1rem;">
+        <!-- User Dropdown Menu -->
+        <transition name="slide-up">
+          <div v-if="showUserDropdown" class="user-dropdown-menu" style="position: absolute; bottom: 100%; left: 0.75rem; right: 0.75rem; background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: 0 -10px 25px -5px rgba(0,0,0,0.3); z-index: 100; margin-bottom: 0.5rem; display: flex; flex-direction: column; overflow: hidden;">
+            <Link :href="route('admin.profile.show')" @click="showUserDropdown = false" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--color-text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; border-bottom: 1px solid var(--color-border); transition: background 0.2s; cursor: pointer;">
+              <span>⚙️</span> Meus Dados / Perfil
+            </Link>
+            <button @click="logout" class="dropdown-item text-red" style="padding: 0.75rem 1rem; text-align: left; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #ef4444; border: none; background: transparent; cursor: pointer; transition: background 0.2s; width: 100%;">
+              <span>🚪</span> Sair do Painel
+            </button>
+          </div>
+        </transition>
+
+        <div class="sidebar-user" @click="showUserDropdown = !showUserDropdown" style="display: flex; align-items: center; gap: 0.75rem; width: 100%; cursor: pointer;">
+          <div class="sidebar-user-avatar" style="flex-shrink: 0;">
             {{ initials($page.props.auth.employee.nome) }}
           </div>
-          <div class="sidebar-user-info">
-            <div class="sidebar-user-name">{{ $page.props.auth.employee.nome }}</div>
-            <div class="sidebar-user-role">{{ $page.props.auth.employee.perfil?.nome }}</div>
+          <div class="sidebar-user-info" style="flex-grow: 1; min-width: 0; overflow: hidden;">
+            <div class="sidebar-user-name" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $page.props.auth.employee.nome }}</div>
+            <div class="sidebar-user-role" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $page.props.auth.employee.perfil?.nome }}</div>
           </div>
-          <button class="btn-icon" title="Sair" @click="logout">
-            <LogoutIcon />
-          </button>
+          <span style="font-size: 0.7rem; color: var(--color-text-muted); opacity: 0.6; margin-left: auto; transition: transform 0.2s;" :style="showUserDropdown ? 'transform: rotate(180deg);' : ''">▲</span>
         </div>
       </div>
     </aside>
@@ -203,6 +213,7 @@ const page = usePage()
 const sidebarOpen = ref(false)
 const showAlertsPanel = ref(false)
 const isDark = ref(false)
+const showUserDropdown = ref(false)
 
 const flash = computed(() => page.props.flash || {})
 
@@ -345,5 +356,18 @@ function logout() {
 .slide-left-enter-from, .slide-left-leave-to {
   opacity: 0;
   transform: translateX(100%);
+}
+
+.dropdown-item:hover {
+  background: var(--color-bg-elevated) !important;
+}
+
+/* Slide-up transition for dropdown */
+.slide-up-enter-active, .slide-up-leave-active {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.slide-up-enter-from, .slide-up-leave-to {
+  transform: translateY(10px);
+  opacity: 0;
 }
 </style>

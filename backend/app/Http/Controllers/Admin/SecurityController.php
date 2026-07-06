@@ -58,13 +58,18 @@ class SecurityController extends Controller
                 ->get(),
         ];
 
+        $perfis = DB::table('perfis_permissao')->orderBy('nome')->get();
+        $permissoesMap = DB::table('permissoes_modulo')->get();
+
         return Inertia::render('Security/Index', [
             'logsSeguranca' => $logsSeguranca,
             'logsAcesso' => $logsAcesso,
             'ipsBloqueados' => $ipsBloqueados,
             'auditLogs' => $auditLogs,
             'alerts' => $alertasSuspicious,
-            'filters' => $request->only('search', 'tipo')
+            'filters' => $request->only('search', 'tipo'),
+            'perfis' => $perfis,
+            'permissoesMap' => $permissoesMap,
         ]);
     }
 
@@ -130,5 +135,49 @@ class SecurityController extends Controller
 
         fclose($output);
         exit;
+    }
+
+    /**
+     * Atualizar a matriz de permissões de um perfil
+     */
+    public function updatePermissions(Request $request, int $perfilId)
+    {
+        $perfil = DB::table('perfis_permissao')->where('id', $perfilId)->first();
+        if (!$perfil || $perfil->is_admin) {
+            return back()->with('error', 'Não é possível editar as permissões do perfil Administrador.');
+        }
+
+        $request->validate([
+            'permissions' => 'required|array',
+        ]);
+
+        $permissions = $request->input('permissions');
+
+        DB::transaction(function () use ($perfilId, $permissions) {
+            // Limpa as permissões antigas
+            DB::table('permissoes_modulo')->where('perfil_id', $perfilId)->delete();
+
+            // Insere as permissões ativas selecionadas
+            $insertData = [];
+            foreach ($permissions as $modulo => $acoes) {
+                foreach ($acoes as $acao => $checked) {
+                    if ($checked) {
+                        $insertData[] = [
+                            'perfil_id'  => $perfilId,
+                            'modulo'     => $modulo,
+                            'acao'       => $acao,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ];
+                    }
+                }
+            }
+
+            if (!empty($insertData)) {
+                DB::table('permissoes_modulo')->insert($insertData);
+            }
+        });
+
+        return back()->with('success', 'Permissões do perfil atualizadas com sucesso!');
     }
 }

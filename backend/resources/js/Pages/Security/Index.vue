@@ -141,6 +141,91 @@
         </div>
       </div>
     </div>
+    <!-- Perfis & Permissões Section -->
+    <div class="card mb-6">
+      <div class="card-header border-b pb-4">
+        <h3 class="card-title">🔑 Perfis de Acesso & Permissões Dinâmicas</h3>
+        <p class="text-secondary mt-1">Configure o nível de acesso e o que cada perfil pode visualizar, criar, editar ou excluir nos módulos do sistema.</p>
+      </div>
+      <div class="card-body" style="padding: 0;">
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Perfil</th>
+                <th>Descrição</th>
+                <th>Status / Tipo</th>
+                <th style="width: 180px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="perf in perfis" :key="perf.id">
+                <td><strong>{{ perf.nome }}</strong></td>
+                <td class="text-secondary">{{ perf.descricao }}</td>
+                <td>
+                  <span :class="perf.is_admin ? 'badge badge-primary' : 'badge badge-secondary'">
+                    {{ perf.is_admin ? 'Administrador' : 'Customizado' }}
+                  </span>
+                </td>
+                <td style="text-align: right; padding-right: 1.5rem;">
+                  <button v-if="!perf.is_admin" class="btn btn-secondary btn-sm" @click="openPermissions(perf)">
+                    ⚙️ Editar Permissões
+                  </button>
+                  <span v-else class="text-secondary text-xs font-bold">Acesso Total (Admin)</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Editar Permissões do Perfil -->
+    <div v-if="showPermissionsModal" class="modal-backdrop" @click.self="showPermissionsModal = false">
+      <div class="modal-box" style="max-width: 800px; width: 90%;">
+        <div class="flex justify-between items-center mb-4" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
+          <h2 class="modal-title" style="margin-bottom: 0;">Permissões: {{ selectedPerfil?.nome }}</h2>
+          <div class="flex gap-2">
+            <button type="button" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 0.75rem;" @click="toggleAll(true)">Marcar Todos</button>
+            <button type="button" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 0.75rem;" @click="toggleAll(false)">Limpar Todos</button>
+          </div>
+        </div>
+
+        <form @submit.prevent="savePermissions">
+          <div class="table-wrapper" style="max-height: 400px; overflow-y: auto; margin-bottom: 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead style="position: sticky; top: 0; background: var(--color-bg-secondary); z-index: 10;">
+                <tr>
+                  <th style="text-align: left; padding: 0.75rem 1rem;">Módulo / Funcionalidade</th>
+                  <th v-for="act in actions" :key="act.key" style="text-align: center; width: 100px; padding: 0.75rem 1rem;">
+                    {{ act.label }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="mod in modules" :key="mod.key" style="border-bottom: 1px solid var(--color-border);">
+                  <td style="padding: 0.75rem 1rem; font-weight: 500;">
+                    {{ mod.label }}
+                  </td>
+                  <td v-for="act in actions" :key="act.key" style="text-align: center; padding: 0.75rem 1rem;">
+                    <input 
+                      type="checkbox" 
+                      v-model="localPermissions[mod.key][act.key]" 
+                      style="width: 16px; height: 16px; accent-color: var(--color-brand); cursor: pointer;"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="flex gap-3" style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--color-border); padding-top: 1rem;">
+            <button type="button" class="btn btn-secondary" @click="showPermissionsModal = false">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Salvar Permissões</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </AdminLayout>
 </template>
 
@@ -155,13 +240,80 @@ const props = defineProps({
   ipsBloqueados: { type: Array, required: true },
   auditLogs: { type: Array, required: true },
   alerts: { type: Object, required: true },
-  filters: { type: Object, default: () => ({}) }
+  filters: { type: Object, default: () => ({}) },
+  perfis: { type: Array, required: true },
+  permissoesMap: { type: Array, required: true },
 })
 
 const blockForm = ref({
   ip: '',
   motivo: ''
 })
+
+const selectedPerfil = ref(null)
+const showPermissionsModal = ref(false)
+const localPermissions = ref({})
+
+const modules = [
+  { key: 'produtos', label: '📦 Produtos & Catálogo' },
+  { key: 'categorias', label: '🏷️ Categorias' },
+  { key: 'fornecedores', label: '🤝 Fornecedores' },
+  { key: 'pedidos', label: '🛒 Pedidos & Vendas' },
+  { key: 'estoque', label: '🏢 Controle de Estoque' },
+  { key: 'financeiro', label: '💰 Controle Financeiro' },
+  { key: 'frete', label: '🚚 Regras de Frete' },
+  { key: 'api_config', label: '🔌 Configuração de APIs' },
+  { key: 'funcionarios', label: '👥 Funcionários & Equipe' },
+  { key: 'marketing', label: '📢 Marketing & Cupons' },
+  { key: 'importacao', label: '📥 Importação/Exportação' },
+  { key: 'seguranca', label: '🔐 Segurança & Logs' },
+  { key: 'clientes', label: '👤 Clientes' },
+]
+
+const actions = [
+  { key: 'view', label: 'Visualizar' },
+  { key: 'create', label: 'Criar' },
+  { key: 'edit', label: 'Editar' },
+  { key: 'delete', label: 'Excluir' },
+]
+
+function openPermissions(perfil) {
+  selectedPerfil.value = perfil
+  
+  const matrix = {}
+  modules.forEach(m => {
+    matrix[m.key] = { view: false, create: false, edit: false, delete: false }
+  })
+
+  props.permissoesMap.forEach(p => {
+    if (p.perfil_id === perfil.id) {
+      if (matrix[p.modulo]) {
+        matrix[p.modulo][p.acao] = true
+      }
+    }
+  })
+
+  localPermissions.value = matrix
+  showPermissionsModal.value = true
+}
+
+function savePermissions() {
+  router.post(route('admin.security.profiles.permissions.update', selectedPerfil.value.id), {
+    permissions: localPermissions.value
+  }, {
+    onSuccess: () => {
+      showPermissionsModal.value = false
+    }
+  })
+}
+
+function toggleAll(value) {
+  modules.forEach(m => {
+    actions.forEach(a => {
+      localPermissions.value[m.key][a.key] = value
+    })
+  })
+}
 
 function submitBlockIp() {
   router.post(route('admin.security.block-ip'), blockForm.value, {
@@ -184,4 +336,30 @@ function formatDate(dateStr) {
 
 <style scoped>
 .my-4 { margin-top: 1rem; margin-bottom: 1rem; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal-box {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 1.5rem;
+}
 </style>

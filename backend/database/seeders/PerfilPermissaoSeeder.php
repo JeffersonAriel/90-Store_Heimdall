@@ -32,6 +32,26 @@ class PerfilPermissaoSeeder extends Seeder
                 'descricao' => 'Acesso a produtos, fornecedores e estoque',
                 'is_admin'  => false,
             ],
+            [
+                'nome'      => 'Financeiro',
+                'descricao' => 'Acesso ao controle financeiro e relatórios de faturamento',
+                'is_admin'  => false,
+            ],
+            [
+                'nome'      => 'Marketing',
+                'descricao' => 'Acesso a cupons de desconto, banners e benefícios',
+                'is_admin'  => false,
+            ],
+            [
+                'nome'      => 'Logística',
+                'descricao' => 'Acesso ao estoque, regras de frete e controle de pedidos',
+                'is_admin'  => false,
+            ],
+            [
+                'nome'      => 'Suporte',
+                'descricao' => 'Acesso aos dados de clientes e pedidos de venda',
+                'is_admin'  => false,
+            ],
         ];
 
         foreach ($perfis as $perfil) {
@@ -45,10 +65,14 @@ class PerfilPermissaoSeeder extends Seeder
         }
 
         // ─── Permissões por Perfil ────────────────────────────────
-        $adminId    = DB::table('perfis_permissao')->where('nome', 'Administrador')->value('id');
-        $gerenteId  = DB::table('perfis_permissao')->where('nome', 'Gerente')->value('id');
-        $atendenteId= DB::table('perfis_permissao')->where('nome', 'Atendente')->value('id');
-        $estoqueId  = DB::table('perfis_permissao')->where('nome', 'Estoque')->value('id');
+        $adminId      = DB::table('perfis_permissao')->where('nome', 'Administrador')->value('id');
+        $gerenteId    = DB::table('perfis_permissao')->where('nome', 'Gerente')->value('id');
+        $atendenteId  = DB::table('perfis_permissao')->where('nome', 'Atendente')->value('id');
+        $estoqueId    = DB::table('perfis_permissao')->where('nome', 'Estoque')->value('id');
+        $financeiroId = DB::table('perfis_permissao')->where('nome', 'Financeiro')->value('id');
+        $marketingId  = DB::table('perfis_permissao')->where('nome', 'Marketing')->value('id');
+        $logisticaId  = DB::table('perfis_permissao')->where('nome', 'Logística')->value('id');
+        $suporteId    = DB::table('perfis_permissao')->where('nome', 'Suporte')->value('id');
 
         $modulos = ['produtos', 'fornecedores', 'categorias', 'pedidos', 'estoque',
                     'financeiro', 'frete', 'api_config', 'funcionarios', 'marketing',
@@ -98,6 +122,62 @@ class PerfilPermissaoSeeder extends Seeder
                     ['created_at' => now(), 'updated_at' => now()]
                 );
             }
+        }
+
+        // Financeiro: financeiro e pedidos (view)
+        foreach ($acoes as $acao) {
+            DB::table('permissoes_modulo')->updateOrInsert(
+                ['perfil_id' => $financeiroId, 'modulo' => 'financeiro', 'acao' => $acao],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+        }
+        DB::table('permissoes_modulo')->updateOrInsert(
+            ['perfil_id' => $financeiroId, 'modulo' => 'pedidos', 'acao' => 'view'],
+            ['created_at' => now(), 'updated_at' => now()]
+        );
+
+        // Marketing: marketing, categorias (view) e produtos (view)
+        foreach ($acoes as $acao) {
+            DB::table('permissoes_modulo')->updateOrInsert(
+                ['perfil_id' => $marketingId, 'modulo' => 'marketing', 'acao' => $acao],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+        }
+        DB::table('permissoes_modulo')->updateOrInsert(
+            ['perfil_id' => $marketingId, 'modulo' => 'categorias', 'acao' => 'view'],
+            ['created_at' => now(), 'updated_at' => now()]
+        );
+        DB::table('permissoes_modulo')->updateOrInsert(
+            ['perfil_id' => $marketingId, 'modulo' => 'produtos', 'acao' => 'view'],
+            ['created_at' => now(), 'updated_at' => now()]
+        );
+
+        // Logística: estoque (view/edit), frete (view/edit) e pedidos (view/edit)
+        foreach (['view', 'edit'] as $acao) {
+            DB::table('permissoes_modulo')->updateOrInsert(
+                ['perfil_id' => $logisticaId, 'modulo' => 'estoque', 'acao' => $acao],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+            DB::table('permissoes_modulo')->updateOrInsert(
+                ['perfil_id' => $logisticaId, 'modulo' => 'frete', 'acao' => $acao],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+            DB::table('permissoes_modulo')->updateOrInsert(
+                ['perfil_id' => $logisticaId, 'modulo' => 'pedidos', 'acao' => $acao],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+        }
+
+        // Suporte: clientes (view/edit) e pedidos (view/edit)
+        foreach (['view', 'edit'] as $acao) {
+            DB::table('permissoes_modulo')->updateOrInsert(
+                ['perfil_id' => $suporteId, 'modulo' => 'clientes', 'acao' => $acao],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+            DB::table('permissoes_modulo')->updateOrInsert(
+                ['perfil_id' => $suporteId, 'modulo' => 'pedidos', 'acao' => $acao],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
         }
     }
 }

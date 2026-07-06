@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ImportExportController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\MarketingController;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\ProfileController;
 
 // ─── ROTA DO INSTALADOR (Auto-desabilita após uso via middleware CheckInstalled) ───
 Route::middleware(['installed'])->group(function () {
@@ -92,9 +93,14 @@ Route::prefix('heimdall')->group(function () {
             Route::post('security/block-ip', [SecurityController::class, 'blockIp'])->name('admin.security.block-ip');
             Route::delete('security/unblock-ip/{ip}', [SecurityController::class, 'unblockIp'])->name('admin.security.unblock-ip');
             Route::get('security/export-csv/{tipo}', [SecurityController::class, 'exportCsv'])->name('admin.security.export-csv');
+            Route::post('security/profiles/{id}/permissions', [SecurityController::class, 'updatePermissions'])->name('admin.security.profiles.permissions.update');
         });
 
         Route::resource('employees', EmployeeController::class)->names('admin.employees');
+
+        // Perfil do Usuário
+        Route::get('profile', [ProfileController::class, 'show'])->name('admin.profile.show');
+        Route::put('profile', [ProfileController::class, 'update'])->name('admin.profile.update');
         Route::get('marketing/coupons', [MarketingController::class, 'couponsIndex'])->name('admin.marketing.coupons');
         Route::post('marketing/coupons', [MarketingController::class, 'couponsStore'])->name('admin.marketing.coupons.store');
         Route::patch('marketing/coupons/{id}/toggle', [MarketingController::class, 'couponsToggle'])->name('admin.marketing.coupons.toggle');

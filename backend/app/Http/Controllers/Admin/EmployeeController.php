@@ -14,7 +14,7 @@ class EmployeeController extends Controller
     {
         $employees = DB::table('funcionarios as f')
             ->leftJoin('perfis_permissao as p', 'f.perfil_id', '=', 'p.id')
-            ->select('f.id', 'f.nome', 'f.email', 'f.ativo', 'f.created_at', 'p.nome as perfil_nome')
+            ->select('f.id', 'f.nome', 'f.email', 'f.telefone', 'f.cpf', 'f.ativo', 'f.created_at', 'p.nome as perfil_nome')
             ->orderBy('f.nome')
             ->paginate(20);
 
@@ -33,13 +33,17 @@ class EmployeeController extends Controller
             'email'     => 'required|email|unique:funcionarios,email',
             'senha'     => 'required|string|min:8',
             'perfil_id' => 'required|exists:perfis_permissao,id',
+            'telefone'  => 'nullable|string|max:20',
+            'cpf'       => 'nullable|string|max:14',
         ]);
 
         DB::table('funcionarios')->insert([
             'nome'       => $data['nome'],
             'email'      => $data['email'],
-            'senha_hash' => Hash::make($data['senha']),
+            'password'   => Hash::make($data['senha']),
             'perfil_id'  => $data['perfil_id'],
+            'telefone'   => $data['telefone'] ?? null,
+            'cpf'        => $data['cpf'] ?? null,
             'ativo'      => true,
             'created_at' => now(),
             'updated_at' => now(),
@@ -55,12 +59,16 @@ class EmployeeController extends Controller
             'email'     => "required|email|unique:funcionarios,email,{$id}",
             'perfil_id' => 'required|exists:perfis_permissao,id',
             'ativo'     => 'boolean',
+            'telefone'  => 'nullable|string|max:20',
+            'cpf'       => 'nullable|string|max:14',
         ]);
 
         DB::table('funcionarios')->where('id', $id)->update([
             'nome'       => $data['nome'],
             'email'      => $data['email'],
             'perfil_id'  => $data['perfil_id'],
+            'telefone'   => $data['telefone'] ?? null,
+            'cpf'        => $data['cpf'] ?? null,
             'ativo'      => $data['ativo'] ?? true,
             'updated_at' => now(),
         ]);

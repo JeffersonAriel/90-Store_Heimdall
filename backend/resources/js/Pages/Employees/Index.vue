@@ -26,6 +26,8 @@
               <tr>
                 <th>Nome</th>
                 <th>E-mail</th>
+                <th>Telefone</th>
+                <th>CPF</th>
                 <th>Perfil</th>
                 <th>Status</th>
                 <th style="width:80px;"></th>
@@ -35,6 +37,8 @@
               <tr v-for="emp in employees.data" :key="emp.id">
                 <td><strong>{{ emp.nome }}</strong></td>
                 <td class="text-secondary">{{ emp.email }}</td>
+                <td class="text-secondary">{{ emp.telefone || '—' }}</td>
+                <td class="text-secondary font-mono">{{ emp.cpf || '—' }}</td>
                 <td>
                   <span class="badge badge-secondary">{{ emp.perfil_nome || '—' }}</span>
                 </td>
@@ -65,6 +69,16 @@
           <div class="form-group">
             <label class="form-label">E-mail</label>
             <input v-model="form.email" type="email" class="form-control" required />
+          </div>
+          <div class="grid-2 gap-4">
+            <div class="form-group">
+              <label class="form-label">Telefone</label>
+              <input v-model="form.telefone" type="text" class="form-control" placeholder="(11) 99999-9999" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">CPF</label>
+              <input v-model="form.cpf" type="text" class="form-control" placeholder="000.000.000-00" />
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">Senha</label>
@@ -98,11 +112,11 @@ const props = defineProps({
 })
 
 const showForm = ref(false)
-const form = ref({ nome: '', email: '', senha: '', perfil_id: '' })
+const form = ref({ nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '' })
 
 function saveEmployee() {
   router.post(route('admin.employees.store'), form.value, {
-    onSuccess: () => { showForm.value = false; form.value = { nome: '', email: '', senha: '', perfil_id: '' } },
+    onSuccess: () => { showForm.value = false; form.value = { nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '' } },
   })
 }
 
