@@ -1,17 +1,27 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # 1. Roteamento para o Backend/API (Laravel)
+    # 1. Arquivos estáticos do Backend (build, storage)
     
     # Se estiver no link temporário (~jeff2892)
     RewriteCond %{REQUEST_URI} ^/~jeff2892/
-    RewriteRule ^(heimdall|install|api|build|storage)(/.*)?$ /~jeff2892/backend/public/$1$2 [L,PT]
+    RewriteRule ^(build|storage)(/.*)?$ /~jeff2892/backend/public/$1$2 [L,PT]
 
     # Se estiver no domínio próprio (raiz)
     RewriteCond %{REQUEST_URI} !^/~jeff2892/
-    RewriteRule ^(heimdall|install|api|build|storage)(/.*)?$ backend/public/$1$2 [L]
+    RewriteRule ^(build|storage)(/.*)?$ backend/public/$1$2 [L]
 
-    # 2. Roteamento do E-commerce (Vue Single Page Application)
+    # 2. Rotas Dinâmicas do Backend (heimdall, install, api) -> envia direto pro index.php do Laravel
+    
+    # Se estiver no link temporário (~jeff2892)
+    RewriteCond %{REQUEST_URI} ^/~jeff2892/
+    RewriteRule ^(heimdall|install|api)(/.*)?$ /~jeff2892/backend/public/index.php [L,PT]
+
+    # Se estiver no domínio próprio (raiz)
+    RewriteCond %{REQUEST_URI} !^/~jeff2892/
+    RewriteRule ^(heimdall|install|api)(/.*)?$ backend/public/index.php [L]
+
+    # 3. Roteamento do E-commerce (Vue Single Page Application)
     RewriteRule ^index\.html$ - [L]
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

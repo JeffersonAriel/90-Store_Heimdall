@@ -17,4 +17,14 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
-$app->handleRequest(Request::capture());
+$request = Request::capture();
+
+// Corrige o roteamento quando acessado via URL amigável em subpastas do cPanel
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+$scriptDir = preg_replace('/\/index\.php$/', '', $scriptName);
+$appBase = preg_replace('/\/backend\/public$/', '', $scriptDir);
+if ($scriptDir && strpos($request->getRequestUri(), $scriptDir) !== 0) {
+    $request->setBaseUrl($appBase);
+}
+
+$app->handleRequest($request);
