@@ -2,7 +2,9 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <img :src="logoUrl" class="logo-badge" style="object-fit: contain; background: none; box-shadow: none;" alt="Heimdall Logo" />
+        <div class="login-logo-container">
+          <img :src="logoUrl" class="login-logo-img" alt="Heimdall Logo" />
+        </div>
         <h1>Heimdall Back-Office</h1>
         <p class="subtitle text-secondary">Identifique-se para acessar a gestão do e-commerce</p>
       </div>
@@ -110,20 +112,30 @@ const logoUrl = `${basePath}/logo-heimdall.png?v=3`
   margin-bottom: 2rem;
 }
 
-.logo-badge {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, var(--color-brand, #6366f1), var(--color-brand-dark, #4f46e5));
-  border-radius: var(--radius-md, 8px);
+.login-logo-container {
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(26, 26, 53, 0.8) 0%, rgba(13, 13, 26, 0.9) 100%);
+  border: 2px solid var(--color-brand, #6366f1);
+  border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
-  box-shadow: var(--shadow-glow);
+  margin-bottom: 1.25rem;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.login-logo-container:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.6);
+}
+
+.login-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .form-checkbox {
