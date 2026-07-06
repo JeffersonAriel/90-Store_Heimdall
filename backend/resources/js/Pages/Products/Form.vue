@@ -6,7 +6,7 @@
 
     <div class="card max-w-5xl mx-auto">
       <div class="card-body">
-        <form @submit.prevent="submitForm">
+        <form @submit.prevent="submitForm" novalidate>
           
           <!-- Alerta de Erros de Validação -->
           <div v-if="Object.keys(form.errors).length > 0" class="mb-6 p-4 rounded-lg text-sm" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444;">
