@@ -2,7 +2,7 @@
   <div class="install-wizard-container">
     <div class="install-card">
       <div class="install-header">
-        <div class="logo-circle">H</div>
+        <img src="/logo-heimdall.png" class="logo-circle" style="object-fit: contain; background: none; border-radius: 0;" alt="Heimdall Logo" />
         <h1>Instalação do Heimdall</h1>
         <p class="subtitle text-secondary">Configuração inicial do back-office e do e-commerce</p>
       </div>

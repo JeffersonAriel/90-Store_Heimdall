@@ -11,7 +11,7 @@
     <aside class="admin-sidebar" :class="{ open: sidebarOpen }">
       <!-- Logo -->
       <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">H</div>
+        <img src="/logo-heimdall.png" class="sidebar-logo-icon" style="object-fit: contain; background: none; border-radius: 0;" alt="Heimdall" />
         <span class="sidebar-logo-text">Heimdall</span>
       </div>
 
