@@ -2,7 +2,7 @@
   <div class="install-wizard-container">
     <div class="install-card">
       <div class="install-header">
-        <img :src="$page.props.asset_url + 'logo-heimdall.png?v=2'" class="logo-circle" style="object-fit: contain; background: none; border-radius: 0;" alt="Heimdall Logo" />
+        <img :src="logoUrl" class="logo-circle" style="object-fit: contain; background: none; border-radius: 0;" alt="Heimdall Logo" />
         <h1>Instalação do Heimdall</h1>
         <p class="subtitle text-secondary">Configuração inicial do back-office e do e-commerce</p>
       </div>
@@ -198,6 +198,7 @@ const connectionMsg = ref('')
 const runningSetup = ref(false)
 
 const basePath = window.location.pathname.replace(/\/install$/, '')
+const logoUrl = `${basePath}/logo-heimdall.png?v=2`
 
 async function testConnection() {
   testingConnection.value = true

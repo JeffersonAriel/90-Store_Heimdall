@@ -11,7 +11,7 @@
     <aside class="admin-sidebar" :class="{ open: sidebarOpen }">
       <!-- Logo -->
       <div class="sidebar-logo">
-        <img :src="$page.props.asset_url + 'logo-heimdall.png?v=2'" class="sidebar-logo-icon" style="object-fit: contain; background: none; border-radius: 0;" alt="Heimdall" />
+        <img :src="logoUrl" class="sidebar-logo-icon" style="object-fit: contain; background: none; border-radius: 0;" alt="Heimdall" />
         <span class="sidebar-logo-text">Heimdall</span>
       </div>
 
@@ -256,6 +256,9 @@ function initials(name) {
 function logout() {
   router.post(route('admin.logout'))
 }
+
+const basePath = typeof window !== 'undefined' && window.location.pathname.includes('/~jeff2892') ? '/~jeff2892' : ''
+const logoUrl = `${basePath}/logo-heimdall.png?v=2`
 </script>
 
 <style scoped>

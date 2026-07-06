@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <img :src="$page.props.asset_url + 'logo-heimdall.png?v=2'" class="logo-badge" style="object-fit: contain; background: none; box-shadow: none;" alt="Heimdall Logo" />
+        <img :src="logoUrl" class="logo-badge" style="object-fit: contain; background: none; box-shadow: none;" alt="Heimdall Logo" />
         <h1>Heimdall Back-Office</h1>
         <p class="subtitle text-secondary">Identifique-se para acessar a gestão do e-commerce</p>
       </div>
@@ -80,6 +80,9 @@ function submit() {
     onFinish: () => form.reset('password'),
   })
 }
+
+const basePath = typeof window !== 'undefined' && window.location.pathname.includes('/~jeff2892') ? '/~jeff2892' : ''
+const logoUrl = `${basePath}/logo-heimdall.png?v=2`
 </script>
 
 <style>
