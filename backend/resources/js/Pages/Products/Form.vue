@@ -82,6 +82,14 @@
                   <div v-if="form.categoria_id" class="mt-3 text-sm font-medium flex items-center gap-1" style="color: var(--color-success)">
                     ✓ Categoria final selecionada com sucesso.
                   </div>
+
+                  <!-- ANO DA CAMISETA (SE FOR DE TIME/SELEÇÃO) -->
+                  <div v-if="isTimeCategory" class="mt-4 pt-4 border-t border-dashed animate-fade-in" style="border-color: var(--color-border);">
+                    <div class="form-group max-w-xs mb-0">
+                      <label class="form-label font-bold text-indigo-500">Ano da Camiseta</label>
+                      <input v-model="form.retro_year" type="number" class="form-input" placeholder="Ex: 2026, 1998..." />
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-group">
@@ -153,20 +161,6 @@
               <div class="mt-6 flex items-center">
                 <input v-model="form.ativo" type="checkbox" id="ativo" class="w-5 h-5 rounded" style="accent-color: var(--color-brand)" />
                 <label for="ativo" class="ml-2 form-label mb-0 font-bold cursor-pointer">Este produto está ativo e visível na vitrine</label>
-              </div>
-
-              <!-- OPÇÕES RETRÔ -->
-              <div v-if="isTimeCategory" class="mt-6 p-4 rounded-lg" style="background: var(--color-warning-bg); border: 1px solid rgba(245, 158, 11, 0.2);">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                  <div class="flex items-center">
-                    <input v-model="form.is_retro" type="checkbox" id="is_retro" class="w-5 h-5 rounded" style="accent-color: var(--color-warning)" />
-                    <label for="is_retro" class="ml-2 form-label mb-0 font-bold cursor-pointer" style="color: var(--color-warning)">Camisa Retrô (Clássica/Histórica)</label>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label font-bold" style="color: var(--color-warning)">Ano do Modelo / Edição</label>
-                    <input v-model="form.retro_year" type="number" class="form-input" placeholder="Ex: 2026, 1998..." />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -518,6 +512,15 @@ function updateAllVariationSkus() {
 watch(() => form.sku_base, () => {
   if (!isEdit.value) {
     updateAllVariationSkus();
+  }
+});
+
+// Define se é retro de forma automatica: se o ano for menor do que o ano atual
+watch(() => form.retro_year, (newYear) => {
+  if (newYear && Number(newYear) < new Date().getFullYear()) {
+    form.is_retro = true;
+  } else {
+    form.is_retro = false;
   }
 });
 
