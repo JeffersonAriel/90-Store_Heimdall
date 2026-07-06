@@ -77,39 +77,46 @@ class ImportExportController extends Controller
      */
     public function upload(Request $request)
     {
-        $request->validate([
-            'tipo' => 'required|in:produtos,fornecedores',
-            'file' => 'required|mimes:xlsx,xls|max:5120',
-        ]);
+        try {
+            $request->validate([
+                'tipo' => 'required|in:produtos,fornecedores',
+                'file' => 'required|mimes:xlsx,xls|max:5120',
+            ]);
 
-        $file = $request->file('file');
-        $path = $file->store('imports');
+            $file = $request->file('file');
+            $path = $file->store('imports');
 
-        $fullPath = storage_path('app/' . $path);
+            $fullPath = storage_path('app/' . $path);
 
-        $previewData = $this->importService->preview($fullPath, $request->tipo);
+            $previewData = $this->importService->preview($fullPath, $request->tipo);
 
-        // Grava lote temporário aguardando confirmação do administrador
-        $importId = DB::table('importacoes_lote')->insertGetId([
-            'funcionario_id' => Auth::guard('admin')->id(),
-            'tipo' => $request->tipo,
-            'arquivo_original' => $file->getClientOriginalName(),
-            'arquivo_path' => $path,
-            'total_linhas' => $previewData['total'],
-            'criados' => $previewData['criar'],
-            'atualizados' => $previewData['atualizar'],
-            'erros' => $previewData['erros'],
-            'preview_json' => json_encode($previewData['data']),
-            'status' => 'aguardando_confirmacao',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            // Grava lote temporário aguardando confirmação do administrador
+            $importId = DB::table('importacoes_lote')->insertGetId([
+                'funcionario_id' => Auth::guard('admin')->id(),
+                'tipo' => $request->tipo,
+                'arquivo_original' => $file->getClientOriginalName(),
+                'arquivo_path' => $path,
+                'total_linhas' => $previewData['total'],
+                'criados' => $previewData['criar'],
+                'atualizados' => $previewData['atualizar'],
+                'erros' => $previewData['erros'],
+                'preview_json' => json_encode($previewData['data']),
+                'status' => 'aguardando_confirmacao',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'import_id' => $importId,
-            'preview' => $previewData
-        ]);
+            return response()->json([
+                'success' => true,
+                'import_id' => $importId,
+                'preview' => $previewData
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno do servidor: ' . $e->getMessage() . ' (Linha ' . $e->getLine() . ' em ' . basename($e->getFile()) . ')'
+            ], 500);
+        }
     }
 
     /**
