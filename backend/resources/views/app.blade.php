@@ -7,7 +7,7 @@
 
         {{-- Inertia page title --}}
         <title inertia>Heimdall | Vigilância Total</title>
-        <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}?v=4">
+        <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}?v=5">
 
         {{-- Fonts --}}
         <link rel="preconnect" href="https://fonts.googleapis.com">
