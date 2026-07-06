@@ -140,6 +140,7 @@
                 <th>Atualizados</th>
                 <th>Erros</th>
                 <th>Status</th>
+                <th style="width: 130px; text-align: center;">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -158,9 +159,93 @@
                     {{ h.status }}
                   </span>
                 </td>
+                <td style="text-align: center;">
+                  <button @click="openDetails(h)" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                    🔍 Ver Detalhes
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Detalhes do Histórico -->
+    <div v-if="showDetailsModal" class="modal-backdrop" @click.self="showDetailsModal = false">
+      <div class="modal-box" style="max-width: 800px; width: 90%;">
+        <h2 class="modal-title">📋 Detalhes do Lote #{{ selectedHistoryItem.id }}</h2>
+        
+        <div style="font-size: 0.875rem; margin-bottom: 1.5rem; line-height: 1.6;" class="grid-2 gap-4">
+          <div>
+            <p><strong>Arquivo Original:</strong> {{ selectedHistoryItem.arquivo_original }}</p>
+            <p><strong>Data de Upload:</strong> {{ formatDate(selectedHistoryItem.created_at) }}</p>
+          </div>
+          <div>
+            <p><strong>Tipo de Cadastro:</strong> <span class="badge badge-secondary">{{ selectedHistoryItem.tipo === 'produtos' ? 'Produtos & Variações' : 'Fornecedores' }}</span></p>
+            <p><strong>Status Atual:</strong> 
+              <span class="badge" :class="selectedHistoryItem.status === 'concluido' ? 'badge-success' : 'badge-warning'">
+                {{ selectedHistoryItem.status === 'concluido' ? 'Concluído' : 'Aguardando Confirmação' }}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <!-- KPI Cards do Lote -->
+        <div class="grid-3 gap-4 mb-6">
+          <div class="kpi-card" style="padding: 0.75rem; text-align: center;">
+            <div class="kpi-value text-success" style="font-size: 1.5rem;">+{{ selectedHistoryItem.criados }}</div>
+            <div class="kpi-label" style="font-size: 0.75rem;">Registros Criados</div>
+          </div>
+          <div class="kpi-card" style="padding: 0.75rem; text-align: center;">
+            <div class="kpi-value text-brand" style="font-size: 1.5rem;">{{ selectedHistoryItem.atualizados }}</div>
+            <div class="kpi-label" style="font-size: 0.75rem;">Registros Atualizados</div>
+          </div>
+          <div class="kpi-card" style="padding: 0.75rem; text-align: center;">
+            <div class="kpi-value text-danger" style="font-size: 1.5rem;">{{ selectedHistoryItem.erros }}</div>
+            <div class="kpi-label" style="font-size: 0.75rem;">Linhas com Erro</div>
+          </div>
+        </div>
+
+        <!-- Tabela de itens validados na planilha -->
+        <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-text-primary);">Itens Identificados na Planilha:</h4>
+        <div v-if="selectedHistoryItem.preview_json" class="table-wrapper mb-4" style="max-height: 250px; overflow-y: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 60px; text-align: center;">Linha</th>
+                <th style="width: 100px;">Ação</th>
+                <th>Identificador / SKU</th>
+                <th>Detalhes / Erros</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in getPreviewData(selectedHistoryItem)" :key="item.line" :style="item.valido === false ? 'background: rgba(var(--color-danger-rgb), 0.05);' : ''">
+                <td class="font-mono text-center">{{ item.line }}</td>
+                <td>
+                  <span class="badge" :class="item.valido === false ? 'badge-danger' : item.acao === 'criar' ? 'badge-success' : 'badge-primary'">
+                    {{ item.valido === false ? 'Erro' : item.acao === 'criar' ? 'Criar' : 'Atualizar' }}
+                  </span>
+                </td>
+                <td>
+                  <strong>{{ item.data.sku_var || item.data.cnpj || item.data.cpf || item.data.sku_base }}</strong>
+                </td>
+                <td :class="item.valido === false ? 'text-danger font-bold' : 'text-secondary'">
+                  <div v-if="item.valido === false">
+                    <div v-for="err in item.erros" :key="err">• {{ err }}</div>
+                  </div>
+                  <span v-else>Pronto para processar</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex gap-3 justify-end mt-6">
+          <button @click="showDetailsModal = false" class="btn btn-secondary">Fechar</button>
+          <button v-if="selectedHistoryItem.status === 'aguardando_confirmacao'" @click="confirmFromHistory(selectedHistoryItem)" :disabled="loading || (selectedHistoryItem.criados === 0 && selectedHistoryItem.atualizados === 0)" class="btn btn-primary">
+            Confirmar e Importar Válidos
+          </button>
         </div>
       </div>
     </div>
@@ -186,8 +271,47 @@ const preview = ref(null)
 const loading = ref(false)
 const importId = ref(null)
 
+const showDetailsModal = ref(false)
+const selectedHistoryItem = ref(null)
+
 function handleFileChange(e) {
   selectedFile.value = e.target.files[0]
+}
+
+function openDetails(item) {
+  selectedHistoryItem.value = item
+  showDetailsModal.value = true
+}
+
+function getPreviewData(item) {
+  if (!item || !item.preview_json) return []
+  try {
+    return typeof item.preview_json === 'string' ? JSON.parse(item.preview_json) : item.preview_json
+  } catch (e) {
+    return []
+  }
+}
+
+async function confirmFromHistory(item) {
+  loading.value = true
+  try {
+    const response = await axios.post(route('admin.import-export.confirm'), {
+      import_id: item.id
+    })
+    const data = response.data
+    if (data.success) {
+      alert(data.message)
+      showDetailsModal.value = false
+      router.reload()
+    } else {
+      alert(data.message)
+    }
+  } catch (error) {
+    const errMsg = error.response?.data?.message || 'Erro ao confirmar a importação.'
+    alert(errMsg)
+  } finally {
+    loading.value = false
+  }
 }
 
 async function uploadFile() {
@@ -252,5 +376,32 @@ function formatDate(dateStr) {
 .disabled {
   pointer-events: none;
   opacity: 0.5;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal-box {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 1.5rem;
 }
 </style>
