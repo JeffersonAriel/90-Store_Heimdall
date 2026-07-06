@@ -56,10 +56,12 @@
     <!-- ── KPI Cards ───────────────────────────────────────── -->
     <div class="kpi-grid">
       <div class="kpi-card kpi-threats">
-        <div class="kpi-icon">⚡</div>
-        <div class="kpi-body">
-          <span class="kpi-value">{{ threats1h }}</span>
-          <span class="kpi-name">Ameaças (1h)</span>
+        <div class="kpi-top">
+          <div class="kpi-icon">⚡</div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ threats1h }}</span>
+            <span class="kpi-name">Ameaças (1h)</span>
+          </div>
         </div>
         <div class="kpi-trend" :class="threats1h > 0 ? 'trend-bad' : 'trend-good'">
           {{ threats1h > 0 ? '↑ Alerta' : '✓ Normal' }}
@@ -67,10 +69,12 @@
       </div>
 
       <div class="kpi-card kpi-blocked">
-        <div class="kpi-icon">🚫</div>
-        <div class="kpi-body">
-          <span class="kpi-value">{{ ipsBloqueados.length }}</span>
-          <span class="kpi-name">IPs Bloqueados</span>
+        <div class="kpi-top">
+          <div class="kpi-icon">🚫</div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ ipsBloqueados.length }}</span>
+            <span class="kpi-name">IPs Bloqueados</span>
+          </div>
         </div>
         <div class="kpi-trend" :class="ipsBloqueados.length > 0 ? 'trend-warn' : 'trend-good'">
           {{ ipsBloqueados.length > 0 ? 'Ativos' : '✓ Limpo' }}
@@ -78,10 +82,12 @@
       </div>
 
       <div class="kpi-card kpi-logins">
-        <div class="kpi-icon">🔐</div>
-        <div class="kpi-body">
-          <span class="kpi-value">{{ loginsFailed24h }}</span>
-          <span class="kpi-name">Logins Falhos (24h)</span>
+        <div class="kpi-top">
+          <div class="kpi-icon">🔐</div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ loginsFailed24h }}</span>
+            <span class="kpi-name">Logins Falhos (24h)</span>
+          </div>
         </div>
         <div class="kpi-trend" :class="loginsFailed24h > 5 ? 'trend-bad' : 'trend-good'">
           {{ loginsOk24h }} ok / {{ loginsFailed24h }} falhos
@@ -89,19 +95,23 @@
       </div>
 
       <div class="kpi-card kpi-traffic">
-        <div class="kpi-icon">🌐</div>
-        <div class="kpi-body">
-          <span class="kpi-value">{{ totalRequests24h.toLocaleString('pt-BR') }}</span>
-          <span class="kpi-name">Requisições (24h)</span>
+        <div class="kpi-top">
+          <div class="kpi-icon">🌐</div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ totalRequests24h.toLocaleString('pt-BR') }}</span>
+            <span class="kpi-name">Requisições (24h)</span>
+          </div>
         </div>
         <div class="kpi-trend trend-info">{{ blockedAttempts24h }} bloqueadas</div>
       </div>
 
       <div class="kpi-card kpi-threats24">
-        <div class="kpi-icon">🔍</div>
-        <div class="kpi-body">
-          <span class="kpi-value">{{ threats24h }}</span>
-          <span class="kpi-name">Ameaças (24h)</span>
+        <div class="kpi-top">
+          <div class="kpi-icon">🔍</div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ threats24h }}</span>
+            <span class="kpi-name">Ameaças (24h)</span>
+          </div>
         </div>
         <div class="kpi-trend" :class="threats24h > 0 ? 'trend-warn' : 'trend-good'">
           Últimas 24 horas
@@ -109,10 +119,12 @@
       </div>
 
       <div class="kpi-card kpi-audit">
-        <div class="kpi-icon">📋</div>
-        <div class="kpi-body">
-          <span class="kpi-value">{{ auditLogs.length }}</span>
-          <span class="kpi-name">Eventos Auditoria</span>
+        <div class="kpi-top">
+          <div class="kpi-icon">📋</div>
+          <div class="kpi-body">
+            <span class="kpi-value">{{ auditLogs.length }}</span>
+            <span class="kpi-name">Eventos Auditoria</span>
+          </div>
         </div>
         <div class="kpi-trend trend-info">Últimos registros</div>
       </div>
@@ -727,10 +739,10 @@ function auditActionLabel(a) { return auditLabels[a] || a }
   background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 14px;
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem 1.25rem;
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.75rem;
   position: relative;
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -740,15 +752,23 @@ function auditActionLabel(a) { return auditLabels[a] || a }
   box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
 
+.kpi-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .kpi-icon { font-size: 1.75rem; line-height: 1; flex-shrink: 0; }
 .kpi-body { flex: 1; }
 .kpi-value { display: block; font-size: 1.75rem; font-weight: 800; color: #e0e7ff; line-height: 1; }
-.kpi-name  { display: block; font-size: 0.72rem; color: rgba(165,180,252,0.6); margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.kpi-name  { display: block; font-size: 0.72rem; color: rgba(165,180,252,0.7); margin-top: 0.35rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
 
 .kpi-trend {
-  position: absolute; bottom: 0.75rem; right: 1rem;
+  display: inline-block;
+  align-self: flex-start;
   font-size: 0.7rem; font-weight: 600;
-  padding: 0.2rem 0.5rem; border-radius: 99px;
+  padding: 0.2rem 0.6rem; border-radius: 99px;
+  margin-top: 0.25rem;
 }
 .trend-good { background: rgba(34,197,94,0.12);  color: #4ade80; }
 .trend-bad  { background: rgba(239,68,68,0.12);  color: #f87171; }
