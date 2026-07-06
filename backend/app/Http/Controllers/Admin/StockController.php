@@ -30,6 +30,7 @@ class StockController extends Controller
         $stock = VariacaoProduto::query()
             ->where('tipo_estoque', 'proprio')
             ->join('produtos', 'variacoes_produto.produto_id', '=', 'produtos.id')
+            ->whereNull('produtos.deleted_at')
             ->select('variacoes_produto.*', 'produtos.nome as produto_nome')
             ->when($search, function ($query, $search) {
                 $query->where('produtos.nome', 'like', "%{$search}%")
