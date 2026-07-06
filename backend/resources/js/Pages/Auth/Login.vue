@@ -82,7 +82,7 @@ function submit() {
 }
 
 const basePath = typeof window !== 'undefined' && window.location.pathname.includes('/~jeff2892') ? '/~jeff2892' : ''
-const logoUrl = `${basePath}/logo-heimdall.png?v=2`
+const logoUrl = `${basePath}/logo-heimdall.png?v=3`
 </script>
 
 <style>
