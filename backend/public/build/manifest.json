@@ -13,8 +13,8 @@
     "file": "assets/AdminLayout-UZC2NqSL.css",
     "src": "_AdminLayout-UZC2NqSL.css"
   },
-  "_charts-BSjGCEAz.js": {
-    "file": "assets/charts-BSjGCEAz.js",
+  "_charts-BR9QGZJa.js": {
+    "file": "assets/charts-BR9QGZJa.js",
     "name": "charts",
     "imports": [
       "_vendor-DZqTcOXY.js"
@@ -331,12 +331,12 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Bd1SREyd.js",
+    "file": "assets/app-CBORj3HV.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_charts-BSjGCEAz.js",
+      "_charts-BR9QGZJa.js",
       "_vendor-DZqTcOXY.js"
     ],
     "dynamicImports": [
