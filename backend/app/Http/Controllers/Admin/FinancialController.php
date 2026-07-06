@@ -82,25 +82,70 @@ class FinancialController extends Controller
             'data_lancamento' => 'required|date',
             'conta_id' => 'nullable|exists:contas_bancarias,id',
             'conciliado' => 'boolean',
+            'recorrente' => 'boolean',
+            'recorrencias' => 'nullable|integer|min:2|max:36',
+            'frequencia' => 'nullable|in:mensal,semanal',
         ]);
 
         $isConciliado = $request->boolean('conciliado');
+        $isRecorrente = $request->boolean('recorrente');
+        $recorrencias = $request->input('recorrencias', 1);
+        $frequencia = $request->input('frequencia', 'mensal');
 
-        LancamentoFinanceiro::create([
-            'tipo' => $request->tipo,
-            'categoria' => $request->categoria,
-            'descricao' => $request->descricao,
-            'valor' => $request->valor,
-            'data_lancamento' => $request->data_lancamento,
-            'data_competencia' => $request->data_lancamento,
-            'conta_id' => $request->conta_id,
-            'conciliado' => $isConciliado,
-            'conciliado_por' => $isConciliado ? Auth::guard('admin')->id() : null,
-            'conciliado_em' => $isConciliado ? now() : null,
-            'created_by' => Auth::guard('admin')->id(),
-        ]);
+        try {
+            if ($isRecorrente && $recorrencias > 1) {
+                $baseDate = \Carbon\Carbon::parse($request->data_lancamento);
+                DB::transaction(function () use ($request, $baseDate, $recorrencias, $frequencia, $isConciliado) {
+                    for ($i = 0; $i < $recorrencias; $i++) {
+                        $occurrenceDate = $baseDate->copy();
+                        if ($frequencia === 'semanal') {
+                            $occurrenceDate->addWeeks($i);
+                        } else {
+                            $occurrenceDate->addMonths($i);
+                        }
 
-        return back()->with('success', 'Lançamento financeiro cadastrado com sucesso!');
+                        $numeroParcela = $i + 1;
+                        $descFinal = $request->descricao . " ({$numeroParcela}/{$recorrencias})";
+
+                        // Somente a primeira parcela pode ser considerada conciliada se o checkbox foi marcado,
+                        // as parcelas futuras nascem pendentes de pagamento.
+                        $conciliadoParcela = ($i === 0) ? $isConciliado : false;
+
+                        LancamentoFinanceiro::create([
+                            'tipo' => $request->tipo,
+                            'categoria' => $request->categoria,
+                            'descricao' => $descFinal,
+                            'valor' => $request->valor,
+                            'data_lancamento' => $occurrenceDate->toDateString(),
+                            'data_competencia' => $occurrenceDate->toDateString(),
+                            'conta_id' => $conciliadoParcela ? $request->conta_id : null,
+                            'conciliado' => $conciliadoParcela,
+                            'conciliado_por' => $conciliadoParcela ? Auth::guard('admin')->id() : null,
+                            'conciliado_em' => $conciliadoParcela ? now() : null,
+                            'created_by' => Auth::guard('admin')->id(),
+                        ]);
+                    }
+                });
+            } else {
+                LancamentoFinanceiro::create([
+                    'tipo' => $request->tipo,
+                    'categoria' => $request->categoria,
+                    'descricao' => $request->descricao,
+                    'valor' => $request->valor,
+                    'data_lancamento' => $request->data_lancamento,
+                    'data_competencia' => $request->data_lancamento,
+                    'conta_id' => $request->conta_id,
+                    'conciliado' => $isConciliado,
+                    'conciliado_por' => $isConciliado ? Auth::guard('admin')->id() : null,
+                    'conciliado_em' => $isConciliado ? now() : null,
+                    'created_by' => Auth::guard('admin')->id(),
+                ]);
+            }
+
+            return back()->with('success', 'Lançamento financeiro cadastrado com sucesso!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erro ao salvar lançamento: ' . $e->getMessage());
+        }
     }
 
     /**

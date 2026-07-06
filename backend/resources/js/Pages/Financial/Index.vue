@@ -230,6 +230,27 @@
               </label>
             </div>
 
+            <div class="form-options mb-4 mt-2">
+              <label class="checkbox-label" style="display:flex; gap:8px; align-items:center;">
+                <input type="checkbox" v-model="modalForm.recorrente" />
+                <span>Repetir lançamento (Recorrente)</span>
+              </label>
+            </div>
+
+            <div v-if="modalForm.recorrente" class="grid-2 gap-4 mb-4">
+              <div class="form-group">
+                <label class="form-label">Frequência</label>
+                <select v-model="modalForm.frequencia" class="form-control" required>
+                  <option value="mensal">Mensal</option>
+                  <option value="semanal">Semanal</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Número de Vezes (Meses/Semanas)</label>
+                <input v-model="modalForm.recorrencias" type="number" min="2" max="36" class="form-control" placeholder="Ex: 12" required />
+              </div>
+            </div>
+
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="showModal = false">Cancelar</button>
@@ -271,7 +292,10 @@ const modalForm = ref({
   valor: '',
   data_lancamento: new Date().toISOString().slice(0, 10),
   conta_id: null,
-  conciliado: false
+  conciliado: false,
+  recorrente: false,
+  recorrencias: 12,
+  frequencia: 'mensal'
 })
 
 function handleFilter() {
@@ -292,7 +316,10 @@ function openCreateModal() {
     valor: '',
     data_lancamento: new Date().toISOString().slice(0, 10),
     conta_id: props.accounts[0]?.id || null,
-    conciliado: false
+    conciliado: false,
+    recorrente: false,
+    recorrencias: 12,
+    frequencia: 'mensal'
   }
   showModal.value = true
 }
