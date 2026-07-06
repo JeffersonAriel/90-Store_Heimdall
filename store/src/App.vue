@@ -54,12 +54,12 @@
                       <div v-for="(grandchild, idx) in child.children" :key="grandchild.id" class="dropdown-column" :class="{ 'has-divider': idx > 0 }">
                         <h4>{{ grandchild.nome }}</h4>
                         <ul class="grandchild-list">
-                          <li v-for="sub in grandchild.children.slice(0, 7)" :key="sub.id" class="grandchild-item">
+                          <li v-for="sub in (grandchild.children || []).slice(0, 7)" :key="sub.id" class="grandchild-item">
                             <RouterLink :to="`/catalogo?categoria=${sub.slug}`" class="grandchild-link-plain">
                               {{ sub.nome }}
                             </RouterLink>
                           </li>
-                          <li v-if="grandchild.children.length > 7" class="ver-mais-li">
+                          <li v-if="(grandchild.children || []).length > 7" class="ver-mais-li">
                             <RouterLink :to="`/catalogo?categoria=${grandchild.slug}`" class="sub-grandchild-ver-mais">
                               Ver Mais +
                             </RouterLink>

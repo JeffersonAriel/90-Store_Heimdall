@@ -7,7 +7,7 @@ import axios from 'axios'
 import './assets/css/main.css'
 
 // Detecta dinamicamente a subpasta do cPanel (ex: /~jeff2892)
-const basePath = window.location.pathname.replace(/\/$/, '')
+const basePath = window.location.pathname.includes('/~jeff2892') ? '/~jeff2892' : ''
 
 axios.interceptors.request.use((config) => {
   if (config.url && config.url.startsWith('/api/')) {
