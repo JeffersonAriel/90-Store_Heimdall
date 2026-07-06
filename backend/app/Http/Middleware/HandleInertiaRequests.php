@@ -79,6 +79,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         return array_merge(parent::share($request), [
+            'asset_url' => asset(''),
             'auth' => [
                 'employee' => $employee ? [
                     'id' => $employee->id,

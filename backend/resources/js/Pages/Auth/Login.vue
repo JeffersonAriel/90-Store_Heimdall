@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <img src="/logo-heimdall.png" class="logo-badge" style="object-fit: contain; background: none; box-shadow: none;" alt="Heimdall Logo" />
+        <img :src="$page.props.asset_url + 'logo-heimdall.png'" class="logo-badge" style="object-fit: contain; background: none; box-shadow: none;" alt="Heimdall Logo" />
         <h1>Heimdall Back-Office</h1>
         <p class="subtitle text-secondary">Identifique-se para acessar a gestão do e-commerce</p>
       </div>
