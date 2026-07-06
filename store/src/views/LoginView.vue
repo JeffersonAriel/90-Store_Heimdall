@@ -95,6 +95,7 @@ async function submit() {
     router.push(redirectPath)
   } catch (err) {
     error.value = err.response?.data?.message || 'E-mail ou senha incorretos.'
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   } finally {
     loading.value = false
   }

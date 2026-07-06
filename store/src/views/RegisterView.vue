@@ -275,6 +275,7 @@ async function submit() {
     } else {
       error.value = 'Ocorreu um erro ao registrar. Tente novamente.'
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   } finally {
     loading.value = false
   }
