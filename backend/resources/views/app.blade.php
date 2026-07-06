@@ -6,8 +6,8 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         {{-- Inertia page title --}}
-        <title inertia>Heimdall | 90-Store</title>
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+        <title inertia>Heimdall | Vigilância Total</title>
+        <link rel="icon" type="image/png" href="{{ asset('favicon.ico') }}">
 
         {{-- Fonts --}}
         <link rel="preconnect" href="https://fonts.googleapis.com">
