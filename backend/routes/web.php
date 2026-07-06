@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\MarketingController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\AgendaController;
 
 // ─── ROTA DO INSTALADOR (Auto-desabilita após uso via middleware CheckInstalled) ───
 Route::middleware(['installed'])->group(function () {
@@ -66,11 +67,14 @@ Route::prefix('heimdall')->group(function () {
         Route::post('orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('admin.orders.confirm-payment');
         Route::patch('orders/{order}/update-frete', [OrderController::class, 'updateFrete'])->name('admin.orders.update-frete');
 
+        Route::resource('agenda', AgendaController::class)->names('admin.agenda');
+
         Route::get('stock', [StockController::class, 'index'])->name('admin.stock.index');
         Route::post('stock/{id}/adjust', [StockController::class, 'adjust'])->name('admin.stock.adjust');
         Route::get('stock/{id}/history', [StockController::class, 'history'])->name('admin.stock.history');
 
         Route::get('financial', [FinancialController::class, 'index'])->name('admin.financial.index');
+        Route::post('financial', [FinancialController::class, 'store'])->name('admin.financial.store');
         Route::post('financial/{id}/reconcile', [FinancialController::class, 'reconcile'])->name('admin.financial.reconcile');
         Route::get('financial/reports', [FinancialController::class, 'reports'])->name('admin.financial.reports');
         Route::get('financial/export-bi', [FinancialController::class, 'biExport'])->name('admin.financial.export-bi');

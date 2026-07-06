@@ -27,6 +27,7 @@ class FinancialController extends Controller
     {
         $tipo = $request->input('tipo');
         $categoria = $request->input('categoria');
+        $status = $request->input('status');
 
         $transactions = LancamentoFinanceiro::query()
             ->with(['conta', 'pedido', 'fornecedor', 'funcionarioCriador'])
@@ -36,17 +37,70 @@ class FinancialController extends Controller
             ->when($categoria, function ($query, $categoria) {
                 $query->where('categoria', $categoria);
             })
+            ->when($status, function ($query, $status) {
+                if ($status === 'conciliado') {
+                    $query->where('conciliado', true);
+                } elseif ($status === 'pendente') {
+                    $query->where('conciliado', false);
+                }
+            })
             ->orderBy('data_lancamento', 'desc')
             ->paginate(15)
             ->withQueryString();
 
         $accounts = ContaBancaria::where('ativa', true)->get();
 
+        $lucroLiquido = LancamentoFinanceiro::where('conciliado', true)->where('tipo', 'entrada')->sum('valor')
+            - LancamentoFinanceiro::where('conciliado', true)->where('tipo', 'saida')->sum('valor');
+        
+        $contasReceber = LancamentoFinanceiro::where('conciliado', false)->where('tipo', 'entrada')->sum('valor');
+        
+        $contasPagar = LancamentoFinanceiro::where('conciliado', false)->where('tipo', 'saida')->sum('valor');
+
         return Inertia::render('Financial/Index', [
             'transactions' => $transactions,
             'accounts' => $accounts,
-            'filters' => $request->only('tipo', 'categoria')
+            'filters' => $request->only('tipo', 'categoria', 'status'),
+            'metrics' => [
+                'lucro_liquido' => floatval($lucroLiquido),
+                'contas_receber' => floatval($contasReceber),
+                'contas_pagar' => floatval($contasPagar),
+            ]
         ]);
+    }
+
+    /**
+     * Cadastra um novo lançamento financeiro manual
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'tipo' => 'required|in:entrada,saida',
+            'categoria' => 'required|string|max:100',
+            'descricao' => 'required|string|max:255',
+            'valor' => 'required|numeric|min:0.01',
+            'data_lancamento' => 'required|date',
+            'conta_id' => 'nullable|exists:contas_bancarias,id',
+            'conciliado' => 'boolean',
+        ]);
+
+        $isConciliado = $request->boolean('conciliado');
+
+        LancamentoFinanceiro::create([
+            'tipo' => $request->tipo,
+            'categoria' => $request->categoria,
+            'descricao' => $request->descricao,
+            'valor' => $request->valor,
+            'data_lancamento' => $request->data_lancamento,
+            'data_competencia' => $request->data_lancamento,
+            'conta_id' => $request->conta_id,
+            'conciliado' => $isConciliado,
+            'conciliado_por' => $isConciliado ? Auth::guard('admin')->id() : null,
+            'conciliado_em' => $isConciliado ? now() : null,
+            'created_by' => Auth::guard('admin')->id(),
+        ]);
+
+        return back()->with('success', 'Lançamento financeiro cadastrado com sucesso!');
     }
 
     /**

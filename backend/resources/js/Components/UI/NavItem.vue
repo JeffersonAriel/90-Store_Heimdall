@@ -37,6 +37,7 @@ import PointsIcon from '@/Components/Icons/PointsIcon.vue'
 import ReferralsIcon from '@/Components/Icons/ReferralsIcon.vue'
 import ImportIcon from '@/Components/Icons/ImportIcon.vue'
 import SecurityIcon from '@/Components/Icons/SecurityIcon.vue'
+import CalendarIcon from '@/Components/Icons/CalendarIcon.vue'
 
 const props = defineProps({
   href:      { type: String, default: null },
@@ -63,6 +64,7 @@ const iconMap = {
   referrals: ReferralsIcon,
   import: ImportIcon,
   security: SecurityIcon,
+  calendar: CalendarIcon,
 }
 
 const iconComponent = computed(() => iconMap[props.icon] || DashboardIcon)
