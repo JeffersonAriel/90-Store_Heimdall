@@ -210,9 +210,29 @@
 
     <!-- Modal Confirmação de Pagamento manual -->
     <div v-if="showPaymentModal" class="modal-backdrop" @click.self="showPaymentModal = false">
-      <div class="modal-box">
+      <div class="modal-box" style="max-width: 500px; width: 90%;">
         <h2 class="modal-title">Confirmar Recebimento de Pagamento Pix</h2>
         <form @submit.prevent="submitPaymentConfirmation">
+          
+          <!-- Custos de Dropshipping se houver -->
+          <div v-if="dropshippingItens.length > 0" class="mb-4 p-4" style="background: rgba(var(--color-brand-rgb), 0.05); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+            <h4 style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-text-primary);">
+              ⚠️ Preço de Custo (Dropshipping)
+            </h4>
+            <p class="text-secondary mb-3" style="font-size: 0.75rem;">
+              Este pedido possui itens de dropshipping. Informe o preço de custo pago a cada fornecedor.
+            </p>
+            <div v-for="item in dropshippingItens" :key="item.id" class="form-group mb-3">
+              <label class="form-label" style="font-size: 0.8125rem; display: block; margin-bottom: 0.25rem;">
+                {{ item.nome_snapshot }} ({{ item.sku_snapshot }}) - Qtd: {{ item.quantidade }}
+              </label>
+              <div class="flex gap-2 items-center">
+                <span style="font-size: 0.875rem; color: var(--color-text-secondary);">R$</span>
+                <input type="number" v-model="paymentForm.custos[item.id]" step="0.01" min="0.01" class="form-control" placeholder="0,00" required />
+              </div>
+            </div>
+          </div>
+
           <div class="form-group">
             <label class="form-label">Informações / Comprovante (Obrigatório)</label>
             <textarea v-model="paymentForm.observacao" class="form-control" rows="3" placeholder="Ex: Pix confirmado na conta PJ Banco do Brasil às 14:32..." required></textarea>
@@ -241,6 +261,11 @@ const showTrackingModal = ref(false)
 const showPaymentModal = ref(false)
 const showFreteModal = ref(false)
 
+// Filtra itens de dropshipping do pedido
+const dropshippingItens = computed(() => {
+  return (props.order.itens || []).filter(item => item.tipo_estoque_snapshot === 'dropshipping')
+})
+
 // Detecta se este pedido tem frete a combinar (valor 0 + observação marcada + status ainda não confirmado)
 const freteACombinar = computed(() => {
   return props.order.valor_frete == 0
@@ -256,7 +281,8 @@ const trackingForm = ref({
 })
 
 const paymentForm = ref({
-  observacao: ''
+  observacao: '',
+  custos: {}
 })
 
 function submitFreteACombinar() {
@@ -277,6 +303,10 @@ function advanceStatus(statusNovo) {
 
 function openConfirmPaymentModal() {
   paymentForm.value.observacao = ''
+  paymentForm.value.custos = {}
+  dropshippingItens.value.forEach(item => {
+    paymentForm.value.custos[item.id] = item.preco_custo_snapshot ? parseFloat(item.preco_custo_snapshot) : ''
+  })
   showPaymentModal.value = true
 }
 

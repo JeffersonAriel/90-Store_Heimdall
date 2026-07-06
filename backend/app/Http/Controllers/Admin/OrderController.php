@@ -96,14 +96,31 @@ class OrderController extends Controller
     {
         $request->validate([
             'observacao' => 'required|string|max:255',
+            'custos' => 'nullable|array',
+            'custos.*' => 'required|numeric|min:0.01',
         ]);
 
         try {
-            $this->statusService->confirmPaymentManually(
-                $id,
-                Auth::guard('admin')->id(),
-                $request->observacao
-            );
+            DB::transaction(function () use ($id, $request) {
+                // Se houver custos de dropshipping informados, atualiza os itens correspondentes
+                if ($request->has('custos') && is_array($request->custos)) {
+                    foreach ($request->custos as $itemId => $custoValue) {
+                        DB::table('itens_pedido')
+                            ->where('pedido_id', $id)
+                            ->where('id', $itemId)
+                            ->where('tipo_estoque_snapshot', 'dropshipping')
+                            ->update([
+                                'preco_custo_snapshot' => $custoValue
+                            ]);
+                    }
+                }
+
+                $this->statusService->confirmPaymentManually(
+                    $id,
+                    Auth::guard('admin')->id(),
+                    $request->observacao
+                );
+            });
 
             return back()->with('success', 'Pagamento confirmado manualmente! Pedido avançado para Separação.');
         } catch (\Exception $e) {
