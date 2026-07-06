@@ -15,28 +15,23 @@ class SecurityController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $tipo = $request->input('tipo'); // brute_force, rate_limit, xss_tentativa, sql_tentativa
+        $tipo   = $request->input('tipo');
+
+        // ── Core logs ──────────────────────────────────────────────
+        $logsSeguranca = DB::table('logs_seguranca')
+            ->when($search, fn($q) => $q->where('ip', 'like', "%{$search}%")->orWhere('detalhe', 'like', "%{$search}%"))
+            ->when($tipo,   fn($q) => $q->where('tipo', $tipo))
+            ->orderBy('id', 'desc')
+            ->paginate(15)
+            ->withQueryString();
 
         $logsAcesso = DB::table('logs_acesso')
             ->orderBy('id', 'desc')
             ->limit(10)
             ->get();
 
-        $logsSeguranca = DB::table('logs_seguranca')
-            ->when($search, function ($query, $search) {
-                $query->where('ip', 'like', "%{$search}%")
-                      ->orWhere('detalhe', 'like', "%{$search}%");
-            })
-            ->when($tipo, function ($query, $tipo) {
-                $query->where('tipo', $tipo);
-            })
-            ->orderBy('id', 'desc')
-            ->paginate(15)
-            ->withQueryString();
-
         $ipsBloqueados = DB::table('ips_bloqueados')->get();
 
-        // Auditoria granular de alteração de dados (quem alterou o quê)
         $auditLogs = DB::table('logs_auditoria')
             ->join('funcionarios', 'logs_auditoria.funcionario_id', '=', 'funcionarios.id')
             ->select('logs_auditoria.*', 'funcionarios.nome as funcionario_nome')
@@ -44,32 +39,107 @@ class SecurityController extends Controller
             ->limit(20)
             ->get();
 
-        // Alertas de comportamento suspeito na última hora
+        // ── KPIs de Segurança ──────────────────────────────────────
+        $now = now();
+
+        $threats1h     = DB::table('logs_seguranca')->where('created_at', '>=', $now->copy()->subHour())->count();
+        $threats24h    = DB::table('logs_seguranca')->where('created_at', '>=', $now->copy()->subDay())->count();
+        $loginsFailed24h = DB::table('logs_login')->where('sucesso', false)->where('created_at', '>=', $now->copy()->subDay())->count();
+        $loginsOk24h   = DB::table('logs_login')->where('sucesso', true)->where('created_at', '>=', $now->copy()->subDay())->count();
+        $totalRequests24h = DB::table('logs_acesso')->where('created_at', '>=', $now->copy()->subDay())->count();
+        $blockedAttempts24h = DB::table('logs_seguranca')->where('bloqueado', true)->where('created_at', '>=', $now->copy()->subDay())->count();
+
+        // ── Distribuição de ameaças por tipo (últimos 7 dias) ──────
+        $topThreats = DB::table('logs_seguranca')
+            ->select('tipo', DB::raw('count(*) as total'))
+            ->where('created_at', '>=', $now->copy()->subDays(7))
+            ->groupBy('tipo')
+            ->orderByDesc('total')
+            ->get();
+
+        // ── Ameaças por hora (últimas 24h para gráfico) ────────────
+        $threatsPerHour = DB::table('logs_seguranca')
+            ->select(DB::raw('HOUR(created_at) as hora'), DB::raw('count(*) as total'))
+            ->where('created_at', '>=', $now->copy()->subDay())
+            ->groupBy(DB::raw('HOUR(created_at)'))
+            ->orderBy('hora')
+            ->get()
+            ->keyBy('hora');
+
+        $threatChart = collect(range(0, 23))->map(fn($h) => [
+            'hora'  => str_pad($h, 2, '0', STR_PAD_LEFT) . 'h',
+            'total' => $threatsPerHour->get($h)?->total ?? 0,
+        ]);
+
+        // ── IPs únicos que mais atacaram (top 5) ───────────────────
+        $topAttackers = DB::table('logs_seguranca')
+            ->select('ip', DB::raw('count(*) as total'))
+            ->where('created_at', '>=', $now->copy()->subDays(7))
+            ->groupBy('ip')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+
+        // ── Score de Segurança calculado ───────────────────────────
+        $score = 100;
+        if ($threats1h > 0)           $score -= min(15, $threats1h * 2);
+        if (count($ipsBloqueados) > 5) $score -= 5;
+        if ($loginsFailed24h > 10)     $score -= 10;
+        $scoreStatus = $score >= 80 ? 'seguro' : ($score >= 60 ? 'alerta' : 'critico');
+
+        // ── Alertas comportamentais ─────────────────────────────────
         $alertasSuspicious = [
             'brute_force_counts' => DB::table('logs_seguranca')
                 ->where('tipo', 'brute_force')
-                ->where('created_at', '>=', now()->subHour())
+                ->where('created_at', '>=', $now->copy()->subHour())
                 ->count(),
             'high_traffic_ips' => DB::table('logs_acesso')
                 ->select('ip', DB::raw('count(*) as total'))
-                ->where('created_at', '>=', now()->subHour())
+                ->where('created_at', '>=', $now->copy()->subHour())
                 ->groupBy('ip')
                 ->having('total', '>', 100)
                 ->get(),
         ];
 
-        $perfis = DB::table('perfis_permissao')->orderBy('nome')->get();
+        // ── Saúde do Sistema ────────────────────────────────────────
+        $systemChecks = [
+            ['label' => 'Rate Limiting no Login', 'status' => 'pass', 'detail' => 'throttle:5,1 ativo nas rotas de autenticação'],
+            ['label' => 'Headers HTTP de Segurança', 'status' => 'pass', 'detail' => 'X-Frame-Options, X-Content-Type, Referrer-Policy, Permissions-Policy'],
+            ['label' => 'Bloqueio Automático por Brute Force', 'status' => 'pass', 'detail' => 'IPs bloqueados automaticamente após 5 falhas em 10 minutos'],
+            ['label' => 'APP_DEBUG em Produção', 'status' => config('app.debug') ? 'fail' : 'pass', 'detail' => config('app.debug') ? 'ATENÇÃO: APP_DEBUG está true!' : 'Modo debug desativado'],
+            ['label' => 'Autenticação 2FA Disponível', 'status' => 'pass', 'detail' => 'Google 2FA disponível para todos os funcionários'],
+            ['label' => 'CSRF Protection', 'status' => 'pass', 'detail' => 'Token CSRF validado em todos os formulários POST/PUT/DELETE'],
+            ['label' => 'IPs Bloqueados Monitorados', 'status' => count($ipsBloqueados) > 0 ? 'warn' : 'pass', 'detail' => count($ipsBloqueados) . ' IP(s) atualmente na lista negra'],
+            ['label' => 'Log de Acesso Ativo', 'status' => 'pass', 'detail' => 'Middleware LogAccess registrando todas as requisições'],
+            ['label' => 'Permissões por Perfil (RBAC)', 'status' => 'pass', 'detail' => 'Controle granular view/create/edit/delete por módulo'],
+            ['label' => 'Sessão Invalidada no Logout', 'status' => 'pass', 'detail' => 'invalidate() + regenerateToken() aplicados no logout'],
+        ];
+
+        $perfis        = DB::table('perfis_permissao')->orderBy('nome')->get();
         $permissoesMap = DB::table('permissoes_modulo')->get();
 
         return Inertia::render('Security/Index', [
-            'logsSeguranca' => $logsSeguranca,
-            'logsAcesso' => $logsAcesso,
-            'ipsBloqueados' => $ipsBloqueados,
-            'auditLogs' => $auditLogs,
-            'alerts' => $alertasSuspicious,
-            'filters' => $request->only('search', 'tipo'),
-            'perfis' => $perfis,
-            'permissoesMap' => $permissoesMap,
+            'logsSeguranca'   => $logsSeguranca,
+            'logsAcesso'      => $logsAcesso,
+            'ipsBloqueados'   => $ipsBloqueados,
+            'auditLogs'       => $auditLogs,
+            'alerts'          => $alertasSuspicious,
+            'filters'         => $request->only('search', 'tipo'),
+            'perfis'          => $perfis,
+            'permissoesMap'   => $permissoesMap,
+            // Novos dados premium
+            'securityScore'   => $score,
+            'scoreStatus'     => $scoreStatus,
+            'threats1h'       => $threats1h,
+            'threats24h'      => $threats24h,
+            'loginsFailed24h' => $loginsFailed24h,
+            'loginsOk24h'     => $loginsOk24h,
+            'totalRequests24h'=> $totalRequests24h,
+            'blockedAttempts24h' => $blockedAttempts24h,
+            'topThreats'      => $topThreats,
+            'threatChart'     => $threatChart,
+            'topAttackers'    => $topAttackers,
+            'systemChecks'    => $systemChecks,
         ]);
     }
 

@@ -39,9 +39,9 @@ Route::prefix('heimdall')->group(function () {
     // ─ Auth Funcionários (Visitantes) ─
     Route::middleware(['guest:admin'])->group(function () {
         Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
-        Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.post');
+        Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:5,1')->name('admin.login.post');
         Route::get('/login/2fa', [AdminAuthController::class, 'show2fa'])->name('admin.login.2fa');
-        Route::post('/login/2fa', [AdminAuthController::class, 'verify2fa'])->name('admin.login.2fa.post');
+        Route::post('/login/2fa', [AdminAuthController::class, 'verify2fa'])->middleware('throttle:5,1')->name('admin.login.2fa.post');
     });
 
     // ─ Dashboard & Logout (Autenticados) ─

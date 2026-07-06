@@ -29,8 +29,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(append: [
-            \App\Http\Middleware\BlockBannedIps::class, // Bloqueia IPs banidos
-            \App\Http\Middleware\LogAccess::class, // Logs automáticos de navegação
+            \App\Http\Middleware\SecurityHeaders::class,  // Headers HTTP de segurança (X-Frame, HSTS, CSP...)
+            \App\Http\Middleware\BlockBannedIps::class,   // Bloqueia IPs banidos
+            \App\Http\Middleware\LogAccess::class,        // Logs automáticos de navegação
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);

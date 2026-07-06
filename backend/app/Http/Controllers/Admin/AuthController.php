@@ -204,10 +204,23 @@ class AuthController extends Controller
                 'tipo'         => 'brute_force',
                 'detalhe'      => "Múltiplas tentativas de login falhas ({$recentFailures}) para o e-mail: {$request->email}",
                 'usuario_tipo' => 'anonimo',
-                'bloqueado'    => false,
+                'bloqueado'    => true,
                 'rota'         => $request->getRequestUri(),
                 'created_at'   => now(),
+                'updated_at'   => now(),
             ]);
+
+            // Auto-bloqueio de IP por 1 hora após brute force confirmado
+            DB::table('ips_bloqueados')->updateOrInsert(
+                ['ip' => $ip],
+                [
+                    'motivo'       => "Auto-bloqueio: {$recentFailures} tentativas de brute force detectadas em 10 minutos.",
+                    'bloqueado_por' => null,
+                    'expires_at'   => now()->addHour(),
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ]
+            );
         }
     }
 }
