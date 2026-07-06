@@ -10,6 +10,9 @@
         <p class="text-secondary mt-1">Exclusivo do Administrador. Monitore tráfego, tentativas de invasão, logins e logs de auditoria.</p>
       </div>
       <div class="flex gap-2">
+        <button @click="runMigrations" class="btn btn-primary" :disabled="runningMigrations" style="display: flex; align-items: center; gap: 0.5rem;">
+          {{ runningMigrations ? 'Atualizando Banco...' : '🔄 Atualizar Banco (Migrations)' }}
+        </button>
         <a :href="route('admin.security.export-csv', 'seguranca')" target="_blank" class="btn btn-secondary">
           Exportar Logs Ameaças (CSV)
         </a>
@@ -249,6 +252,19 @@ const blockForm = ref({
   ip: '',
   motivo: ''
 })
+
+const runningMigrations = ref(false)
+
+function runMigrations() {
+  if (confirm('Deseja realmente executar as migrações e sementes do banco de dados agora? Isso atualizará a estrutura do banco no servidor de hospedagem.')) {
+    runningMigrations.value = true
+    router.post(route('admin.security.run-migrations'), {}, {
+      onFinish: () => {
+        runningMigrations.value = false
+      }
+    })
+  }
+}
 
 const selectedPerfil = ref(null)
 const showPermissionsModal = ref(false)

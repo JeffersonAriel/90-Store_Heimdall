@@ -180,4 +180,25 @@ class SecurityController extends Controller
 
         return back()->with('success', 'Permissões do perfil atualizadas com sucesso!');
     }
+
+    /**
+     * Executa as migrações e seeders do banco de dados pelo painel
+     */
+    public function runMigrations()
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
+
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'PerfilPermissaoSeeder',
+                '--force' => true
+            ]);
+            $seederOutput = \Illuminate\Support\Facades\Artisan::output();
+
+            return back()->with('success', 'Banco de dados e permissões atualizados com sucesso! Detalhes: ' . trim($migrateOutput) . ' | ' . trim($seederOutput));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Erro ao executar migrações: ' . $e->getMessage());
+        }
+    }
 }

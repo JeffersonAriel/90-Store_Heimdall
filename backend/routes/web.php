@@ -94,6 +94,7 @@ Route::prefix('heimdall')->group(function () {
             Route::delete('security/unblock-ip/{ip}', [SecurityController::class, 'unblockIp'])->name('admin.security.unblock-ip');
             Route::get('security/export-csv/{tipo}', [SecurityController::class, 'exportCsv'])->name('admin.security.export-csv');
             Route::post('security/profiles/{id}/permissions', [SecurityController::class, 'updatePermissions'])->name('admin.security.profiles.permissions.update');
+            Route::post('security/run-migrations', [SecurityController::class, 'runMigrations'])->name('admin.security.run-migrations');
         });
 
         Route::resource('employees', EmployeeController::class)->names('admin.employees');
