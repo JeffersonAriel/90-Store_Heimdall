@@ -25,7 +25,10 @@
                 
                 <div class="col-span-1 form-group">
                   <label class="form-label">Marca</label>
-                  <input v-model="form.marca" type="text" class="form-input text-lg font-medium" placeholder="Ex: Nike, Puma..." />
+                  <input v-model="form.marca" list="marcas_list" type="text" class="form-input text-lg font-medium" placeholder="Ex: Nike, Adidas..." />
+                  <datalist id="marcas_list">
+                    <option v-for="m in brandOptions" :key="m" :value="m" />
+                  </datalist>
                 </div>
 
                 <div class="col-span-1 form-group">
@@ -321,6 +324,13 @@ const colorOptions = [
   'Prata', 'Bronze', 'Colorido/Estampado'
 ].sort();
 
+// Marcas Pré-configuradas
+const brandOptions = [
+  'Nike', 'Adidas', 'Puma', 'Umbro', 'Kappa', 'Reebok', 'Fila', 'Under Armour', 
+  'New Balance', 'Mizuno', 'Asics', 'Penalty', 'Topper', 'Castore', 'Macron', 
+  'Joma', 'Le Coq Sportif', 'Hummel', 'Athleta'
+].sort();
+
 // Tamanhos Padronizados
 const sizeOptions = {
   roupas: ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', '2', '4', '6', '8', '10', '12', '14', '16', '36', '38', '40', '42', '44', '46', '48', 'Único'],
@@ -362,10 +372,19 @@ function updateFinalCategory() {
 }
 
 const isTimeCategory = computed(() => {
-  const cat2 = childrenLevel1.value.find(c => c.id === selectedCatLevel2.value);
-  if (cat2 && cat2.nome.toLowerCase().includes('time')) return true;
-  const cat1 = rootCategories.value.find(c => c.id === selectedCatLevel1.value);
-  if (cat1 && cat1.nome.toLowerCase().includes('time')) return true;
+  const selectedIds = [selectedCatLevel1.value, selectedCatLevel2.value, selectedCatLevel3.value, selectedCatLevel4.value].filter(Boolean);
+  for (const id of selectedIds) {
+    const cat = props.categories.find(c => c.id === id);
+    if (cat && (
+      cat.nome.toLowerCase().includes('time') || 
+      cat.nome.toLowerCase().includes('seleção') || 
+      cat.nome.toLowerCase().includes('selecao') ||
+      cat.nome.toLowerCase().includes('nacional') ||
+      cat.nome.toLowerCase().includes('internacional')
+    )) {
+      return true;
+    }
+  }
   return false;
 });
 
