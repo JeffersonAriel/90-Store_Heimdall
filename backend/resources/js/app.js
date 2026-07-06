@@ -5,7 +5,7 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy'
 import vue3ApexCharts from 'vue3-apexcharts'
 
 createInertiaApp({
-    title: (title) => title ? `${title} — Heimdall` : 'Heimdall | Gestão 90-Store',
+    title: (title) => title ? `${title} — Heimdall` : 'Heimdall | Vigilância Total',
 
     resolve: (name) =>
         resolvePageComponent(
