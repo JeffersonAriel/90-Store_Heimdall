@@ -373,10 +373,12 @@ function updateFinalCategory() {
   form.categoria_id = selectedCatLevel4.value || selectedCatLevel3.value || selectedCatLevel2.value || selectedCatLevel1.value || '';
 }
 
+
+
 const isTimeCategory = computed(() => {
   const selectedIds = [selectedCatLevel1.value, selectedCatLevel2.value, selectedCatLevel3.value, selectedCatLevel4.value].filter(Boolean);
   for (const id of selectedIds) {
-    const cat = props.categories.find(c => c.id === id);
+    const cat = props.categories.find(c => String(c.id) === String(id));
     if (cat && (
       cat.nome.toLowerCase().includes('time') || 
       cat.nome.toLowerCase().includes('seleção') || 

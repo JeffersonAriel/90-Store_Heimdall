@@ -233,7 +233,7 @@
     ]
   },
   "resources/js/Pages/Products/Form.vue": {
-    "file": "assets/Form-8OvfwCA6.js",
+    "file": "assets/Form-AN5jLPdB.js",
     "name": "Form",
     "src": "resources/js/Pages/Products/Form.vue",
     "isDynamicEntry": true,
@@ -242,7 +242,7 @@
       "_AdminLayout-Dce_O1N0.js"
     ],
     "css": [
-      "assets/Form-bTFOivSI.css"
+      "assets/Form-DjC3YE76.css"
     ]
   },
   "resources/js/Pages/Products/Index.vue": {
@@ -331,7 +331,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DZPXbCKV.js",
+    "file": "assets/app-BY1xTs_j.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
