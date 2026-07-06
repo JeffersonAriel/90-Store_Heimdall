@@ -157,13 +157,15 @@
 
               <!-- OPÇÕES RETRÔ -->
               <div v-if="isTimeCategory" class="mt-6 p-4 rounded-lg" style="background: var(--color-warning-bg); border: 1px solid rgba(245, 158, 11, 0.2);">
-                <div class="flex items-center mb-3">
-                  <input v-model="form.is_retro" type="checkbox" id="is_retro" class="w-5 h-5 rounded" style="accent-color: var(--color-warning)" />
-                  <label for="is_retro" class="ml-2 form-label mb-0 font-bold cursor-pointer" style="color: var(--color-warning)">Camisa Retrô (Clássica/Histórica)</label>
-                </div>
-                <div v-if="form.is_retro" class="animate-fade-in pl-7 form-group max-w-xs">
-                  <label class="form-label">Ano da Edição Retrô</label>
-                  <input v-model="form.retro_year" type="number" class="form-input" placeholder="Ex: 1998" />
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                  <div class="flex items-center">
+                    <input v-model="form.is_retro" type="checkbox" id="is_retro" class="w-5 h-5 rounded" style="accent-color: var(--color-warning)" />
+                    <label for="is_retro" class="ml-2 form-label mb-0 font-bold cursor-pointer" style="color: var(--color-warning)">Camisa Retrô (Clássica/Histórica)</label>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label font-bold" style="color: var(--color-warning)">Ano do Modelo / Edição</label>
+                    <input v-model="form.retro_year" type="number" class="form-input" placeholder="Ex: 2026, 1998..." />
+                  </div>
                 </div>
               </div>
             </div>
