@@ -21,6 +21,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'log.access'  => \App\Http\Middleware\LogAccess::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'heimdall/import-export/upload',
+            'heimdall/import-export/confirm',
+            'import-export/upload',
+            'import-export/confirm',
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\BlockBannedIps::class, // Bloqueia IPs banidos
             \App\Http\Middleware\LogAccess::class, // Logs automáticos de navegação
