@@ -1,0 +1,3 @@
+Contact: mailto:security@90store.com.br
+Preferred-Languages: pt, en
+Canonical: https://90store.com.br/.well-known/security.txt
