@@ -5,9 +5,9 @@
 
     RewriteEngine On
 
-    # Force HTTPS
-    RewriteCond %{HTTPS} off
-    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    # Force HTTPS (Comentado para ambiente de teste HTTP)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
@@ -29,8 +29,8 @@
 </IfModule>
 
 <IfModule mod_headers.c>
-    # 1. Strict-Transport-Security (HSTS)
-    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    # 1. Strict-Transport-Security (HSTS) - Comentado para permitir testes em HTTP local
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
     
     # 2. X-Frame-Options
     Header always set X-Frame-Options "SAMEORIGIN"
