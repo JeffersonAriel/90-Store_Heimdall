@@ -47,9 +47,11 @@
                     {{ emp.ativo ? 'Ativo' : 'Inativo' }}
                   </span>
                 </td>
-                <td class="flex gap-2 justify-end">
-                  <button class="btn-icon" title="Editar" @click="editEmployee(emp)">✏️</button>
-                  <button class="btn-icon" title="Excluir" @click="deleteEmployee(emp.id)">🗑</button>
+                <td style="text-align: right; white-space: nowrap; width: 100px;">
+                  <div style="display: inline-flex; gap: 0.5rem; justify-content: flex-end; width: 100%;">
+                    <button class="btn-icon" title="Editar" @click="editEmployee(emp)" style="cursor: pointer; background: transparent; border: none; padding: 4px; font-size: 1.1rem;">✏️</button>
+                    <button class="btn-icon" title="Excluir" @click="deleteEmployee(emp.id)" style="cursor: pointer; background: transparent; border: none; padding: 4px; font-size: 1.1rem;">🗑</button>
+                  </div>
                 </td>
               </tr>
             </tbody>
