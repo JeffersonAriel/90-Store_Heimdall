@@ -321,7 +321,7 @@
     ]
   },
   "resources/js/Pages/Suppliers/Form.vue": {
-    "file": "assets/Form-CLG92hcW.js",
+    "file": "assets/Form-BakHx8hW.js",
     "name": "Form",
     "src": "resources/js/Pages/Suppliers/Form.vue",
     "isDynamicEntry": true,
@@ -343,8 +343,18 @@
       "assets/Index-C7QvwdIc.css"
     ]
   },
+  "resources/js/Pages/Suppliers/Show.vue": {
+    "file": "assets/Show-N_9l_yCM.js",
+    "name": "Show",
+    "src": "resources/js/Pages/Suppliers/Show.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-FUk6Rkiv.js",
+      "_AdminLayout-ta1kSQsL.js"
+    ]
+  },
   "resources/js/app.js": {
-    "file": "assets/app-DZ7vsQ5v.js",
+    "file": "assets/app-VaZnt8_1.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -377,7 +387,8 @@
       "resources/js/Pages/Shipping/Index.vue",
       "resources/js/Pages/Stock/Index.vue",
       "resources/js/Pages/Suppliers/Form.vue",
-      "resources/js/Pages/Suppliers/Index.vue"
+      "resources/js/Pages/Suppliers/Index.vue",
+      "resources/js/Pages/Suppliers/Show.vue"
     ]
   }
 }

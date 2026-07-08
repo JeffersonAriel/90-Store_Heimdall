@@ -64,7 +64,21 @@
           <div class="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
             <div class="form-group md:col-span-4">
               <label class="form-label">CEP</label>
-              <input v-model="form.cep" type="text" class="form-input font-mono" placeholder="00000-000" />
+              <div style="position: relative;">
+                <input
+                  v-model="form.cep"
+                  @blur="fetchCep"
+                  @keydown.enter.prevent="fetchCep"
+                  type="text"
+                  class="form-input font-mono"
+                  placeholder="00000-000"
+                  maxlength="9"
+                  :style="cepLoading ? 'padding-right: 2.5rem;' : ''"
+                />
+                <span v-if="cepLoading" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); font-size: 0.875rem; color: var(--color-brand);">⏳</span>
+                <span v-if="cepError" style="display: block; color: var(--color-danger); font-size: 0.75rem; margin-top: 0.25rem;">{{ cepError }}</span>
+                <span v-if="cepSuccess" style="display: block; color: var(--color-success); font-size: 0.75rem; margin-top: 0.25rem;">✓ Endereço encontrado!</span>
+              </div>
             </div>
             <div class="form-group md:col-span-8">
               <label class="form-label">Logradouro (Rua, Av.)</label>
@@ -182,6 +196,38 @@ const form = useForm({
 });
 
 const newCategoria = ref('');
+const cepLoading = ref(false);
+const cepError = ref('');
+const cepSuccess = ref(false);
+
+async function fetchCep() {
+  const cep = form.cep.replace(/\D/g, '');
+  if (cep.length !== 8) return;
+
+  cepLoading.value = true;
+  cepError.value = '';
+  cepSuccess.value = false;
+
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = await res.json();
+
+    if (data.erro) {
+      cepError.value = 'CEP não encontrado. Verifique e tente novamente.';
+    } else {
+      form.logradouro = data.logradouro || '';
+      form.bairro     = data.bairro || '';
+      form.cidade     = data.localidade || '';
+      form.estado     = data.uf || '';
+      cepSuccess.value = true;
+      setTimeout(() => { cepSuccess.value = false; }, 3000);
+    }
+  } catch (e) {
+    cepError.value = 'Erro ao buscar CEP. Verifique sua conexão.';
+  } finally {
+    cepLoading.value = false;
+  }
+}
 
 function addCategoria() {
   const val = newCategoria.value.trim();
