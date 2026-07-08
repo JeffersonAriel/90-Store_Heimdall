@@ -157,4 +157,126 @@ class ImportExportController extends Controller
             'message' => "Importação concluída: {$summary['criados']} criado(s), {$summary['atualizados']} atualizado(s) e {$summary['erros']} erro(s) pulado(s)."
         ]);
     }
+
+    /**
+     * Exporta os dados cadastrais em planilha Excel (.xlsx)
+     */
+    public function export(string $tipo)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        if ($tipo === 'fornecedores') {
+            $sheet->setTitle('Fornecedores');
+            $headers = [
+                'ID', 'Razão Social', 'Nome Fantasia', 'Tipo', 'CNPJ', 'CPF',
+                'E-mail', 'Telefone', 'WhatsApp', 'Website',
+                'CEP', 'Logradouro', 'Número', 'Complemento', 'Bairro', 'Cidade', 'Estado',
+                'Condição Pagamento', 'Prazo Médio (dias)', 'Categorias Fornecidas',
+                'Observações', 'Avaliação Média', 'Ativo',
+            ];
+            $sheet->fromArray([$headers], null, 'A1');
+
+            $rows = DB::table('fornecedores')->orderBy('id')->get();
+            $rowIndex = 2;
+            foreach ($rows as $f) {
+                $cats = '';
+                if ($f->categorias_fornecidas) {
+                    $decoded = json_decode($f->categorias_fornecidas, true);
+                    $cats = is_array($decoded) ? implode(', ', $decoded) : $f->categorias_fornecidas;
+                }
+                $sheet->fromArray([[
+                    $f->id, $f->razao_social, $f->nome_fantasia, $f->tipo_pessoa,
+                    $f->cnpj, $f->cpf, $f->email, $f->telefone, $f->whatsapp, $f->website,
+                    $f->cep, $f->logradouro, $f->numero, $f->complemento, $f->bairro, $f->cidade, $f->estado,
+                    $f->condicao_pagamento, $f->prazo_medio_dias, $cats,
+                    $f->observacoes, $f->avaliacao_media, $f->ativo ? 'Sim' : 'Não',
+                ]], null, "A{$rowIndex}");
+                $rowIndex++;
+            }
+            $fileName = 'exportacao_fornecedores_' . date('Y-m-d') . '.xlsx';
+
+        } else {
+            // produtos
+            $sheet->setTitle('Produtos');
+            $headers = [
+                'ID Produto', 'Nome', 'Marca', 'Gênero', 'SKU Base', 'Categoria', 'Subcategorias',
+                'ID Variação', 'SKU Variação', 'Tamanho', 'Cor',
+                'Preço Custo', 'Preço Venda', 'Preço Promocional',
+                'Tipo Estoque', 'Estoque Qtd', 'Estoque Crítico',
+                'Fornecedor ID', 'Fornecedor Nome',
+                'URL Foto', 'Descrição', 'Ativo',
+            ];
+            $sheet->fromArray([$headers], null, 'A1');
+
+            $produtos = DB::table('produtos as p')
+                ->leftJoin('fornecedores as f', 'p.fornecedor_id', '=', 'f.id')
+                ->select('p.*', 'f.razao_social as fornecedor_nome')
+                ->orderBy('p.id')
+                ->get();
+
+            $rowIndex = 2;
+            foreach ($produtos as $produto) {
+                // Buscar subcategorias do produto (caminho completo)
+                $subcats = DB::table('produto_subcategoria as ps')
+                    ->join('categorias as c', 'ps.subcategoria_id', '=', 'c.id')
+                    ->where('ps.produto_id', $produto->id)
+                    ->pluck('c.nome')
+                    ->implode(' > ');
+
+                // Buscar variações
+                $variacoes = DB::table('produto_variacoes')->where('produto_id', $produto->id)->get();
+
+                if ($variacoes->isEmpty()) {
+                    // Produto sem variações — linha única
+                    $sheet->fromArray([[
+                        $produto->id, $produto->nome, $produto->marca ?? '', $produto->genero ?? '',
+                        $produto->sku_base ?? '', $produto->categoria ?? '', $subcats,
+                        '', '', '', '',
+                        $produto->preco_custo ?? '', $produto->preco_venda ?? '', $produto->preco_promocional ?? '',
+                        $produto->tipo_estoque ?? 'proprio', $produto->estoque ?? 0, $produto->estoque_critico ?? 5,
+                        $produto->fornecedor_id ?? '', $produto->fornecedor_nome ?? '',
+                        $produto->foto_url ?? '', $produto->descricao ?? '', $produto->ativo ? 'Sim' : 'Não',
+                    ]], null, "A{$rowIndex}");
+                    $rowIndex++;
+                } else {
+                    foreach ($variacoes as $var) {
+                        // Foto: tenta foto da variação, depois a foto de capa do produto
+                        $fotoUrl = $var->foto_url ?? $produto->foto_url ?? '';
+
+                        $sheet->fromArray([[
+                            $produto->id, $produto->nome, $produto->marca ?? '', $produto->genero ?? '',
+                            $produto->sku_base ?? '', $produto->categoria ?? '', $subcats,
+                            $var->id, $var->sku ?? '', $var->tamanho ?? '', $var->cor ?? '',
+                            $var->preco_custo ?? $produto->preco_custo ?? '', $var->preco_venda ?? $produto->preco_venda ?? '', $var->preco_promocional ?? $produto->preco_promocional ?? '',
+                            $produto->tipo_estoque ?? 'proprio', $var->estoque ?? 0, $produto->estoque_critico ?? 5,
+                            $produto->fornecedor_id ?? '', $produto->fornecedor_nome ?? '',
+                            $fotoUrl, $produto->descricao ?? '', $produto->ativo ? 'Sim' : 'Não',
+                        ]], null, "A{$rowIndex}");
+                        $rowIndex++;
+                    }
+                }
+            }
+            $fileName = 'exportacao_produtos_' . date('Y-m-d') . '.xlsx';
+        }
+
+        // Auto-ajuste de largura de colunas
+        foreach (range('A', $sheet->getHighestColumn()) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Estilo do cabeçalho
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1a1a2e']],
+        ];
+        $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1')->applyFromArray($headerStyle);
+
+        $writer = new Xlsx($spreadsheet);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . urlencode($fileName) . '"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+        exit;
+    }
 }

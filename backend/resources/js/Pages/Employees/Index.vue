@@ -47,7 +47,8 @@
                     {{ emp.ativo ? 'Ativo' : 'Inativo' }}
                   </span>
                 </td>
-                <td>
+                <td class="flex gap-2 justify-end">
+                  <button class="btn-icon" title="Editar" @click="editEmployee(emp)">✏️</button>
                   <button class="btn-icon" title="Excluir" @click="deleteEmployee(emp.id)">🗑</button>
                 </td>
               </tr>
@@ -57,10 +58,10 @@
       </div>
     </div>
 
-    <!-- Modal Novo Funcionário -->
-    <div v-if="showForm" class="modal-backdrop" @click.self="showForm = false">
+    <!-- Modal Novo/Editar Funcionário -->
+    <div v-if="showForm" class="modal-backdrop" @click.self="closeForm">
       <div class="modal-box">
-        <h2 class="modal-title">Novo Funcionário</h2>
+        <h2 class="modal-title">{{ isEdit ? 'Editar Funcionário' : 'Novo Funcionário' }}</h2>
         <form @submit.prevent="saveEmployee">
           <div class="form-group">
             <label class="form-label">Nome completo</label>
@@ -80,7 +81,7 @@
               <input v-model="form.cpf" type="text" class="form-control" placeholder="000.000.000-00" />
             </div>
           </div>
-          <div class="form-group">
+          <div class="form-group" v-if="!isEdit">
             <label class="form-label">Senha</label>
             <input v-model="form.senha" type="password" class="form-control" minlength="8" required />
           </div>
@@ -91,9 +92,15 @@
               <option v-for="p in perfis" :key="p.id" :value="p.id">{{ p.nome }}</option>
             </select>
           </div>
-          <div class="flex gap-3 mt-4" style="justify-content:flex-end;">
-            <button type="button" class="btn btn-secondary" @click="showForm = false">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Salvar</button>
+          <div class="form-group" v-if="isEdit">
+            <label class="form-label flex items-center gap-2 cursor-pointer">
+              <input v-model="form.ativo" type="checkbox" style="width: 1.2rem; height: 1.2rem; accent-color: var(--color-brand);" />
+              <span>Funcionário Ativo</span>
+            </label>
+          </div>
+          <div class="flex gap-3 mt-6" style="justify-content:flex-end;">
+            <button type="button" class="btn btn-secondary" @click="closeForm">Cancelar</button>
+            <button type="submit" class="btn btn-primary">{{ isEdit ? 'Salvar Alterações' : 'Criar' }}</button>
           </div>
         </form>
       </div>
@@ -102,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 
@@ -112,12 +119,51 @@ const props = defineProps({
 })
 
 const showForm = ref(false)
-const form = ref({ nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '' })
+const isEdit = ref(false)
+const editingId = ref(null)
+
+const form = ref({
+  nome: '',
+  email: '',
+  senha: '',
+  perfil_id: '',
+  telefone: '',
+  cpf: '',
+  ativo: true
+})
+
+function editEmployee(emp) {
+  isEdit.value = true
+  editingId.value = emp.id
+  form.value = {
+    nome: emp.nome,
+    email: emp.email,
+    senha: '',
+    perfil_id: emp.perfil_id || '',
+    telefone: emp.telefone || '',
+    cpf: emp.cpf || '',
+    ativo: emp.ativo === 1 || emp.ativo === true
+  }
+  showForm.value = true
+}
+
+function closeForm() {
+  showForm.value = false
+  isEdit.value = false
+  editingId.value = null
+  form.value = { nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '', ativo: true }
+}
 
 function saveEmployee() {
-  router.post(route('admin.employees.store'), form.value, {
-    onSuccess: () => { showForm.value = false; form.value = { nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '' } },
-  })
+  if (isEdit.value) {
+    router.put(route('admin.employees.update', editingId.value), form.value, {
+      onSuccess: () => closeForm()
+    })
+  } else {
+    router.post(route('admin.employees.store'), form.value, {
+      onSuccess: () => closeForm()
+    })
+  }
 }
 
 function deleteEmployee(id) {

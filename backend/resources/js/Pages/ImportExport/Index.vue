@@ -12,7 +12,7 @@
     </div>
 
     <!-- Módulos de Operação -->
-    <div class="grid-2 gap-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       <!-- Painel de Upload -->
       <div class="card">
         <div class="card-header">
@@ -34,12 +34,34 @@
 
           <div class="flex gap-4 mt-6">
             <a :href="route('admin.import-export.template', uploadForm.tipo)" target="_blank" class="btn btn-secondary flex-1 text-center">
-              Baixar Modelo (.xlsx)
+              Baixar Modelo
             </a>
             <button @click="uploadFile" :disabled="!selectedFile || loading" class="btn btn-primary flex-1">
-              {{ loading ? 'Processando...' : 'Validar Planilha' }}
+              {{ loading ? 'Processando...' : 'Validar' }}
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Painel de Exportação -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">📤 Exportação de Dados</h3>
+        </div>
+        <div class="card-body">
+          <p class="text-secondary mb-4" style="font-size: 0.875rem;">
+            Gere e baixe a planilha completa de cadastros atualizada em tempo real no formato Excel.
+          </p>
+          <div class="form-group mb-6">
+            <label class="form-label">Selecionar Módulo</label>
+            <select v-model="exportTipo" class="form-control">
+              <option value="produtos">📦 Produtos e Variações (Completo)</option>
+              <option value="fornecedores">🏭 Fornecedores (Completo)</option>
+            </select>
+          </div>
+          <a :href="route('admin.import-export.export', exportTipo)" class="btn btn-primary w-full text-center" style="display: block;">
+            Exportar Planilha (.xlsx)
+          </a>
         </div>
       </div>
 
@@ -265,6 +287,8 @@ const props = defineProps({
 const uploadForm = ref({
   tipo: 'produtos'
 })
+
+const exportTipo = ref('produtos')
 
 const selectedFile = ref(null)
 const preview = ref(null)

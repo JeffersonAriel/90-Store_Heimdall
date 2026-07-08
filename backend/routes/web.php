@@ -89,6 +89,7 @@ Route::prefix('heimdall')->group(function () {
 
         Route::get('import-export', [ImportExportController::class, 'index'])->name('admin.import-export.index');
         Route::get('import-export/template/{tipo}', [ImportExportController::class, 'downloadTemplate'])->name('admin.import-export.template');
+        Route::get('import-export/export/{tipo}', [ImportExportController::class, 'export'])->name('admin.import-export.export');
         Route::post('import-export/upload', [ImportExportController::class, 'upload'])->name('admin.import-export.upload');
         Route::post('import-export/confirm', [ImportExportController::class, 'confirm'])->name('admin.import-export.confirm');
 
