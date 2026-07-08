@@ -240,7 +240,7 @@ class ImportExportController extends Controller
                 }
 
                 // Buscar variações
-                $variacoes = DB::table('produto_variacoes')->where('produto_id', $produto->id)->get();
+                $variacoes = DB::table('variacoes_produto')->where('produto_id', $produto->id)->get();
 
                 if ($variacoes->isEmpty()) {
                     // Produto sem variações — linha única
@@ -263,8 +263,8 @@ class ImportExportController extends Controller
                             $produto->id, $produto->nome, $produto->marca ?? '', $produto->genero ?? '',
                             $produto->sku_base ?? '', $categoriaNome, $subcats,
                             $var->id, $var->sku ?? '', $var->tamanho ?? '', $var->cor ?? '',
-                            $var->preco_custo ?? $produto->preco_custo ?? '', $var->preco_venda ?? $produto->preco_venda ?? '', $var->preco_promocional ?? $produto->preco_promocional ?? '',
-                            $produto->tipo_estoque ?? 'proprio', $var->estoque ?? 0, $produto->estoque_critico ?? 5,
+                            $var->preco_adicional ?? $produto->preco_custo ?? '', $produto->preco_venda ?? '', $produto->preco_promocional ?? '',
+                            $produto->tipo_estoque ?? 'proprio', $var->estoque_quantidade ?? 0, $produto->estoque_critico ?? 5,
                             $produto->fornecedor_id ?? '', $produto->fornecedor_nome ?? '',
                             $fotoUrl, $produto->descricao ?? '', $produto->ativo ? 'Sim' : 'Não',
                         ]], null, "A{$rowIndex}");
