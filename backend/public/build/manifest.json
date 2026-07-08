@@ -343,8 +343,21 @@
       "assets/Index-C7QvwdIc.css"
     ]
   },
+  "resources/js/Pages/Suppliers/Show.vue": {
+    "file": "assets/Show-DCXptjHV.js",
+    "name": "Show",
+    "src": "resources/js/Pages/Suppliers/Show.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-FUk6Rkiv.js",
+      "_AdminLayout-VD5Pa4un.js"
+    ],
+    "css": [
+      "assets/Show-3q_Vi-WE.css"
+    ]
+  },
   "resources/js/app.js": {
-    "file": "assets/app-D8nw-R4B.js",
+    "file": "assets/app-Cy2B5Sxp.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -377,7 +390,8 @@
       "resources/js/Pages/Shipping/Index.vue",
       "resources/js/Pages/Stock/Index.vue",
       "resources/js/Pages/Suppliers/Form.vue",
-      "resources/js/Pages/Suppliers/Index.vue"
+      "resources/js/Pages/Suppliers/Index.vue",
+      "resources/js/Pages/Suppliers/Show.vue"
     ]
   }
 }
