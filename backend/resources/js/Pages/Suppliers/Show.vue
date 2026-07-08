@@ -22,7 +22,8 @@
           <div class="text-center px-6 py-4 rounded-xl" style="background: var(--color-bg); border: 2px solid var(--color-brand-muted);">
             <div class="text-5xl font-black mb-1" :style="{ color: scoreColor }">{{ formattedScore }}</div>
             <div class="flex justify-center gap-1 mb-1">
-              <span v-for="i in 5" :key="i" class="text-xl" :style="{ color: i <= Math.round(supplier.avaliacao_media || 0) ? '#f59e0b' : 'var(--color-border)' }">★</span>
+              <span v-for="i in 5" :key="i" style="font-size: 1.5rem; line-height: 1;"
+                :style="{ color: i <= Math.round(supplier.avaliacao_media || 0) ? '#f59e0b' : 'var(--color-border)' }">★</span>
             </div>
             <div class="text-xs" style="color: var(--color-text-muted);">{{ supplier.avaliacoes?.length || 0 }} avaliação(ões)</div>
           </div>
@@ -135,34 +136,34 @@
           </div>
           <div class="card-body">
             <form @submit.prevent="submitEvaluation">
-              <!-- Seletor de estrelas -->
-              <div class="mb-4">
-                <label class="form-label mb-2">Nota *</label>
-                <div class="flex gap-2">
+              <!-- Seletor de estrelas interativo -->
+              <div class="mb-5">
+                <label class="form-label mb-3" style="display: block;">Nota <span style="color: var(--color-text-muted); font-size: 0.75rem;">(clique para selecionar)</span></label>
+                <div class="star-picker">
                   <button
                     v-for="i in 5"
                     :key="i"
                     type="button"
-                    @click="evalForm.estrelas = i"
+                    @click="selectStar(i)"
                     @mouseenter="hoveredStar = i"
                     @mouseleave="hoveredStar = 0"
-                    class="text-4xl transition-transform hover:scale-125 focus:outline-none"
-                    :style="{ color: i <= (hoveredStar || evalForm.estrelas) ? '#f59e0b' : 'var(--color-border)', cursor: 'pointer' }"
+                    class="star-btn"
+                    :class="{ 'star-active': i <= (hoveredStar || evalForm.estrelas), 'star-selected': i <= evalForm.estrelas }"
                   >★</button>
                 </div>
-                <p class="text-xs mt-1" style="color: var(--color-text-muted);">
+                <p class="star-hint">
                   {{ starLabel }}
                 </p>
               </div>
 
               <div class="form-group mb-4">
-                <label class="form-label">Comentário *</label>
+                <label class="form-label">Comentário <span style="color: var(--color-text-muted); font-size: 0.75rem;">(opcional)</span></label>
                 <textarea
                   v-model="evalForm.comentario"
-                  class="form-textarea"
+                  class="form-control"
                   rows="4"
                   placeholder="Descreva sua experiência com este fornecedor..."
-                  required
+                  style="resize: vertical;"
                 ></textarea>
               </div>
 
@@ -170,8 +171,9 @@
                 type="submit"
                 class="btn btn-primary w-full"
                 :disabled="evalForm.processing || !evalForm.estrelas"
+                :style="{ opacity: evalForm.estrelas ? 1 : 0.5 }"
               >
-                {{ evalForm.processing ? 'Salvando...' : 'Registrar Avaliação' }}
+                {{ evalForm.processing ? 'Salvando...' : (evalForm.estrelas ? `Registrar ${evalForm.estrelas} ★` : 'Selecione uma nota primeiro') }}
               </button>
             </form>
           </div>
@@ -242,7 +244,7 @@ const evalForm = useForm({
 const hoveredStar = ref(0);
 
 const starLabels = {
-  0: 'Selecione uma nota',
+  0: 'Clique em uma estrela para selecionar a nota',
   1: '1 ★ — Muito ruim',
   2: '2 ★★ — Ruim',
   3: '3 ★★★ — Regular',
@@ -251,6 +253,15 @@ const starLabels = {
 };
 
 const starLabel = computed(() => starLabels[hoveredStar.value || evalForm.estrelas]);
+
+function selectStar(n) {
+  // Se clicar na mesma estrela já selecionada, limpa
+  if (evalForm.estrelas === n) {
+    evalForm.estrelas = 0;
+  } else {
+    evalForm.estrelas = n;
+  }
+}
 
 function submitEvaluation() {
   evalForm.post(route('admin.suppliers.evaluate', props.supplier.id), {
@@ -298,3 +309,44 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 </script>
+
+<style scoped>
+.star-picker {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.star-btn {
+  font-size: 2.5rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  padding: 0.1rem 0.15rem;
+  cursor: pointer;
+  color: var(--color-border);
+  transition: color 0.15s ease, transform 0.15s ease, filter 0.15s ease;
+  user-select: none;
+  outline: none;
+}
+
+.star-btn:hover,
+.star-active {
+  color: #f59e0b !important;
+  transform: scale(1.25);
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
+}
+
+.star-selected {
+  color: #f59e0b !important;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
+}
+
+.star-hint {
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  color: var(--color-text-muted);
+  min-height: 1.2rem;
+  transition: color 0.2s;
+}
+</style>

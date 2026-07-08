@@ -357,17 +357,20 @@
     ]
   },
   "resources/js/Pages/Suppliers/Show.vue": {
-    "file": "assets/Show-BzQgJZBh.js",
+    "file": "assets/Show-BqLg4KgJ.js",
     "name": "Show",
     "src": "resources/js/Pages/Suppliers/Show.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-EzIoi6P2.js",
       "_AdminLayout-D_25Xd7E.js"
+    ],
+    "css": [
+      "assets/Show-8qMJZ_v5.css"
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Bgou_b38.js",
+    "file": "assets/app-CAHtOjWn.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
