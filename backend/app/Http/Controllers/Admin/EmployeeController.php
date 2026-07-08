@@ -14,7 +14,7 @@ class EmployeeController extends Controller
     {
         $employees = DB::table('funcionarios as f')
             ->leftJoin('perfis_permissao as p', 'f.perfil_id', '=', 'p.id')
-            ->select('f.id', 'f.nome', 'f.email', 'f.telefone', 'f.cpf', 'f.ativo', 'f.created_at', 'p.nome as perfil_nome')
+            ->select('f.id', 'f.nome', 'f.email', 'f.telefone', 'f.cpf', 'f.ativo', 'f.perfil_id', 'f.created_at', 'p.nome as perfil_nome')
             ->orderBy('f.nome')
             ->paginate(20);
 

@@ -12,7 +12,7 @@
     </div>
 
     <!-- Módulos de Operação -->
-    <div class="grid-2 gap-6 mb-6">
+    <div class="grid-3 gap-6 mb-6" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
       <!-- Painel de Upload -->
       <div class="card">
         <div class="card-header">
@@ -33,12 +33,38 @@
           </div>
 
           <div class="flex gap-4 mt-6">
-            <a :href="route('admin.import-export.template', uploadForm.tipo)" target="_blank" class="btn btn-secondary flex-1 text-center">
+            <a :href="route('admin.import-export.template', uploadForm.tipo)" target="_blank" class="btn btn-secondary flex-1 text-center" style="display: flex; align-items: center; justify-content: center;">
               Baixar Modelo (.xlsx)
             </a>
             <button @click="uploadFile" :disabled="!selectedFile || loading" class="btn btn-primary flex-1">
               {{ loading ? 'Processando...' : 'Validar Planilha' }}
             </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Painel de Exportação -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">📤 Exportação de Dados</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label">Tipo de Cadastro</label>
+            <select v-model="exportForm.tipo" class="form-control">
+              <option value="produtos">📦 Produtos e Variações</option>
+              <option value="fornecedores">🏭 Fornecedores</option>
+            </select>
+          </div>
+
+          <p class="text-secondary mt-2 mb-4" style="font-size: 0.875rem; line-height: 1.5;">
+            Gere e faça o download de uma planilha Excel (.xlsx) contendo todos os dados cadastrados no sistema Heimdall de forma organizada e completa.
+          </p>
+
+          <div class="flex gap-4 mt-6" style="margin-top: 2rem;">
+            <a :href="route('admin.import-export.export', exportForm.tipo)" target="_blank" class="btn btn-primary flex-1 text-center font-bold" style="display: flex; align-items: center; justify-content: center; width: 100%;">
+              Exportar Planilha (.xlsx)
+            </a>
           </div>
         </div>
       </div>
@@ -263,6 +289,10 @@ const props = defineProps({
 })
 
 const uploadForm = ref({
+  tipo: 'produtos'
+})
+
+const exportForm = ref({
   tipo: 'produtos'
 })
 

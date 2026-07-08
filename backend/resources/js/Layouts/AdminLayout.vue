@@ -24,14 +24,14 @@
         <div class="nav-section-label">Catálogo</div>
         <NavItem v-if="can('produtos', 'view')"     :href="route('admin.products.index')"    icon="products"    label="Produtos"    :active="$page.url.startsWith('/heimdall/products')" />
         <NavItem v-if="can('fornecedores', 'view')" :href="route('admin.suppliers.index')"   icon="suppliers"   label="Fornecedores" :active="$page.url.startsWith('/heimdall/suppliers')" />
-        <NavItem v-if="can('produtos', 'view')"     :href="route('admin.categories.index')"  icon="categories"  label="Categorias"  :active="$page.url.startsWith('/heimdall/categories')" />
+        <NavItem v-if="can('categorias', 'view')"     :href="route('admin.categories.index')"  icon="categories"  label="Categorias"  :active="$page.url.startsWith('/heimdall/categories')" />
 
         <!-- Operações -->
         <div class="nav-section-label">Operações</div>
         <NavItem v-if="can('pedidos', 'view')"   :href="route('admin.orders.index')"   icon="orders"   label="Pedidos"  :active="$page.url.startsWith('/heimdall/orders')"  :badge="$page.props.counts?.pendingOrders" />
         <NavItem v-if="can('estoque', 'view')"   :href="route('admin.stock.index')"    icon="stock"    label="Estoque"  :active="$page.url.startsWith('/heimdall/stock')"   :badge="$page.props.counts?.criticalStock" badge-type="danger" />
         <NavItem v-if="can('financeiro', 'view')" :href="route('admin.financial.index')" icon="financial" label="Financeiro" :active="$page.url.startsWith('/heimdall/financial')" />
-        <NavItem v-if="can('pedidos', 'view') || can('financeiro', 'view')" :href="route('admin.agenda.index')" icon="calendar" label="Agenda" :active="$page.url.startsWith('/heimdall/agenda')" />
+        <NavItem v-if="can('agenda', 'view')" :href="route('admin.agenda.index')" icon="calendar" label="Agenda" :active="$page.url.startsWith('/heimdall/agenda')" />
 
         <!-- Configurações -->
         <div class="nav-section-label">Configurações</div>

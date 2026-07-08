@@ -76,7 +76,7 @@ class PerfilPermissaoSeeder extends Seeder
 
         $modulos = ['produtos', 'fornecedores', 'categorias', 'pedidos', 'estoque',
                     'financeiro', 'frete', 'api_config', 'funcionarios', 'marketing',
-                    'importacao', 'seguranca', 'clientes'];
+                    'importacao', 'seguranca', 'clientes', 'agenda'];
         $acoes   = ['view', 'create', 'edit', 'delete'];
 
         // Admin: tudo
@@ -91,7 +91,7 @@ class PerfilPermissaoSeeder extends Seeder
 
         // Gerente: tudo exceto funcionários e segurança (view/create/edit)
         $modulosGerente = ['produtos', 'fornecedores', 'categorias', 'pedidos', 'estoque',
-                           'financeiro', 'frete', 'marketing', 'importacao', 'clientes'];
+                           'financeiro', 'frete', 'marketing', 'importacao', 'clientes', 'agenda'];
         foreach ($modulosGerente as $modulo) {
             foreach (['view', 'create', 'edit'] as $acao) {
                 DB::table('permissoes_modulo')->updateOrInsert(

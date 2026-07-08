@@ -543,6 +543,7 @@ const modules = [
   { key: 'importacao',   label: '📥 Importação/Exportação' },
   { key: 'seguranca',    label: '🔐 Segurança & Logs' },
   { key: 'clientes',     label: '👤 Clientes' },
+  { key: 'agenda',       label: '📅 Agenda & Compromissos' },
 ]
 const actions = [
   { key: 'view',   label: 'Ver' },

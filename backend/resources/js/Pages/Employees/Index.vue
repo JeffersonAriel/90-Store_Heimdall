@@ -9,7 +9,7 @@
         <h1 class="page-title">👥 Funcionários</h1>
         <p class="text-secondary mt-1">Gerencie a equipe e os perfis de acesso ao painel Heimdall.</p>
       </div>
-      <button class="btn btn-primary" @click="showForm = true">
+      <button class="btn btn-primary" @click="openCreateModal">
         <span>+ Novo Funcionário</span>
       </button>
     </div>
@@ -48,7 +48,10 @@
                   </span>
                 </td>
                 <td>
-                  <button class="btn-icon" title="Excluir" @click="deleteEmployee(emp.id)">🗑</button>
+                  <div class="flex gap-2" style="display: flex; gap: 0.5rem;">
+                    <button class="btn-icon" title="Editar" @click="editEmployee(emp)">✏️</button>
+                    <button class="btn-icon" title="Excluir" @click="deleteEmployee(emp.id)">🗑</button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -60,7 +63,7 @@
     <!-- Modal Novo Funcionário -->
     <div v-if="showForm" class="modal-backdrop" @click.self="showForm = false">
       <div class="modal-box">
-        <h2 class="modal-title">Novo Funcionário</h2>
+        <h2 class="modal-title">{{ isEditing ? 'Editar Funcionário' : 'Novo Funcionário' }}</h2>
         <form @submit.prevent="saveEmployee">
           <div class="form-group">
             <label class="form-label">Nome completo</label>
@@ -80,9 +83,13 @@
               <input v-model="form.cpf" type="text" class="form-control" placeholder="000.000.000-00" />
             </div>
           </div>
-          <div class="form-group">
+          <div v-if="!isEditing" class="form-group">
             <label class="form-label">Senha</label>
             <input v-model="form.senha" type="password" class="form-control" minlength="8" required />
+          </div>
+          <div v-if="isEditing" class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem; margin-bottom: 1rem;">
+            <input v-model="form.ativo" type="checkbox" id="modal-ativo" class="form-control" style="width: auto; height: auto; margin: 0;" />
+            <label for="modal-ativo" class="form-label" style="margin: 0; cursor: pointer; font-weight: 600;">Funcionário Ativo</label>
           </div>
           <div class="form-group">
             <label class="form-label">Perfil de Acesso</label>
@@ -112,12 +119,50 @@ const props = defineProps({
 })
 
 const showForm = ref(false)
-const form = ref({ nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '' })
+const isEditing = ref(false)
+const editingId = ref(null)
+const form = ref({ nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '', ativo: true })
+
+function openCreateModal() {
+  isEditing.value = false
+  editingId.value = null
+  form.value = { nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '', ativo: true }
+  showForm.value = true
+}
+
+function editEmployee(emp) {
+  isEditing.value = true
+  editingId.value = emp.id
+  form.value = {
+    nome: emp.nome,
+    email: emp.email,
+    senha: '',
+    perfil_id: emp.perfil_id || '',
+    telefone: emp.telefone || '',
+    cpf: emp.cpf || '',
+    ativo: emp.ativo === 1 || emp.ativo === true
+  }
+  showForm.value = true
+}
 
 function saveEmployee() {
-  router.post(route('admin.employees.store'), form.value, {
-    onSuccess: () => { showForm.value = false; form.value = { nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '' } },
-  })
+  if (isEditing.value) {
+    router.put(route('admin.employees.update', editingId.value), form.value, {
+      onSuccess: () => {
+        showForm.value = false
+        isEditing.value = false
+        editingId.value = null
+        form.value = { nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '', ativo: true }
+      },
+    })
+  } else {
+    router.post(route('admin.employees.store'), form.value, {
+      onSuccess: () => {
+        showForm.value = false
+        form.value = { nome: '', email: '', senha: '', perfil_id: '', telefone: '', cpf: '', ativo: true }
+      },
+    })
+  }
 }
 
 function deleteEmployee(id) {
