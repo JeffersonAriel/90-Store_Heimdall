@@ -76,7 +76,7 @@ class PerfilPermissaoSeeder extends Seeder
 
         $modulos = ['produtos', 'fornecedores', 'categorias', 'pedidos', 'estoque',
                     'financeiro', 'frete', 'api_config', 'funcionarios', 'marketing',
-                    'importacao', 'seguranca', 'clientes'];
+                    'importacao', 'seguranca', 'clientes', 'agenda'];
         $acoes   = ['view', 'create', 'edit', 'delete'];
 
         // Admin: tudo

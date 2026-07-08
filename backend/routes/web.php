@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\MarketingController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\AgendaController;
+use App\Http\Controllers\Admin\ClientController;
 
 // ─── ROTA DO INSTALADOR (Auto-desabilita após uso via middleware CheckInstalled) ───
 Route::middleware(['installed'])->group(function () {
@@ -104,6 +105,7 @@ Route::prefix('heimdall')->group(function () {
         });
 
         Route::resource('employees', EmployeeController::class)->names('admin.employees');
+        Route::resource('clients', ClientController::class)->names('admin.clients');
 
         // Perfil do Usuário
         Route::get('profile', [ProfileController::class, 'show'])->name('admin.profile.show');

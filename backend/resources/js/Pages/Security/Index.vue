@@ -541,6 +541,7 @@ const modules = [
   { key: 'funcionarios', label: '👥 Funcionários & Equipe' },
   { key: 'marketing',    label: '📢 Marketing & Cupons' },
   { key: 'importacao',   label: '📥 Importação/Exportação' },
+  { key: 'agenda',       label: '📅 Agenda & Tarefas' },
   { key: 'seguranca',    label: '🔐 Segurança & Logs' },
   { key: 'clientes',     label: '👤 Clientes' },
 ]
