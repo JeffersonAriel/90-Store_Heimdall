@@ -217,12 +217,27 @@ class ImportExportController extends Controller
 
             $rowIndex = 2;
             foreach ($produtos as $produto) {
-                // Buscar subcategorias do produto (caminho completo)
-                $subcats = DB::table('produto_subcategoria as ps')
-                    ->join('categorias as c', 'ps.subcategoria_id', '=', 'c.id')
-                    ->where('ps.produto_id', $produto->id)
-                    ->pluck('c.nome')
-                    ->implode(' > ');
+                // Resolver hierarquia de categorias/subcategorias dinamicamente
+                $categoriaNome = '';
+                $subcats = '';
+                if ($produto->categoria_id) {
+                    $ancestrais = [];
+                    $atualId = $produto->categoria_id;
+                    while ($atualId) {
+                        $cat = DB::table('categorias_tipo_produto')->where('id', $atualId)->first();
+                        if ($cat) {
+                            $ancestrais[] = $cat->nome;
+                            $atualId = $cat->parent_id;
+                        } else {
+                            break;
+                        }
+                    }
+                    $ancestrais = array_reverse($ancestrais);
+                    $categoriaNome = $ancestrais[0] ?? '';
+                    if (count($ancestrais) > 1) {
+                        $subcats = implode(' > ', array_slice($ancestrais, 1));
+                    }
+                }
 
                 // Buscar variações
                 $variacoes = DB::table('produto_variacoes')->where('produto_id', $produto->id)->get();
@@ -231,7 +246,7 @@ class ImportExportController extends Controller
                     // Produto sem variações — linha única
                     $sheet->fromArray([[
                         $produto->id, $produto->nome, $produto->marca ?? '', $produto->genero ?? '',
-                        $produto->sku_base ?? '', $produto->categoria ?? '', $subcats,
+                        $produto->sku_base ?? '', $categoriaNome, $subcats,
                         '', '', '', '',
                         $produto->preco_custo ?? '', $produto->preco_venda ?? '', $produto->preco_promocional ?? '',
                         $produto->tipo_estoque ?? 'proprio', $produto->estoque ?? 0, $produto->estoque_critico ?? 5,
@@ -246,7 +261,7 @@ class ImportExportController extends Controller
 
                         $sheet->fromArray([[
                             $produto->id, $produto->nome, $produto->marca ?? '', $produto->genero ?? '',
-                            $produto->sku_base ?? '', $produto->categoria ?? '', $subcats,
+                            $produto->sku_base ?? '', $categoriaNome, $subcats,
                             $var->id, $var->sku ?? '', $var->tamanho ?? '', $var->cor ?? '',
                             $var->preco_custo ?? $produto->preco_custo ?? '', $var->preco_venda ?? $produto->preco_venda ?? '', $var->preco_promocional ?? $produto->preco_promocional ?? '',
                             $produto->tipo_estoque ?? 'proprio', $var->estoque ?? 0, $produto->estoque_critico ?? 5,
