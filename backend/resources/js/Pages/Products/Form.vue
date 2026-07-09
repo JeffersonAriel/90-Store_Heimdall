@@ -203,7 +203,7 @@
                     <tbody>
                       <tr v-for="(varItem, index) in form.variacoes" :key="index">
                         <td>
-                          <select v-model="varItem.tamanho" @change="updateVariationSku(index)" class="form-select w-24 mx-auto" :disabled="!!varItem.id" required>
+                          <select v-model="varItem.tamanho" @change="updateVariationSku(index)" class="form-select w-24 mx-auto" required>
                             <option value="" disabled>Tam...</option>
                             <optgroup label="Roupas">
                               <option v-for="s in sizeOptions.roupas" :key="s" :value="s">{{ s }}</option>
@@ -214,13 +214,13 @@
                           </select>
                         </td>
                         <td>
-                          <select v-model="varItem.cor" @change="updateVariationSku(index)" class="form-select w-32" :disabled="!!varItem.id" required>
+                          <select v-model="varItem.cor" @change="updateVariationSku(index)" class="form-select w-32">
                             <option value="" disabled>Cor...</option>
                             <option v-for="cor in colorOptions" :key="cor" :value="cor">{{ cor }}</option>
                           </select>
                         </td>
                         <td>
-                          <input v-model="varItem.sku" type="text" class="form-input font-mono text-sm w-48" style="background: var(--color-bg-elevated)" :disabled="!!varItem.id" required />
+                          <input v-model="varItem.sku" type="text" class="form-input font-mono text-sm w-48" style="background: var(--color-bg-elevated)" required />
                         </td>
                         <td>
                           <select v-model="varItem.tipo_estoque" class="form-select w-36">
@@ -458,9 +458,9 @@ const form = useForm({
   deleted_photos: []
 });
 
-// Cores únicas
+// Cores únicas (ignora variações sem cor definida)
 const uniqueColors = computed(() => {
-  const cores = form.variacoes.map(v => v.cor).filter(c => c !== '');
+  const cores = form.variacoes.map(v => v.cor).filter(c => c !== '' && c !== null && c !== undefined);
   return [...new Set(cores)];
 });
 
