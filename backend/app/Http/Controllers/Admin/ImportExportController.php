@@ -275,6 +275,15 @@ class ImportExportController extends Controller
                 // Buscar variações
                 $variacoes = DB::table('variacoes_produto')->where('produto_id', $produto->id)->get();
 
+                // Buscar todas as fotos do produto de forma ordenada (capa primeiro)
+                $fotos = DB::table('fotos_produto')
+                    ->where('produto_id', $produto->id)
+                    ->orderBy('is_capa', 'desc')
+                    ->orderBy('ordem')
+                    ->pluck('url')
+                    ->toArray();
+                $fotoUrl = implode(', ', $fotos);
+
                 if ($variacoes->isEmpty()) {
                     // Produto sem variações — linha única
                     $sheet->fromArray([[
@@ -282,22 +291,19 @@ class ImportExportController extends Controller
                         $produto->sku_base ?? '', $categoriaNome, $subcats,
                         '', '', '', '',
                         $produto->preco_custo ?? '', $produto->preco_venda ?? '', $produto->preco_promocional ?? '',
-                        $produto->tipo_estoque ?? 'proprio', $produto->estoque ?? 0, $produto->estoque_critico ?? 5,
+                        'dropshipping', $produto->estoque ?? 0, $produto->estoque_critico ?? 5,
                         $produto->fornecedor_id ?? '', $produto->fornecedor_nome ?? '',
-                        $produto->foto_url ?? '', $produto->descricao ?? '', $produto->ativo ? 'Sim' : 'Não',
+                        $fotoUrl, $produto->descricao ?? '', $produto->ativo ? 'Sim' : 'Não',
                     ]], null, "A{$rowIndex}");
                     $rowIndex++;
                 } else {
                     foreach ($variacoes as $var) {
-                        // Foto: tenta foto da variação, depois a foto de capa do produto
-                        $fotoUrl = $var->foto_url ?? $produto->foto_url ?? '';
-
                         $sheet->fromArray([[
                             $produto->id, $produto->nome, $produto->marca ?? '', $produto->genero ?? '',
                             $produto->sku_base ?? '', $categoriaNome, $subcats,
                             $var->id, $var->sku ?? '', $var->tamanho ?? '', $var->cor ?? '',
                             $var->preco_adicional ?? $produto->preco_custo ?? '', $produto->preco_venda ?? '', $produto->preco_promocional ?? '',
-                            $produto->tipo_estoque ?? 'proprio', $var->estoque_quantidade ?? 0, $produto->estoque_critico ?? 5,
+                            $var->tipo_estoque ?? 'dropshipping', $var->estoque_quantidade ?? 0, $produto->estoque_critico ?? 5,
                             $produto->fornecedor_id ?? '', $produto->fornecedor_nome ?? '',
                             $fotoUrl, $produto->descricao ?? '', $produto->ativo ? 'Sim' : 'Não',
                         ]], null, "A{$rowIndex}");

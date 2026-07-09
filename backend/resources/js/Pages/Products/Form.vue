@@ -244,20 +244,20 @@
               </div>
             </div>
           </template>
+          <!-- 5. IMAGENS DO PRODUTO -->
+          <div class="card mb-6">
+            <div class="card-header">
+              <h3 class="card-title flex items-center gap-2 m-0">
+                <span class="bg-indigo-600 text-white rounded-full w-6 h-6 inline-flex items-center justify-center text-sm font-bold">5</span> 
+                Fotos do Produto
+              </h3>
+            </div>
+            <div class="card-body">
+              <p class="text-muted text-sm mb-4">Faça o upload ou cole as URLs das imagens do produto.</p>
 
-          <!-- 5. IMAGENS POR COR -->
-          <template v-if="uniqueColors.length > 0">
-            <div class="card mb-6">
-              <div class="card-header">
-                <h3 class="card-title flex items-center gap-2 m-0">
-                  <span class="bg-indigo-600 text-white rounded-full w-6 h-6 inline-flex items-center justify-center text-sm font-bold">5</span> 
-                  Fotos por Cor
-                </h3>
-              </div>
-              <div class="card-body">
-                <p class="text-muted text-sm mb-4">Faça o upload das imagens correspondentes a cada cor selecionada na grade acima.</p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Se tiver cores definidas nas variações, mostra por cor -->
+                <template v-if="uniqueColors.length > 0">
                   <div v-for="cor in uniqueColors" :key="cor" class="p-4 rounded-lg" style="background: var(--color-bg-elevated); border: 1px solid var(--color-border);">
                     <label class="form-label font-bold" style="color: var(--color-text-primary)">
                       📸 Fotos da Cor: <span style="color: var(--color-brand)">{{ cor }}</span>
@@ -282,10 +282,38 @@
                       <p class="text-xs mt-1 text-muted">Cole uma URL por linha.</p>
                     </div>
                   </div>
-                </div>
+                </template>
+
+                <!-- Se não tiver cores, mostra uma seção Geral -->
+                <template v-else>
+                  <div class="p-4 rounded-lg md:col-span-2" style="background: var(--color-bg-elevated); border: 1px solid var(--color-border);">
+                    <label class="form-label font-bold" style="color: var(--color-text-primary)">
+                      📸 Fotos Gerais do Produto
+                    </label>
+                    <div v-if="isEdit && existingPhotosByColor(null).length > 0" class="flex flex-wrap gap-2 mt-2 mb-4">
+                      <div v-for="foto in existingPhotosByColor(null)" :key="foto.id" class="relative group" style="width: 64px; height: 64px; flex-shrink: 0;">
+                        <img :src="foto.url" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 1px solid var(--color-border);" :class="{ 'opacity-50 grayscale': form.deleted_photos.includes(foto.id) }" />
+                        <button type="button" @click="toggleDeletePhoto(foto.id)" class="absolute -top-2 -right-2 bg-white rounded-full text-red-500 shadow hover:text-red-700 flex items-center justify-center font-bold" style="width: 24px; height: 24px;">
+                          {{ form.deleted_photos.includes(foto.id) ? '↺' : '×' }}
+                        </button>
+                      </div>
+                    </div>
+                    <div class="mt-3">
+                      <label class="text-xs text-gray-500 font-bold mb-1 block">Opção 1: Arquivos locais</label>
+                      <input type="file" @change="handleFileUpload($event, 'Geral')" multiple accept="image/*" class="form-input text-sm" />
+                      <p class="text-xs mt-1 text-muted">Selecione uma ou mais imagens do seu computador.</p>
+                    </div>
+
+                    <div class="mt-3">
+                      <label class="text-xs text-gray-500 font-bold mb-1 block">Opção 2: Ou cole URLs externas</label>
+                      <textarea v-model="form.fotos_url_por_cor['Geral']" rows="3" class="form-textarea text-sm" placeholder="https://exemplo.com/imagem1.jpg&#10;https://exemplo.com/imagem2.png"></textarea>
+                      <p class="text-xs mt-1 text-muted">Cole uma URL por linha.</p>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
-          </template>
+          </div>
 
           <!-- Ações -->
           <div class="flex justify-end gap-3 pt-2">
@@ -439,7 +467,10 @@ const uniqueColors = computed(() => {
 // Fotos existentes por cor
 function existingPhotosByColor(cor) {
   if (!props.product || !props.product.fotos) return [];
-  return props.product.fotos.filter(f => f.cor === cor);
+  return props.product.fotos.filter(f => {
+    if (!cor) return !f.cor || f.cor === 'Geral';
+    return f.cor === cor;
+  });
 }
 
 // Toggle excluir foto
@@ -534,6 +565,15 @@ watch(() => form.retro_year, (newYear) => {
   }
 });
 
+// Garante chaves inicializadas para evitar undefined no textarea de fotos por cor
+watch(uniqueColors, (newColors) => {
+  newColors.forEach(cor => {
+    if (form.fotos_url_por_cor[cor] === undefined) {
+      form.fotos_url_por_cor[cor] = '';
+    }
+  });
+}, { immediate: true });
+
 function submitForm() {
   if (!form.categoria_id) {
     alert("Por favor, selecione uma categoria.");
@@ -569,6 +609,22 @@ onMounted(() => {
     if (path.length > 1) selectedCatLevel2.value = path[1];
     if (path.length > 2) selectedCatLevel3.value = path[2];
     if (path.length > 3) selectedCatLevel4.value = path[3];
+
+    // Popula fotos_url_por_cor para edição manual das URLs de imagens existentes
+    if (props.product && props.product.fotos && props.product.fotos.length > 0) {
+      const urlsByColor = {};
+      props.product.fotos.forEach(foto => {
+        const cor = foto.cor || 'Geral';
+        if (!urlsByColor[cor]) {
+          urlsByColor[cor] = [];
+        }
+        urlsByColor[cor].push(foto.url);
+      });
+      
+      for (const [cor, urls] of Object.entries(urlsByColor)) {
+        form.fotos_url_por_cor[cor] = urls.join('\n');
+      }
+    }
   }
 });
 </script>

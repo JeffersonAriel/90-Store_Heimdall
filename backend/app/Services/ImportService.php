@@ -113,6 +113,9 @@ class ImportService
         $venda = floatval($row[12] ?? 0);
         $precoPromocional = !empty($row[13]) ? floatval($row[13]) : null;
         $tipoEstoque = strtolower(trim($row[14] ?? 'dropshipping'));
+        if ($tipoEstoque === 'drop') {
+            $tipoEstoque = 'dropshipping';
+        }
         $estoqueQtd = intval($row[15] ?? 0);
         $estoqueCritico = !empty($row[16]) ? intval($row[16]) : 5;
         $fornecedorId = intval($row[17] ?? 0);
@@ -340,21 +343,34 @@ class ImportService
             $variation = VariacaoProduto::where('sku', $d['sku_var'])->first();
         }
 
-        // Foto do produto
+        // Fotos do produto (múltiplas URLs separadas por vírgula)
         if (!empty($d['url_foto'])) {
-            $exists = DB::table('fotos_produto')
+            $urls = array_filter(array_map('trim', explode(',', $d['url_foto'])));
+            $hasCover = DB::table('fotos_produto')
                 ->where('produto_id', $product->id)
-                ->where('url', $d['url_foto'])
+                ->where('is_capa', true)
                 ->exists();
-            if (!$exists) {
-                DB::table('fotos_produto')->insert([
-                    'produto_id' => $product->id,
-                    'url' => $d['url_foto'],
-                    'is_capa' => true,
-                    'ordem' => 0,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+
+            foreach ($urls as $index => $url) {
+                if (empty($url)) continue;
+                $exists = DB::table('fotos_produto')
+                    ->where('produto_id', $product->id)
+                    ->where('url', $url)
+                    ->exists();
+                if (!$exists) {
+                    $isCapa = !$hasCover && ($index === 0);
+                    if ($isCapa) {
+                        $hasCover = true;
+                    }
+                    DB::table('fotos_produto')->insert([
+                        'produto_id' => $product->id,
+                        'url' => $url,
+                        'is_capa' => $isCapa,
+                        'ordem' => $index,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
             }
         }
 
