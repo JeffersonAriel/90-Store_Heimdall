@@ -108,7 +108,31 @@ class ImportService
         $idVariacao = !empty($row[7]) ? intval($row[7]) : null;
         $skuVar = trim($row[8] ?? '');
         $tamanho = trim($row[9] ?? '');
+        
         $cor = trim($row[10] ?? '');
+        $corMap = [
+            'amarela' => 'Amarelo',
+            'vermelha' => 'Vermelho',
+            'roxa' => 'Roxo',
+            'dourada' => 'Dourado',
+            'cinzenta' => 'Cinza',
+            'prateada' => 'Prata',
+            'colorida' => 'Colorido/Estampado',
+            'estampada' => 'Colorido/Estampado',
+            'amarelo' => 'Amarelo',
+            'vermelho' => 'Vermelho',
+            'roxo' => 'Roxo',
+            'dourado' => 'Dourado',
+            'cinza' => 'Cinza',
+            'prata' => 'Prata',
+        ];
+        $corLower = mb_strtolower($cor);
+        if (isset($corMap[$corLower])) {
+            $cor = $corMap[$corLower];
+        } else if (!empty($cor)) {
+            $cor = mb_convert_case($cor, MB_CASE_TITLE, "UTF-8");
+        }
+
         $custo = floatval($row[11] ?? 0);
         $venda = floatval($row[12] ?? 0);
         $precoPromocional = !empty($row[13]) ? floatval($row[13]) : null;
@@ -138,18 +162,44 @@ class ImportService
         $fornecedorExists = Fornecedor::where('id', $fornecedorId)->exists();
         if (!$fornecedorExists) $erros[] = "Fornecedor com ID {$fornecedorId} não existe no sistema.";
 
-        // Busca ou cria categoria dinamicamente por nome se não existir
-        $categoria = CategoriaTipoProduto::where('nome', $categoriaNome)->first();
-        if (!$categoria && !empty($categoriaNome)) {
-            // Cria categoria genérica temporária
-            $categoria = CategoriaTipoProduto::create([
-                'nome' => $categoriaNome,
-                'slug' => \Illuminate\Support\Str::slug($categoriaNome),
-                'ordem' => 99,
-                'ativo' => true
-            ]);
+        // Resolve a categoria hierarquicamente
+        $categoriaId = null;
+        if (!empty($categoriaNome)) {
+            // Categoria Raiz (sem parent_id)
+            $categoria = CategoriaTipoProduto::whereNull('parent_id')->where('nome', $categoriaNome)->first();
+            if (!$categoria) {
+                $categoria = CategoriaTipoProduto::create([
+                    'parent_id' => null,
+                    'nome' => $categoriaNome,
+                    'slug' => \Illuminate\Support\Str::slug($categoriaNome),
+                    'ordem' => 99,
+                    'ativo' => true
+                ]);
+            }
+            $ultimoId = $categoria->id;
+
+            // Resolve subcategorias
+            if (!empty($subcategorias)) {
+                $subcatsList = array_map('trim', explode('>', $subcategorias));
+                foreach ($subcatsList as $subcatName) {
+                    if (empty($subcatName)) continue;
+                    $subcat = CategoriaTipoProduto::where('parent_id', $ultimoId)->where('nome', $subcatName)->first();
+                    if (!$subcat) {
+                        $subcat = CategoriaTipoProduto::create([
+                            'parent_id' => $ultimoId,
+                            'nome' => $subcatName,
+                            'slug' => \Illuminate\Support\Str::slug($subcatName),
+                            'ordem' => 99,
+                            'ativo' => true
+                        ]);
+                    }
+                    $ultimoId = $subcat->id;
+                }
+            }
+            $categoriaId = $ultimoId;
         }
-        if (!$categoria) $erros[] = "Categoria é obrigatória.";
+
+        if (!$categoriaId) $erros[] = "Categoria é obrigatória.";
 
         // Identifica se é criação ou atualização baseando-se no ID da variação ou no SKU
         $variacao = null;
@@ -176,7 +226,7 @@ class ImportService
                 'marca' => $marca,
                 'genero' => $genero,
                 'sku_base' => $skuBase,
-                'categoria_id' => $categoria?->id,
+                'categoria_id' => $categoriaId,
                 'categoria_nome' => $categoriaNome,
                 'subcategorias' => $subcategorias,
                 'id_variacao' => $idVariacao,
@@ -353,11 +403,11 @@ class ImportService
 
             foreach ($urls as $index => $url) {
                 if (empty($url)) continue;
-                $exists = DB::table('fotos_produto')
+                $existingPhoto = DB::table('fotos_produto')
                     ->where('produto_id', $product->id)
                     ->where('url', $url)
-                    ->exists();
-                if (!$exists) {
+                    ->first();
+                if (!$existingPhoto) {
                     $isCapa = !$hasCover && ($index === 0);
                     if ($isCapa) {
                         $hasCover = true;
@@ -366,10 +416,15 @@ class ImportService
                         'produto_id' => $product->id,
                         'url' => $url,
                         'is_capa' => $isCapa,
+                        'cor' => $d['cor'] ?: null,
                         'ordem' => $index,
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);
+                } else if (empty($existingPhoto->cor) && !empty($d['cor'])) {
+                    DB::table('fotos_produto')
+                        ->where('id', $existingPhoto->id)
+                        ->update(['cor' => $d['cor']]);
                 }
             }
         }
