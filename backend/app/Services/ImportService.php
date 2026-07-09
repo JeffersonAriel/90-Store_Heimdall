@@ -165,9 +165,32 @@ class ImportService
         // Resolve a categoria hierarquicamente
         $categoriaId = null;
         if (!empty($categoriaNome)) {
+            $accentMap = [
+                'suica' => 'Suíça',
+                'selecao' => 'Seleção',
+                'selecoes' => 'Seleções',
+                'tenis' => 'Tênis',
+                'acessorios' => 'Acessórios',
+                'promocao' => 'Promoção',
+                'promocoes' => 'Promoções',
+                'calca' => 'Calça',
+                'calcas' => 'Calças',
+                'camisa de time' => 'Camisas de Time',
+                'camisas de time' => 'Camisas de Time',
+            ];
+
+            $cleanCat = trim(mb_strtolower($categoriaNome));
+            if (isset($accentMap[$cleanCat])) {
+                $categoriaNome = $accentMap[$cleanCat];
+            }
+
             // Categoria Raiz (sem parent_id)
             $categoria = CategoriaTipoProduto::whereNull('parent_id')->where('nome', $categoriaNome)->first();
-            if (!$categoria) {
+            if ($categoria) {
+                if ($categoria->nome !== $categoriaNome) {
+                    $categoria->update(['nome' => $categoriaNome]);
+                }
+            } else {
                 $categoria = CategoriaTipoProduto::create([
                     'parent_id' => null,
                     'nome' => $categoriaNome,
@@ -183,8 +206,19 @@ class ImportService
                 $subcatsList = array_map('trim', explode('>', $subcategorias));
                 foreach ($subcatsList as $subcatName) {
                     if (empty($subcatName)) continue;
+
+                    $cleanSub = trim(mb_strtolower($subcatName));
+                    if (isset($accentMap[$cleanSub])) {
+                        $subcatName = $accentMap[$cleanSub];
+                    }
+
                     $subcat = CategoriaTipoProduto::where('parent_id', $ultimoId)->where('nome', $subcatName)->first();
-                    if (!$subcat) {
+                    if ($subcat) {
+                        // Se a grafia exata for diferente (por exemplo, Suica vs Suíça), atualiza
+                        if ($subcat->nome !== $subcatName) {
+                            $subcat->update(['nome' => $subcatName]);
+                        }
+                    } else {
                         $subcat = CategoriaTipoProduto::create([
                             'parent_id' => $ultimoId,
                             'nome' => $subcatName,

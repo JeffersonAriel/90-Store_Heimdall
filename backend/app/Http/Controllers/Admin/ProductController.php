@@ -154,19 +154,22 @@ class ProductController extends Controller
                 }
             }
 
-            // Processa URLs de imagens por cor
+            // Processa URLs de imagens por cor (suporta nova linha e vírgula como separador)
             if ($request->filled('fotos_url_por_cor')) {
+                $hasCover = $product->fotos()->where('is_capa', true)->exists();
                 foreach ($request->input('fotos_url_por_cor') as $cor => $urlText) {
                     if (empty($urlText)) continue;
-                    $urls = explode("\n", str_replace("\r", "", $urlText));
-                    foreach ($urls as $index => $url) {
+                    $rawUrls = preg_split('/[\n,]+/', str_replace("\r", "", $urlText));
+                    foreach ($rawUrls as $index => $url) {
                         $url = trim($url);
                         if (empty($url)) continue;
+                        $isCapa = !$hasCover;
+                        if ($isCapa) $hasCover = true;
                         $product->fotos()->create([
                             'url' => $url,
-                            'ordem' => $index + 100, // offset para ficar após as locais
-                            'cor' => $cor,
-                            'is_capa' => ($product->fotos()->count() === 0),
+                            'ordem' => $index + 100,
+                            'cor' => ($cor === 'Geral') ? null : $cor,
+                            'is_capa' => $isCapa,
                         ]);
                     }
                 }
@@ -253,8 +256,11 @@ class ProductController extends Controller
                 if (!empty($varData['id'])) {
                     $variation = $product->variacoes()->find($varData['id']);
                     if ($variation) {
-                        // Atualiza apenas os campos mutáveis para preservar a integridade do e-commerce
+                        // Permite atualizar todos os campos da variação
                         $variation->update([
+                            'sku' => $varData['sku'] ?? $variation->sku,
+                            'tamanho' => $varData['tamanho'] ?? $variation->tamanho,
+                            'cor' => $varData['cor'] ?? $variation->cor,
                             'preco_adicional' => $varData['preco_adicional'],
                             'tipo_estoque' => $varData['tipo_estoque'],
                         ]);
@@ -329,20 +335,30 @@ class ProductController extends Controller
                 }
             }
 
-            // Processa novas URLs de imagens por cor
+            // Processa novas URLs de imagens por cor (upsert: não duplica se URL já existir)
             if ($request->filled('fotos_url_por_cor')) {
                 foreach ($request->input('fotos_url_por_cor') as $cor => $urlText) {
                     if (empty($urlText)) continue;
-                    $urls = explode("\n", str_replace("\r", "", $urlText));
-                    foreach ($urls as $index => $url) {
+                    // Suporta separação por nova linha e por vírgula
+                    $rawUrls = preg_split('/[\n,]+/', str_replace("\r", "", $urlText));
+                    $hasCover = $product->fotos()->where('is_capa', true)->exists();
+                    foreach ($rawUrls as $index => $url) {
                         $url = trim($url);
                         if (empty($url)) continue;
-                        $product->fotos()->create([
-                            'url' => $url,
-                            'ordem' => $index + 100,
-                            'cor' => $cor,
-                            'is_capa' => ($product->fotos()->count() === 0),
-                        ]);
+                        $existing = $product->fotos()->where('url', $url)->first();
+                        if (!$existing) {
+                            $isCapa = !$hasCover;
+                            if ($isCapa) $hasCover = true;
+                            $product->fotos()->create([
+                                'url' => $url,
+                                'ordem' => $index + 100,
+                                'cor' => ($cor === 'Geral') ? null : $cor,
+                                'is_capa' => $isCapa,
+                            ]);
+                        } else if (!empty($cor) && $cor !== 'Geral' && empty($existing->cor)) {
+                            // Atualiza a cor se a foto existia sem cor associada
+                            $existing->update(['cor' => $cor]);
+                        }
                     }
                 }
             }
