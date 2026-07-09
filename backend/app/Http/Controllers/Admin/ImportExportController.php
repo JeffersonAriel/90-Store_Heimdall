@@ -44,18 +44,44 @@ class ImportExportController extends Controller
 
         if ($tipo === 'produtos') {
             $sheet->setTitle('Produtos & Variações');
-            $headers = ['Nome', 'SKU Base', 'Categoria', 'SKU Variação', 'Tamanho', 'Cor', 'Preço Custo', 'Preço Venda', 'Tipo Estoque (proprio/dropshipping)', 'Estoque Qtd', 'Fornecedor ID'];
+            $headers = [
+                'ID Produto', 'Nome', 'Marca', 'Gênero', 'SKU Base', 'Categoria', 'Subcategorias',
+                'ID Variação', 'SKU Variação', 'Tamanho', 'Cor',
+                'Preço Custo', 'Preço Venda', 'Preço Promocional',
+                'Tipo Estoque', 'Estoque Qtd', 'Estoque Crítico',
+                'Fornecedor ID', 'Fornecedor Nome',
+                'URL Foto', 'Descrição', 'Ativo',
+            ];
             $sheet->fromArray([$headers], null, 'A1');
 
             // Linha de Exemplo
-            $exampleRow = ['Camiseta Seleção Brasileira Retrô', 'BR-RETRO', 'Camisetas', 'BR-RETRO-G', 'G', 'Amarela', '45.00', '129.90', 'proprio', '50', '1'];
+            $exampleRow = [
+                '', 'Camiseta Seleção Brasileira Retrô', 'Nike', 'Unissex', 'BR-RETRO', 'Camisetas', '',
+                '', 'BR-RETRO-G', 'G', 'Amarela',
+                '45.00', '129.90', '',
+                'proprio', '50', '5',
+                '1', 'Distribuidora Esportiva XPTO Ltda',
+                'https://placehold.co/600x400', 'Camiseta retrô clássica da seleção de 1998.', 'Sim'
+            ];
             $sheet->fromArray([$exampleRow], null, 'A2');
         } else {
             $sheet->setTitle('Fornecedores');
-            $headers = ['Razão Social', 'Nome Fantasia', 'CNPJ ou CPF (Apenas números)', 'Tipo (juridica/fisica)', 'E-mail', 'Telefone', 'WhatsApp', 'CEP', 'Cidade', 'Estado'];
+            $headers = [
+                'ID', 'Razão Social', 'Nome Fantasia', 'Tipo', 'CNPJ', 'CPF',
+                'E-mail', 'Telefone', 'WhatsApp', 'Website',
+                'CEP', 'Logradouro', 'Número', 'Complemento', 'Bairro', 'Cidade', 'Estado',
+                'Condição Pagamento', 'Prazo Médio (dias)', 'Categorias Fornecidas',
+                'Observações', 'Avaliação Média', 'Ativo',
+            ];
             $sheet->fromArray([$headers], null, 'A1');
 
-            $exampleRow = ['Distribuidora Esportiva XPTO Ltda', 'XPTO Esportes', '12345678000199', 'juridica', 'comercial@xptoesportes.com', '1122223333', '11999998888', '08010000', 'São Paulo', 'SP'];
+            $exampleRow = [
+                '', 'Distribuidora Esportiva XPTO Ltda', 'XPTO Esportes', 'juridica', '12345678000199', '',
+                'comercial@xptoesportes.com', '1122223333', '11999998888', 'www.xptoesportes.com',
+                '08010000', 'Rua das Palmeiras', '100', 'Sala 2', 'Santa Cecília', 'São Paulo', 'SP',
+                'Boleto 30 dias', '30', 'Camisetas, Calças, Bermudas',
+                'Fornecedor parceiro com ótima logística.', '4.8', 'Sim'
+            ];
             $sheet->fromArray([$exampleRow], null, 'A2');
         }
 
@@ -63,6 +89,13 @@ class ImportExportController extends Controller
         foreach (range('A', $sheet->getHighestColumn()) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
+
+        // Estilo do cabeçalho
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF1a1a2e']],
+        ];
+        $sheet->getStyle('A1:' . $sheet->getHighestColumn() . '1')->applyFromArray($headerStyle);
 
         $writer = new Xlsx($spreadsheet);
         $fileName = "template_{$tipo}.xlsx";
