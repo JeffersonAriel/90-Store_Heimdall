@@ -16,8 +16,19 @@ class InfinitePayService
 
     public function __construct()
     {
-        $this->handle = env('INFINITEPAY_HANDLE');
         $this->config = ApiConfiguracao::where('slug', 'infinitepay')->first();
+        
+        // Prioriza a handle vinda do cadastro do banco de dados (credenciais_json)
+        $handle = null;
+        if ($this->config && $this->config->credenciais_json) {
+            $creds = is_array($this->config->credenciais_json) 
+                ? $this->config->credenciais_json 
+                : json_decode($this->config->credenciais_json, true);
+            $handle = $creds['handle'] ?? null;
+        }
+
+        // Fallback para a variável de ambiente
+        $this->handle = $handle ?: env('INFINITEPAY_HANDLE');
     }
 
     /**

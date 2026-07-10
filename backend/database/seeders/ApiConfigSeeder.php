@@ -102,8 +102,12 @@ class ApiConfigSeeder extends Seeder
                 'fallback_ordem'  => 99,
                 'ativo'           => true,
                 'sandbox'         => false,
-                'template_campos_json' => json_encode([]),
-                'credenciais_json' => null,
+                'template_campos_json' => json_encode([
+                    ['campo' => 'handle', 'label' => 'InfiniteTag / Handle', 'obrigatorio' => true, 'tipo' => 'text']
+                ]),
+                'credenciais_json' => json_encode([
+                    'handle' => 'henrique-gabriel-2j3'
+                ]),
                 'webhook_url'     => '/api/payments/infinitepay/webhook',
             ],
 
