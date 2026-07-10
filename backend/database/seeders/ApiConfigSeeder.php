@@ -95,6 +95,18 @@ class ApiConfigSeeder extends Seeder
                 'credenciais_json' => null,
                 'webhook_url'     => '/webhooks/stripe',
             ],
+            [
+                'slug'            => 'infinitepay',
+                'nome'            => 'InfinitePay',
+                'tipo'            => 'gateway',
+                'fallback_ordem'  => 99,
+                'ativo'           => true,
+                'sandbox'         => false,
+                'template_campos_json' => json_encode([]),
+                'credenciais_json' => null,
+                'webhook_url'     => '/api/payments/infinitepay/webhook',
+            ],
+
 
             // ── Frete ────────────────────────────────────────────
             [

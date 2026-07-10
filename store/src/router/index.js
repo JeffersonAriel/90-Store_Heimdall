@@ -57,6 +57,11 @@ const router = createRouter({
       path: '/institucional/:slug',
       name: 'static.page',
       component: () => import('@/views/StaticPageView.vue'),
+    },
+    {
+      path: '/pagamento/sucesso',
+      name: 'payment.success',
+      component: () => import('@/views/SuccessView.vue'),
     }
   ],
 })

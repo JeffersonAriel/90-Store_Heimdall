@@ -52,6 +52,50 @@ class CustomerOrderController extends Controller
     }
 
     /**
+     * Retorna os detalhes públicos/seguros de um pedido pelo ID para a página de sucesso pós-compra.
+     */
+    public function showPublic(Request $request, $id)
+    {
+        $pedido = Pedido::with([
+            'itens.produto.fotoCapa',
+            'itens.variacao',
+            'endereco',
+            'pagamentos' => function($q) {
+                $q->orderBy('created_at', 'desc');
+            }
+        ])->find($id);
+
+        if (!$pedido) {
+            return response()->json(['success' => false, 'message' => 'Pedido não encontrado.'], 404);
+        }
+
+        // Limpa dados extremamente sensíveis do cliente, mas permite identificar as informações exigidas na página
+        $cliente = $pedido->cliente;
+
+        return response()->json([
+            'success' => true,
+            'pedido' => [
+                'id' => $pedido->id,
+                'order_nsu' => 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT),
+                'total' => $pedido->total,
+                'status' => $pedido->status,
+                'valor_frete' => $pedido->valor_frete,
+                'desconto_cupom' => $pedido->desconto_cupom,
+                'desconto_pontos' => $pedido->desconto_pontos,
+                'subtotal' => $pedido->subtotal,
+                'itens' => $pedido->itens,
+                'endereco' => $pedido->endereco,
+                'pagamentos' => $pedido->pagamentos,
+                'cliente' => $cliente ? [
+                    'nome_completo' => $cliente->nome_completo,
+                    'email' => $cliente->email,
+                    'telefone' => $cliente->telefone ?? $cliente->whatsapp
+                ] : null
+            ]
+        ]);
+    }
+
+    /**
      * Retorna a chave pix manual para o botão Pagar Agora
      */
     public function pixKey()

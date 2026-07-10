@@ -444,6 +444,12 @@ async function finalizeOrder() {
       headers: { Authorization: `Bearer ${store.token}` }
     })
     
+    // Se for InfinitePay, redireciona o cliente para o link de pagamento
+    if (res.data.infinitepay && res.data.redirect_url) {
+      window.location.href = res.data.redirect_url
+      return
+    }
+
     orderNumber.value = res.data.pedido_id
     if (res.data.pix_manual) {
       pixManualData.value = res.data.chave_pix

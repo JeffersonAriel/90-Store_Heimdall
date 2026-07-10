@@ -44,3 +44,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Checkout de compras
     Route::post('/checkout', [CheckoutController::class, 'checkout']);
 });
+
+// ─── ROTAS DO WEBHOOK E CONSULTAS PÚBLICAS/SEGURAS ───
+Route::post('/payments/infinitepay/webhook', [\App\Http\Controllers\Api\InfinitePayController::class, 'webhook']);
+Route::get('/orders/public/{id}', [\App\Http\Controllers\Api\CustomerOrderController::class, 'showPublic']);
+

@@ -16,12 +16,15 @@ class CheckoutController extends Controller
 {
     protected $stockService;
     protected $gatewayService;
+    protected $infinitePayService;
 
-    public function __construct(StockService $stockService, GatewayService $gatewayService)
+    public function __construct(StockService $stockService, GatewayService $gatewayService, \App\Services\InfinitePayService $infinitePayService)
     {
         $this->stockService = $stockService;
         $this->gatewayService = $gatewayService;
+        $this->infinitePayService = $infinitePayService;
     }
+
 
     /**
      * Finaliza o pedido e gera o pagamento Pix
@@ -172,7 +175,27 @@ class CheckoutController extends Controller
             ]);
         }
 
+        // Tratamento para InfinitePay
+        if ($request->gateway === 'infinitepay') {
+            $resInfinite = $this->infinitePayService->createPaymentLink($order);
+            if ($resInfinite['success']) {
+                return response()->json([
+                    'success' => true,
+                    'pedido_id' => $order->id,
+                    'total' => $order->total,
+                    'infinitepay' => true,
+                    'redirect_url' => $resInfinite['url']
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Falha ao gerar link de pagamento na InfinitePay: ' . ($resInfinite['message'] ?? 'Erro desconhecido.')
+                ], 400);
+            }
+        }
+
         // Mock Gateway Payment Success para prosseguir o fluxo sem gateway real configurado (Demo - Cartão)
+
         DB::table('pagamentos')->insert([
             'pedido_id' => $order->id,
             'gateway' => $request->gateway,
