@@ -73,6 +73,9 @@ class CheckoutController extends Controller
             // 1. Processa itens e valida estoques
             foreach ($request->itens as $itemInput) {
                 $variation = VariacaoProduto::with('produto')->lockForUpdate()->find($itemInput['variacao_id']);
+                if (!$variation || !$variation->produto) {
+                    throw new \Exception("Variação do produto não encontrada para o item do carrinho.");
+                }
                 $produto = $variation->produto;
 
                 // Preço final
