@@ -45,60 +45,64 @@ class InfinitePayService
         $items = [];
         foreach ($pedido->itens as $item) {
             $items[] = [
-                'description' => $item->nome_snapshot . ($item->sku_snapshot ? ' (SKU: ' . $item->sku_snapshot . ')' : ''),
+                'name' => $item->nome_snapshot,
+                'sku' => $item->sku_snapshot,
                 'quantity' => (int) $item->quantidade,
-                'price' => (int) round($item->preco_venda_snapshot * 100), // Preço unitário em centavos
+                'amount' => (int) round($item->preco_venda_snapshot * 100), // Preço unitário em centavos
             ];
         }
 
         // Adiciona frete como um item se houver
         if ($pedido->valor_frete > 0) {
             $items[] = [
-                'description' => 'Frete',
+                'name' => 'Frete',
+                'sku' => 'FRETE',
                 'quantity' => 1,
-                'price' => (int) round($pedido->valor_frete * 100),
+                'amount' => (int) round($pedido->valor_frete * 100),
             ];
         }
 
         // Desconto do cupom se aplicável (enviado com sinal negativo)
         if ($pedido->desconto_cupom > 0) {
             $items[] = [
-                'description' => 'Desconto Cupom',
+                'name' => 'Desconto Cupom',
+                'sku' => 'DESCONTO',
                 'quantity' => 1,
-                'price' => -(int) round($pedido->desconto_cupom * 100),
+                'amount' => -(int) round($pedido->desconto_cupom * 100),
             ];
         }
 
         if ($pedido->desconto_pontos > 0) {
             $items[] = [
-                'description' => 'Desconto Pontos',
+                'name' => 'Desconto Pontos',
+                'sku' => 'DESCONTO_PONTOS',
                 'quantity' => 1,
-                'price' => -(int) round($pedido->desconto_pontos * 100),
+                'amount' => -(int) round($pedido->desconto_pontos * 100),
             ];
         }
 
         // Limpar telefone (apenas números)
         $phone = preg_replace('/\D/', '', $cliente->telefone ?? $cliente->whatsapp ?? '');
-        if ($phone && strlen($phone) >= 10 && substr($phone, 0, 1) != '+') {
-            $phone = '+55' . $phone; // InfinitePay usually prefers +55 for BR numbers
-        }
 
         // Formatação do payload
         $payload = [
             'handle' => $this->handle,
             'order_nsu' => 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT),
-            'itens' => $items, // <--- CHANGED from items to itens
+            'items' => $items,
             'customer' => [
                 'name' => $cliente->nome_completo,
                 'email' => $cliente->email,
-                'phone_number' => $phone, // Doc says phone_number
+                'phone' => $phone,
+                'document' => preg_replace('/\D/', '', $cliente->cpf ?? ''),
             ],
             'address' => [
                 'cep' => preg_replace('/\D/', '', $endereco->cep),
                 'street' => $endereco->logradouro,
-                'neighborhood' => $endereco->bairro,
-                'number' => (string) $endereco->numero,
+                'number' => $endereco->numero,
                 'complement' => $endereco->complemento ?? '',
+                'neighborhood' => $endereco->bairro,
+                'city' => $endereco->cidade,
+                'state' => $endereco->estado,
             ],
             'redirect_url' => url('/pagamento/sucesso?order_id=' . $pedido->id),
             'webhook_url' => url('/api/payments/infinitepay/webhook'),
