@@ -80,30 +80,44 @@ class InfinitePayService
 
         // Formata telefone com DDI +55 para pré-preencher no checkout InfinitePay
         $phoneRaw = preg_replace('/\D/', '', $cliente->telefone ?? $cliente->whatsapp ?? '');
-        $phone = ($phoneRaw && strlen($phoneRaw) >= 10) ? '+55' . ltrim($phoneRaw, '0') : '';
+        // Garante formato +5511999887766 (remove zeros à esquerda do DDD)
+        $phone = ($phoneRaw && strlen($phoneRaw) >= 10)
+            ? '+55' . (strlen($phoneRaw) === 11 && str_starts_with($phoneRaw, '0') ? substr($phoneRaw, 1) : $phoneRaw)
+            : null;
 
         // CEP limpo (somente números)
         $cepLimpo = preg_replace('/\D/', '', $endereco->cep ?? '');
 
-        // Formatação do payload conforme documentação oficial InfinitePay
-        // https://api.checkout.infinitepay.io
+        // ── Payload principal (somente campos obrigatórios) ────────────────
         $payload = [
             'handle'       => $this->handle,
             'order_nsu'    => 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT),
             'redirect_url' => url('/pagamento/sucesso?order_id=' . $pedido->id),
             'webhook_url'  => url('/api/payments/infinitepay/webhook'),
             'items'        => $items,
-            'customer'     => [
-                'name'         => $cliente->nome_completo ?? '',
-                'email'        => $cliente->email ?? '',
-                'phone_number' => $phone,
-            ],
-            'address'      => [
-                'cep'        => $cepLimpo,
-                'number'     => (string) ($endereco->numero ?? ''),
-                'complement' => $endereco->complemento ?? '',
-            ],
         ];
+
+        // ── customer: somente quando há pelo menos nome e email ───────────
+        $customerName  = trim($cliente->nome_completo ?? '');
+        $customerEmail = trim($cliente->email ?? '');
+        if ($customerName || $customerEmail) {
+            $customer = [];
+            if ($customerName)  $customer['name']         = $customerName;
+            if ($customerEmail) $customer['email']        = $customerEmail;
+            if ($phone)         $customer['phone_number'] = $phone;
+            $payload['customer'] = $customer;
+        }
+
+        // ── address: somente quando há CEP e número ───────────────────────
+        if ($cepLimpo && ($endereco->numero ?? '')) {
+            $address = [
+                'cep'    => $cepLimpo,
+                'number' => (string) $endereco->numero,
+            ];
+            $complement = trim($endereco->complemento ?? '');
+            if ($complement) $address['complement'] = $complement;
+            $payload['address'] = $address;
+        }
 
         Log::info('InfinitePay createPaymentLink payload', $payload);
 
