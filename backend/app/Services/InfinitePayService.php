@@ -78,13 +78,23 @@ class InfinitePayService
             ];
         }
 
-        // Formatação do payload mínimo obrigatório
+        // Formata telefone com DDI +55 para pré-preencher no checkout InfinitePay
+        $phoneRaw = preg_replace('/\D/', '', $cliente->telefone ?? $cliente->whatsapp ?? '');
+        $phone = ($phoneRaw && strlen($phoneRaw) >= 10) ? '+55' . $phoneRaw : null;
+
+        // Formatação do payload
         $payload = [
             'handle'    => $this->handle,
             'order_nsu' => 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT),
             'items'     => $items,
             'redirect_url' => url('/pagamento/sucesso?order_id=' . $pedido->id),
             'webhook_url'  => url('/api/payments/infinitepay/webhook'),
+            // Dados do cliente para pré-preencher a tela de contato
+            'customer' => array_filter([
+                'name'         => $cliente->nome_completo,
+                'email'        => $cliente->email,
+                'phone_number' => $phone,
+            ]),
         ];
 
         Log::info('InfinitePay createPaymentLink payload', $payload);
