@@ -41,78 +41,61 @@ class InfinitePayService
         $cliente = $pedido->cliente;
         $endereco = $pedido->endereco;
 
-        // Montagem do payload conforme especificações
+        // Montagem do payload conforme especificações da InfinitePay
+        // Docs: { "quantity": 1, "price": 123, "description": "..." }
         $items = [];
         foreach ($pedido->itens as $item) {
             $items[] = [
-                'name' => $item->nome_snapshot,
-                'sku' => $item->sku_snapshot,
-                'quantity' => (int) $item->quantidade,
-                'amount' => (int) round($item->preco_venda_snapshot * 100), // Preço unitário em centavos
+                'description' => $item->nome_snapshot,
+                'quantity'    => (int) $item->quantidade,
+                'price'       => (int) round($item->preco_venda_snapshot * 100), // centavos
             ];
         }
 
         // Adiciona frete como um item se houver
         if ($pedido->valor_frete > 0) {
             $items[] = [
-                'name' => 'Frete',
-                'sku' => 'FRETE',
-                'quantity' => 1,
-                'amount' => (int) round($pedido->valor_frete * 100),
+                'description' => 'Frete',
+                'quantity'    => 1,
+                'price'       => (int) round($pedido->valor_frete * 100),
             ];
         }
 
-        // Desconto do cupom se aplicável (enviado com sinal negativo)
+        // Desconto do cupom se aplicável
         if ($pedido->desconto_cupom > 0) {
             $items[] = [
-                'name' => 'Desconto Cupom',
-                'sku' => 'DESCONTO',
-                'quantity' => 1,
-                'amount' => -(int) round($pedido->desconto_cupom * 100),
+                'description' => 'Desconto Cupom',
+                'quantity'    => 1,
+                'price'       => -(int) round($pedido->desconto_cupom * 100),
             ];
         }
 
         if ($pedido->desconto_pontos > 0) {
             $items[] = [
-                'name' => 'Desconto Pontos',
-                'sku' => 'DESCONTO_PONTOS',
-                'quantity' => 1,
-                'amount' => -(int) round($pedido->desconto_pontos * 100),
+                'description' => 'Desconto Pontos',
+                'quantity'    => 1,
+                'price'       => -(int) round($pedido->desconto_pontos * 100),
             ];
         }
 
-        // Limpar telefone (apenas números)
-        $phone = preg_replace('/\D/', '', $cliente->telefone ?? $cliente->whatsapp ?? '');
-
-        // Formatação do payload
+        // Formatação do payload mínimo obrigatório
         $payload = [
-            'handle' => $this->handle,
+            'handle'    => $this->handle,
             'order_nsu' => 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT),
-            'items' => $items,
-            'customer' => [
-                'name' => $cliente->nome_completo,
-                'email' => $cliente->email,
-                'phone' => $phone,
-                'document' => preg_replace('/\D/', '', $cliente->cpf ?? ''),
-            ],
-            'address' => [
-                'cep' => preg_replace('/\D/', '', $endereco->cep),
-                'street' => $endereco->logradouro,
-                'number' => $endereco->numero,
-                'complement' => $endereco->complemento ?? '',
-                'neighborhood' => $endereco->bairro,
-                'city' => $endereco->cidade,
-                'state' => $endereco->estado,
-            ],
+            'items'     => $items,
             'redirect_url' => url('/pagamento/sucesso?order_id=' . $pedido->id),
-            'webhook_url' => url('/api/payments/infinitepay/webhook'),
+            'webhook_url'  => url('/api/payments/infinitepay/webhook'),
         ];
+
+        Log::info('InfinitePay createPaymentLink payload', $payload);
 
         $startTime = microtime(true);
         try {
             $response = Http::timeout(10)->post("{$this->baseUrl}/links", $payload);
             $durationMs = round((microtime(true) - $startTime) * 1000);
             $data = $response->json();
+
+            Log::info('InfinitePay response', ['status' => $response->status(), 'body' => $data]);
 
             if ($response->successful() && isset($data['url'])) {
                 $this->registrarLogApi("links", 'POST', $payload, $data, $response->status(), $durationMs, true);
