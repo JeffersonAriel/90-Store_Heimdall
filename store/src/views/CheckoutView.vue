@@ -187,7 +187,7 @@
               </div>
             </div>
 
-            <button class="btn btn-primary mt-6 w-full" @click="currentStep = 5" :disabled="!checkoutData.paymentMethod">Revisar Pedido</button>
+            <button class="btn btn-primary mt-6 w-full" @click="finalizeOrder" :disabled="!checkoutData.paymentMethod">FINALIZAR COMPRA</button>
           </div>
           <div class="step-summary" v-show="currentStep > 4">
             {{ paymentOptions.find(p => p.slug === checkoutData.paymentMethod)?.nome || 'Pagamento' }}
@@ -233,11 +233,6 @@
               <span>{{ formatCurrency(cartTotal) }}</span>
             </div>
           </div>
-
-          <!-- Step 5: Confirmação -->
-          <button v-if="currentStep === 5" class="btn btn-primary w-full mt-6" @click="finalizeOrder">
-            FINALIZAR COMPRA
-          </button>
         </div>
       </aside>
     </div>
