@@ -180,27 +180,10 @@
             <div class="payment-methods">
               <label v-for="(gateway, index) in paymentOptions" :key="index" class="payment-label mt-2" :class="{'selected': checkoutData.paymentMethod === gateway.slug}">
                 <input type="radio" v-model="checkoutData.paymentMethod" :value="gateway.slug" />
-                <span>{{ gateway.nome }} {{ gateway.slug === 'pix' ? '(5% OFF)' : '' }}</span>
+                <span>{{ gateway.nome }}</span>
               </label>
               <div v-if="paymentOptions.length === 0" class="text-gray text-center my-4">
                 Nenhum método de pagamento disponível no momento.
-              </div>
-            </div>
-            
-            <div v-if="checkoutData.paymentMethod !== 'pix' && checkoutData.paymentMethod" class="credit-card-form mt-4">
-              <div class="input-group">
-                <label class="input-label">Número do Cartão</label>
-                <input type="text" class="input-field" placeholder="0000 0000 0000 0000" />
-              </div>
-              <div class="grid grid-cols-2 gap-4 mt-4">
-                <div class="input-group">
-                  <label class="input-label">Validade</label>
-                  <input type="text" class="input-field" placeholder="MM/AA" />
-                </div>
-                <div class="input-group">
-                  <label class="input-label">CVV</label>
-                  <input type="text" class="input-field" placeholder="123" />
-                </div>
               </div>
             </div>
 
@@ -300,10 +283,13 @@ onMounted(async () => {
     const res = await axios.get('/api/store-settings')
     paymentOptions.value = res.data.paymentMethods || []
     
-    // Auto-select PIX if available
-    const hasPix = paymentOptions.value.find(p => p.slug === 'pix')
-    if (hasPix) checkoutData.paymentMethod = 'pix'
-    else if (paymentOptions.value.length > 0) checkoutData.paymentMethod = paymentOptions.value[0].slug
+    // Auto-select infinitepay if available
+    const hasInfinitePay = paymentOptions.value.find(p => p.slug === 'infinitepay')
+    if (hasInfinitePay) {
+      checkoutData.paymentMethod = 'infinitepay'
+    } else if (paymentOptions.value.length > 0) {
+      checkoutData.paymentMethod = paymentOptions.value[0].slug
+    }
   } catch (err) {
     console.error("Erro ao carregar configurações de pagamento")
   }
