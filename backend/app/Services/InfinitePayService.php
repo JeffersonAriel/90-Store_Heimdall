@@ -80,21 +80,29 @@ class InfinitePayService
 
         // Formata telefone com DDI +55 para pré-preencher no checkout InfinitePay
         $phoneRaw = preg_replace('/\D/', '', $cliente->telefone ?? $cliente->whatsapp ?? '');
-        $phone = ($phoneRaw && strlen($phoneRaw) >= 10) ? '+55' . $phoneRaw : null;
+        $phone = ($phoneRaw && strlen($phoneRaw) >= 10) ? '+55' . ltrim($phoneRaw, '0') : '';
 
-        // Formatação do payload
+        // CEP limpo (somente números)
+        $cepLimpo = preg_replace('/\D/', '', $endereco->cep ?? '');
+
+        // Formatação do payload conforme documentação oficial InfinitePay
+        // https://api.checkout.infinitepay.io
         $payload = [
-            'handle'    => $this->handle,
-            'order_nsu' => 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT),
-            'items'     => $items,
+            'handle'       => $this->handle,
+            'order_nsu'    => 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT),
             'redirect_url' => url('/pagamento/sucesso?order_id=' . $pedido->id),
             'webhook_url'  => url('/api/payments/infinitepay/webhook'),
-            // Dados do cliente para pré-preencher a tela de contato
-            'customer' => array_filter([
-                'name'         => $cliente->nome_completo,
-                'email'        => $cliente->email,
+            'items'        => $items,
+            'customer'     => [
+                'name'         => $cliente->nome_completo ?? '',
+                'email'        => $cliente->email ?? '',
                 'phone_number' => $phone,
-            ]),
+            ],
+            'address'      => [
+                'cep'        => $cepLimpo,
+                'number'     => (string) ($endereco->numero ?? ''),
+                'complement' => $endereco->complemento ?? '',
+            ],
         ];
 
         Log::info('InfinitePay createPaymentLink payload', $payload);
