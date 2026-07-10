@@ -265,6 +265,10 @@ class SecurityController extends Controller
                 '--force' => true
             ]);
             \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'ApiConfigSeeder',
+                '--force' => true
+            ]);
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
                 '--class' => 'CategorySeeder',
                 '--force' => true
             ]);
@@ -274,7 +278,7 @@ class SecurityController extends Controller
             ]);
             $seederOutput = \Illuminate\Support\Facades\Artisan::output();
 
-            return back()->with('success', 'Banco de dados e permissões atualizados com sucesso! Detalhes: ' . trim($migrateOutput) . ' | ' . trim($seederOutput));
+            return back()->with('success', 'Banco de dados, APIs e permissões sincronizados com sucesso! Detalhes: ' . trim($migrateOutput) . ' | ' . trim($seederOutput));
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao executar migrações: ' . $e->getMessage());
         }
