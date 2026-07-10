@@ -53,7 +53,7 @@ class ApiConfigSeeder extends Seeder
                 'nome'            => 'Mercado Pago',
                 'tipo'            => 'gateway',
                 'fallback_ordem'  => 99,
-                'ativo'           => true,
+                'ativo'           => false,
                 'sandbox'         => true, // Sandbox até credenciais reais serem inseridas
                 'template_campos_json' => json_encode([
                     ['campo' => 'access_token',       'label' => 'Access Token',        'obrigatorio' => true,  'tipo' => 'password'],
@@ -69,7 +69,7 @@ class ApiConfigSeeder extends Seeder
                 'nome'            => 'PagSeguro / PagBank',
                 'tipo'            => 'gateway',
                 'fallback_ordem'  => 99,
-                'ativo'           => true,
+                'ativo'           => false,
                 'sandbox'         => true,
                 'template_campos_json' => json_encode([
                     ['campo' => 'token',              'label' => 'Token de API',          'obrigatorio' => true,  'tipo' => 'password'],
@@ -85,7 +85,7 @@ class ApiConfigSeeder extends Seeder
                 'nome'            => 'Stripe',
                 'tipo'            => 'gateway',
                 'fallback_ordem'  => 99,
-                'ativo'           => true,
+                'ativo'           => false,
                 'sandbox'         => true,
                 'template_campos_json' => json_encode([
                     ['campo' => 'secret_key',         'label' => 'Secret Key',            'obrigatorio' => true,  'tipo' => 'password'],
