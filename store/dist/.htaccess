@@ -13,7 +13,7 @@
 
     # Se estiver no domínio próprio (raiz)
     RewriteCond %{REQUEST_URI} !^/~jeff2892/
-    RewriteRule ^(build|storage)(/.*)?$ backend/public/$1$2 [L]
+    RewriteRule ^(build|storage)(/.*)?$ /backend/public/$1$2 [L]
 
     # 2. Rotas Dinâmicas do Backend (heimdall, install, api) -> envia direto pro index.php do Laravel
     
@@ -23,7 +23,7 @@
 
     # Se estiver no domínio próprio (raiz)
     RewriteCond %{REQUEST_URI} !^/~jeff2892/
-    RewriteRule ^(heimdall|install|api)(/.*)?$ backend/public/index.php [L]
+    RewriteRule ^(heimdall|install|api)(/.*)?$ /backend/public/index.php [L]
 
     # 3. Roteamento do E-commerce (Vue Single Page Application)
     RewriteRule ^index\.html$ - [L]
