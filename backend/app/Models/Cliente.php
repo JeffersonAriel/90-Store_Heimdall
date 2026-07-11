@@ -7,6 +7,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class Cliente extends Authenticatable
 {
@@ -35,11 +37,30 @@ class Cliente extends Authenticatable
     ];
 
     protected $casts = [
-        'cpf' => 'encrypted', // AES-256 cast automático nativo do Laravel 11/10
+        // 'cpf' => 'encrypted' removido: substituído por accessor/mutator manual
+        // para capturar DecryptException quando APP_KEY muda entre ambientes
         'data_nascimento' => 'date',
-        'ativo' => 'boolean',
-        'pontos_saldo' => 'integer',
+        'ativo'           => 'boolean',
+        'pontos_saldo'    => 'integer',
     ];
+
+    // ── CPF: criptografado manualmente com tratamento de erro ─────────────
+    public function getCpfAttribute(?string $value): ?string
+    {
+        if (empty($value)) return null;
+        try {
+            return Crypt::decryptString($value);
+        } catch (DecryptException $e) {
+            // Retorna null se o CPF foi criptografado com outra APP_KEY
+            // O cliente precisará atualizar o CPF no perfil
+            return null;
+        }
+    }
+
+    public function setCpfAttribute(?string $value): void
+    {
+        $this->attributes['cpf'] = $value ? Crypt::encryptString($value) : null;
+    }
 
     public function enderecos()
     {

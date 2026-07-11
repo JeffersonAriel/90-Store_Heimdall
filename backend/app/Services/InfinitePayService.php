@@ -57,7 +57,7 @@ class InfinitePayService
         $digits = preg_replace('/\D/', '', $raw);
 
         // Remove DDI 55 duplicado: 5511... com 13 dígitos → mantém apenas 11...
-        if (strlen($digits) === 13 && str_starts_with($digits, '55')) {
+        if (strlen($digits) === 13 && substr($digits, 0, 2) === '55') {
             $digits = substr($digits, 2); // vira 11 dígitos (DDD + número)
         }
 
