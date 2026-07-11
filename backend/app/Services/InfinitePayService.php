@@ -130,12 +130,14 @@ class InfinitePayService
         }
 
         // ── Payload obrigatório ───────────────────────────────────────────────
-        // redirect_url: usa o APP_URL do servidor (já configurado no HostGator)
-        // url('/pagamento/sucesso') gera: https://seudominio.com/pagamento/sucesso
+        // redirect_url: usa FRONTEND_URL do .env (URL do site Vue no servidor)
+        // Exemplo: FRONTEND_URL=https://seudominio.com
+        $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
+
         $payload = [
             'handle'       => $this->handle,
             'order_nsu'    => 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT),
-            'redirect_url' => url('/pagamento/sucesso') . '?order_id=' . $pedido->id,
+            'redirect_url' => $frontendUrl . '/pagamento/sucesso?order_id=' . $pedido->id,
             'webhook_url'  => url('/api/payments/infinitepay/webhook'),
             'items'        => $items,
         ];
