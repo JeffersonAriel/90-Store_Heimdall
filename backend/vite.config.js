@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
-    base: '/~jeff2892/build/',
+    base: '/build/',
     plugins: [
         laravel({
             input: [

@@ -13,8 +13,8 @@
       "assets/AdminLayout-DPECuU_C.css"
     ]
   },
-  "_charts-sLfgTDx7.js": {
-    "file": "assets/charts-sLfgTDx7.js",
+  "_charts-CrXu_N9I.js": {
+    "file": "assets/charts-CrXu_N9I.js",
     "name": "charts",
     "imports": [
       "_vendor-EzIoi6P2.js"
@@ -259,7 +259,7 @@
     ]
   },
   "resources/js/Pages/Products/Form.vue": {
-    "file": "assets/Form-B5IK04sc.js",
+    "file": "assets/Form-DMGJVa3V.js",
     "name": "Form",
     "src": "resources/js/Pages/Products/Form.vue",
     "isDynamicEntry": true,
@@ -268,7 +268,7 @@
       "_AdminLayout-D_25Xd7E.js"
     ],
     "css": [
-      "assets/Form-DKk4oH7F.css"
+      "assets/Form-Dtrm2OzI.css"
     ]
   },
   "resources/js/Pages/Products/Index.vue": {
@@ -370,12 +370,12 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-D4OgNO4O.js",
+    "file": "assets/app-BXfweAVH.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_charts-sLfgTDx7.js",
+      "_charts-CrXu_N9I.js",
       "_vendor-EzIoi6P2.js"
     ],
     "dynamicImports": [
