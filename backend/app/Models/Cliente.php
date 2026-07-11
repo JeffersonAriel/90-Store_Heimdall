@@ -49,13 +49,8 @@ class Cliente extends Authenticatable
     {
         if (empty($value)) return null;
         try {
-<<<<<<< HEAD
-            return \Illuminate\Support\Facades\Crypt::decryptString($value);
-        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
-=======
             return Crypt::decryptString($value);
         } catch (DecryptException $e) {
->>>>>>> f6b535866c516d9e21d386f88d687b0c48203148
             // Retorna null se o CPF foi criptografado com outra APP_KEY
             // O cliente precisará atualizar o CPF no perfil
             return null;
@@ -64,11 +59,7 @@ class Cliente extends Authenticatable
 
     public function setCpfAttribute(?string $value): void
     {
-<<<<<<< HEAD
-        $this->attributes['cpf'] = $value ? \Illuminate\Support\Facades\Crypt::encryptString($value) : null;
-=======
         $this->attributes['cpf'] = $value ? Crypt::encryptString($value) : null;
->>>>>>> f6b535866c516d9e21d386f88d687b0c48203148
     }
 
     public function enderecos()
