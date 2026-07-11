@@ -1,6 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # 0. Redirecionar para o Instalador se o sistema não estiver instalado
+    RewriteCond %{DOCUMENT_ROOT}/backend/installed.lock !-f
+    RewriteRule ^(.*)$ backend/public/index.php [L,QSA]
+
     # 1. Arquivos estáticos do Backend (build, storage)
     
     # Se estiver no link temporário (~jeff2892)

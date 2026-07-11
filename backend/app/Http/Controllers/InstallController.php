@@ -162,6 +162,9 @@ class InstallController extends Controller
                 'updated_at'    => now(),
             ]);
 
+            // Cria um arquivo de trava (lock) para informar o .htaccess que o sistema está instalado
+            touch(base_path('installed.lock'));
+
             return response()->json(['success' => true, 'message' => 'Administrador criado e instalação concluída com sucesso!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Erro ao criar administrador: ' . $e->getMessage()], 500);
