@@ -122,7 +122,7 @@ onMounted(async () => {
   }
 
   try {
-    const res = await axios.get(`/api/orders/public/${orderId}`)
+    const res = await axios.get(`/api/orders/public/${orderId}`, { params: route.query })
     if (res.data.success) {
       order.value = res.data.pedido
     }

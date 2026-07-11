@@ -35,11 +35,30 @@ class Cliente extends Authenticatable
     ];
 
     protected $casts = [
-        'cpf' => 'encrypted', // AES-256 cast automático nativo do Laravel 11/10
+        // 'cpf' => 'encrypted' removido: substituído por accessor/mutator manual
+        // para capturar DecryptException quando APP_KEY muda entre ambientes
         'data_nascimento' => 'date',
-        'ativo' => 'boolean',
-        'pontos_saldo' => 'integer',
+        'ativo'           => 'boolean',
+        'pontos_saldo'    => 'integer',
     ];
+
+    // ── CPF: criptografado manualmente com tratamento de erro ─────────────
+    public function getCpfAttribute(?string $value): ?string
+    {
+        if (empty($value)) return null;
+        try {
+            return \Illuminate\Support\Facades\Crypt::decryptString($value);
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            // Retorna null se o CPF foi criptografado com outra APP_KEY
+            // O cliente precisará atualizar o CPF no perfil
+            return null;
+        }
+    }
+
+    public function setCpfAttribute(?string $value): void
+    {
+        $this->attributes['cpf'] = $value ? \Illuminate\Support\Facades\Crypt::encryptString($value) : null;
+    }
 
     public function enderecos()
     {

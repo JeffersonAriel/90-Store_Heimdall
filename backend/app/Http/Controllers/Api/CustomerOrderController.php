@@ -69,6 +69,74 @@ class CustomerOrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Pedido não encontrado.'], 404);
         }
 
+        // Se o pedido está aguardando pagamento e recebemos os dados de transação no redirecionamento
+        if ($pedido->status === 'aguardando_pagamento' && $request->filled('transaction_nsu') && $request->filled('slug')) {
+            $orderNsu = 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT);
+            $transactionNsu = $request->input('transaction_nsu');
+            $slug = $request->input('slug');
+
+            $infinitePayService = app(\App\Services\InfinitePayService::class);
+            $check = $infinitePayService->checkPayment($orderNsu, $transactionNsu, $slug);
+
+            if ($check['success'] && $check['paid']) {
+                $checkData = $check['data'];
+                \Illuminate\Support\Facades\DB::transaction(function () use ($pedido, $transactionNsu, $slug, $checkData) {
+                    $pagamento = \Illuminate\Support\Facades\DB::table('pagamentos')
+                        ->where('pedido_id', $pedido->id)
+                        ->where('gateway', 'infinitepay')
+                        ->first();
+
+                    $gatewayIdExterno = $transactionNsu;
+                    $payloadJson = json_encode($checkData);
+
+                    if ($pagamento) {
+                        \Illuminate\Support\Facades\DB::table('pagamentos')->where('id', $pagamento->id)->update([
+                            'gateway_id_externo' => $gatewayIdExterno,
+                            'status' => 'aprovado',
+                            'valor' => $pedido->total,
+                            'payload_json' => $payloadJson,
+                            'webhook_json' => json_encode($checkData),
+                            'paid_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    } else {
+                        \Illuminate\Support\Facades\DB::table('pagamentos')->insert([
+                            'pedido_id' => $pedido->id,
+                            'gateway' => 'infinitepay',
+                            'gateway_id_externo' => $gatewayIdExterno,
+                            'metodo' => $checkData['payment_method'] ?? 'cartao_credito',
+                            'status' => 'aprovado',
+                            'valor' => $pedido->total,
+                            'payload_json' => $payloadJson,
+                            'webhook_json' => json_encode($checkData),
+                            'paid_at' => now(),
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    }
+
+                    $infoPagamento = "\nInfinitePay NSU: {$transactionNsu} | Slug: {$slug}";
+                    if (isset($checkData['receipt_url'])) {
+                        $infoPagamento .= " | Comprovante: " . $checkData['receipt_url'];
+                    }
+                    $pedido->update([
+                        'observacoes' => $pedido->observacoes . $infoPagamento
+                    ]);
+
+                    app(\App\Services\FinancialService::class)->registerSaleEntry($pedido->id, $pedido->total, 'infinitepay');
+                    app(\App\Services\OrderStatusService::class)->transitionTo(
+                        $pedido->id,
+                        'em_separacao',
+                        null,
+                        "Pagamento confirmado via retorno do checkout InfinitePay. NSU: {$transactionNsu}."
+                    );
+                });
+
+                $pedido->refresh();
+                $pedido->load(['itens.produto.fotoCapa', 'itens.variacao', 'endereco', 'pagamentos']);
+            }
+        }
+
         // Limpa dados extremamente sensíveis do cliente, mas permite identificar as informações exigidas na página
         $cliente = $pedido->cliente;
 
