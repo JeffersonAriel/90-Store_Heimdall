@@ -130,13 +130,12 @@ class InfinitePayService
         }
 
         // ── Payload obrigatório ───────────────────────────────────────────────
-        // redirect_url aponta para o FRONTEND (Vue), não para o Laravel backend
-        $frontendUrl = rtrim(env('FRONTEND_URL', config('app.url')), '/');
-
+        // redirect_url: usa o APP_URL do servidor (já configurado no HostGator)
+        // url('/pagamento/sucesso') gera: https://seudominio.com/pagamento/sucesso
         $payload = [
             'handle'       => $this->handle,
             'order_nsu'    => 'PED' . str_pad($pedido->id, 8, '0', STR_PAD_LEFT),
-            'redirect_url' => $frontendUrl . '/pagamento/sucesso?order_id=' . $pedido->id,
+            'redirect_url' => url('/pagamento/sucesso') . '?order_id=' . $pedido->id,
             'webhook_url'  => url('/api/payments/infinitepay/webhook'),
             'items'        => $items,
         ];
