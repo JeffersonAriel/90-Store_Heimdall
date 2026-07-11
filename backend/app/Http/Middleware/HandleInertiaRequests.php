@@ -37,27 +37,32 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $employee = Auth::guard('admin')->user();
+        $employee = null;
         $permissions = [];
 
-        if ($employee) {
-            $employee->load('perfil');
-            
-            if ($employee->perfil) {
-                if ($employee->perfil->is_admin) {
-                    // Admins têm acesso virtual a tudo
-                    $permissions = DB::table('permissoes_modulo')
-                        ->select('modulo', 'acao')
-                        ->get()
-                        ->toArray();
-                } else {
-                    $permissions = DB::table('permissoes_modulo')
-                        ->where('perfil_id', $employee->perfil_id)
-                        ->select('modulo', 'acao')
-                        ->get()
-                        ->toArray();
+        try {
+            $employee = Auth::guard('admin')->user();
+            if ($employee) {
+                $employee->load('perfil');
+                
+                if ($employee->perfil) {
+                    if ($employee->perfil->is_admin) {
+                        // Admins têm acesso virtual a tudo
+                        $permissions = DB::table('permissoes_modulo')
+                            ->select('modulo', 'acao')
+                            ->get()
+                            ->toArray();
+                    } else {
+                        $permissions = DB::table('permissoes_modulo')
+                            ->where('perfil_id', $employee->perfil_id)
+                            ->select('modulo', 'acao')
+                            ->get()
+                            ->toArray();
+                    }
                 }
             }
+        } catch (\Exception $e) {
+            // Ignora se o banco não estiver pronto ou sem tabelas (como no instalador)
         }
 
         // Estatísticas operacionais rápidas para a sidebar/topbar do painel
