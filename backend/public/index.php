@@ -13,7 +13,7 @@ if (!is_dir($vendorPath) && file_exists($zipPath)) {
     if (class_exists('ZipArchive')) {
         $zip = new ZipArchive;
         if ($zip->open($zipPath) === TRUE) {
-            $zip->extractTo(__DIR__.'/../');
+            $zip->extractTo($vendorPath);
             $zip->close();
         }
     }
