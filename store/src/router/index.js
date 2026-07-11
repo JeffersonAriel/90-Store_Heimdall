@@ -62,7 +62,12 @@ const router = createRouter({
       path: '/pagamento/sucesso',
       name: 'payment.success',
       component: () => import('@/views/SuccessView.vue'),
-    }
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/NotFoundView.vue'),
+    },
   ],
 })
 
