@@ -13,7 +13,7 @@ class FreteService
     /**
      * Calcula as opções de frete disponíveis (opções locais se até 50km de São Miguel Paulista, senão SuperFrete).
      */
-    public function calcular(string $cepDestino, float $pesoKg): array
+    public function calcular(string $cepDestino, float $pesoKg, int $itensCount = 1): array
     {
         $cepDestino = preg_replace('/[^0-9]/', '', $cepDestino);
         $regras = FreteRegra::where('ativo', true)->first();
@@ -53,7 +53,7 @@ class FreteService
         }
 
         // 2. Cotação SuperFrete (Correios PAC/SEDEX/Mini Envios)
-        $superFrete = $this->cotarSuperFrete($regras->cep_origem, $cepDestino, $pesoKg);
+        $superFrete = $this->cotarSuperFrete($regras->cep_origem, $cepDestino, $pesoKg, $itensCount);
         $options = array_merge($options, $superFrete);
 
         return $options;
@@ -98,7 +98,7 @@ class FreteService
     /**
      * Cotação via API da SuperFrete
      */
-    private function cotarSuperFrete(string $cepOrigem, string $cepDestino, float $pesoKg): array
+    private function cotarSuperFrete(string $cepOrigem, string $cepDestino, float $pesoKg, int $itensCount = 1): array
     {
         $api = ApiConfiguracao::where('slug', 'superfrete')->first();
 
@@ -116,7 +116,13 @@ class FreteService
 
             $startTime = microtime(true);
             
-            // A SuperFrete exige que o payload tenha informações de dimensões
+            // Regra por produto solicitado:
+            // Cada produto = 1kg de peso, 3cm de altura, 40cm de largura e 50cm de comprimento
+            $pesoFinal   = $pesoKg < (1.0 * $itensCount) ? (1.0 * $itensCount) : $pesoKg;
+            $alturaFinal = 3 * $itensCount; // Se empilharmos a altura aumenta
+            $larguraFinal = 40; // Mantém a largura base da caixa padrão
+            $comprimentoFinal = 50; // Mantém o comprimento base da caixa padrão
+
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$token}",
                 'Content-Type' => 'application/json',
@@ -126,10 +132,10 @@ class FreteService
             ->post('https://api.superfrete.com.br/v1/calculator', [
                 'from'            => $cepOrigem,
                 'to'              => $cepDestino,
-                'weight'          => $pesoKg < 1.0 ? 1.0 : $pesoKg, // Mínimo de 1kg (1.0 kg)
-                'width'           => 40, // 40 cm padrão
-                'height'          => 3,  // 3 cm padrão
-                'length'          => 50, // 50 cm padrão
+                'weight'          => $pesoFinal,
+                'width'           => $larguraFinal,
+                'height'          => $alturaFinal,
+                'length'          => $comprimentoFinal,
                 'insurance_value' => 0,
                 'quantity'        => 1
             ]);
