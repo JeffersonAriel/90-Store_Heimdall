@@ -126,10 +126,10 @@ class FreteService
             ->post('https://api.superfrete.com.br/v1/calculator', [
                 'from'            => $cepOrigem,
                 'to'              => $cepDestino,
-                'weight'          => $pesoKg < 0.3 ? 0.3 : $pesoKg, // Mínimo de 300g (0.3 kg)
-                'width'           => 20, // 20 cm padrão
+                'weight'          => $pesoKg < 1.0 ? 1.0 : $pesoKg, // Mínimo de 1kg (1.0 kg)
+                'width'           => 40, // 40 cm padrão
                 'height'          => 3,  // 3 cm padrão
-                'length'          => 30, // 30 cm padrão
+                'length'          => 50, // 50 cm padrão
                 'insurance_value' => 0,
                 'quantity'        => 1
             ]);
