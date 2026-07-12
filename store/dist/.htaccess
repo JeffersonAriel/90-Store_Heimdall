@@ -1,35 +1,47 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # 0. Redirecionar para o Instalador se o sistema não estiver instalado
+    # 0. Permite arquivos e diretórios físicos que existam (assets, favicon, etc.)
+    #    Esta regra tem que vir ANTES de tudo para garantir que JS/CSS/imagens
+    #    sejam servidos diretamente sem passar por nenhuma outra regra.
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^ - [L]
+
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # 1. Redirecionar para o Instalador se o sistema não estiver instalado
     RewriteCond %{DOCUMENT_ROOT}/backend/installed.lock !-f
     RewriteRule ^(.*)$ backend/public/index.php [L,QSA]
 
-    # 1. Arquivos estáticos do Backend (build, storage)
-    
-    # Se estiver no link temporário (~jeff2892)
-    RewriteCond %{REQUEST_URI} ^/~jeff2892/
-    RewriteRule ^(build|storage)(/.*)?$ /~jeff2892/backend/public/$1$2 [L,PT]
-
-    # Se estiver no domínio próprio (raiz)
-    RewriteCond %{REQUEST_URI} !^/~jeff2892/
+    # 2. Arquivos estáticos do Backend (build, storage) → serve direto da pasta pública do Laravel
     RewriteRule ^(build|storage)(/.*)?$ /backend/public/$1$2 [L]
 
-    # 2. Rotas Dinâmicas do Backend (heimdall, install, api) -> envia direto pro index.php do Laravel
-    
-    # Se estiver no link temporário (~jeff2892)
-    RewriteCond %{REQUEST_URI} ^/~jeff2892/
-    RewriteRule ^(heimdall|install|api)(/.*)?$ /~jeff2892/backend/public/index.php [L,PT]
+    # 3. Rotas Dinâmicas do Backend (heimdall, install, api) → envia pro index.php do Laravel
+    RewriteRule ^(heimdall|install|api)(/.*)?$ /backend/public/index.php [L,QSA]
 
-    # Se estiver no domínio próprio (raiz)
-    RewriteCond %{REQUEST_URI} !^/~jeff2892/
-    RewriteRule ^(heimdall|install|api)(/.*)?$ /backend/public/index.php [L]
+    # 4. Roteamento do E-commerce (Vue Single Page Application)
+    #    Qualquer rota que não seja arquivo/diretório físico → index.html
+    RewriteRule ^ index.html [L]
 
-    # 3. Roteamento do E-commerce (Vue Single Page Application)
-    RewriteRule ^index\.html$ - [L]
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} !^/build/
-    RewriteCond %{REQUEST_URI} !^/storage/
-    RewriteRule . index.html [L]
+</IfModule>
+
+# ── MIME types corretos para módulos JavaScript ──────────────
+<IfModule mod_mime.c>
+    AddType application/javascript .js .mjs
+    AddType text/css               .css
+    AddType image/svg+xml          .svg
+    AddType font/woff2             .woff2
+    AddType font/woff              .woff
+</IfModule>
+
+# ── Cache de assets estáticos ─────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType application/javascript  "access plus 1 year"
+    ExpiresByType text/css                "access plus 1 year"
+    ExpiresByType image/png               "access plus 1 month"
+    ExpiresByType image/jpeg              "access plus 1 month"
+    ExpiresByType image/svg+xml           "access plus 1 month"
+    ExpiresByType font/woff2              "access plus 1 year"
 </IfModule>
