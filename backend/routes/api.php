@@ -25,6 +25,10 @@ Route::post('/shipping/quote', [StoreApiController::class, 'quoteShipping']);
 Route::post('/register', [CustomerAuthController::class, 'register']);
 Route::post('/login', [CustomerAuthController::class, 'login']);
 
+// ─── ROTAS DO WEBHOOK E CONSULTAS PÚBLICAS/SEGURAS ───
+Route::post('/payments/infinitepay/webhook', [\App\Http\Controllers\Api\InfinitePayController::class, 'webhook']);
+Route::get('/orders/public/{id}', [\App\Http\Controllers\Api\CustomerOrderController::class, 'showPublic']);
+
 // ─── ROTAS PROTEGIDAS VIA SANCTUM ───
 Route::middleware('auth:sanctum')->group(function () {
     // Perfil
@@ -44,8 +48,4 @@ Route::middleware('auth:sanctum')->group(function () {
     // Checkout de compras
     Route::post('/checkout', [CheckoutController::class, 'checkout']);
 });
-
-// ─── ROTAS DO WEBHOOK E CONSULTAS PÚBLICAS/SEGURAS ───
-Route::post('/payments/infinitepay/webhook', [\App\Http\Controllers\Api\InfinitePayController::class, 'webhook']);
-Route::get('/orders/public/{id}', [\App\Http\Controllers\Api\CustomerOrderController::class, 'showPublic']);
 
