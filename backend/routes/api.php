@@ -36,6 +36,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile',  [CustomerAuthController::class, 'updateProfile']);
     Route::post('/logout',  [CustomerAuthController::class, 'logout']);
 
+    // Histórico de Pontos e Cupons do Cliente
+    Route::get('/points/history', function (\Illuminate\Http\Request $request) {
+        $historico = \App\Models\PontoFidelidade::where('cliente_id', $request->user()->id)
+            ->orderBy('created_at', 'desc')->get();
+        return response()->json(['success' => true, 'historico' => $historico]);
+    });
+    Route::get('/coupons/mine', function (\Illuminate\Http\Request $request) {
+        // Retorna cupons ativos ou disponíveis
+        $cupons = \App\Models\Cupom::where('ativo', true)
+            ->where(function($q) {
+                $q->whereNull('data_expiracao')->orWhere('data_expiracao', '>=', now());
+            })->get();
+        return response()->json(['success' => true, 'cupons' => $cupons]);
+    });
+
     // Endereços múltiplos do cliente
     Route::get('/addresses',                    [AddressController::class, 'index']);
     Route::post('/addresses',                   [AddressController::class, 'store']);
