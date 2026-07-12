@@ -27,7 +27,7 @@ return new class extends Migration
                     ['campo' => 'token', 'label' => 'Token de API', 'obrigatorio' => true, 'tipo' => 'password']
                 ],
                 'credenciais_json' => [
-                    'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3ODM4MjEwMDUsInN1YiI6IjdSZEU4N1lCMU9WNkxJN3Y3N09KSk93UnFaTDIifQ.PTTy4dTooL-zFq_YbhBhqX5TCWl-YLSuiRJfQugUIQk'
+                    'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3ODM4MjEwMDUsInN1YiI6IjdSZEU4N1lDTU9WNkxJN3Y3N09KSk93UnFaTDIifQ.PTTy4dTooL-zFq_YbhBhqX5TCWl-YLSuiRJfQugUIQk'
                 ]
             ]);
         } catch (\Exception $e) {
