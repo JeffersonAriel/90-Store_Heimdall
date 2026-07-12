@@ -67,3 +67,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'checkout']);
 });
 
+// Rota Temporária de Configuração SuperFrete Criptografada na Produção
+Route::get('/superfrete/setup', function() {
+    try {
+        \App\Models\ApiConfiguracao::updateOrCreate(
+            ['slug' => 'superfrete'],
+            [
+                'nome' => 'SuperFrete',
+                'tipo' => 'frete',
+                'ativo' => true,
+                'sandbox' => false,
+                'credenciais_json' => [
+                    'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3ODM4MjEwMDUsInN1YiI6IjdSZEU4N1lCMU9WNkxJN3Y3N09KSk93UnFaTDIifQ.PTTy4dTooL-zFq_YbhBhqX5TCWl-YLSuiRJfQugUIQk'
+                ]
+            ]
+        );
+        return response()->json(['success' => true, 'message' => 'SuperFrete Token criptografado e salvo com sucesso em Produção!']);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+});
+
