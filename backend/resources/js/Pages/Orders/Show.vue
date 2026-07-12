@@ -88,6 +88,14 @@
                 ✅ Marcar como Entregue
               </button>
 
+              <!-- Integração SuperFrete: Emitir e Imprimir Etiqueta -->
+              <button v-if="order.status === 'em_separacao' || order.status === 'em_envio'" @click="generateSuperFreteLabel" class="btn btn-primary" style="background-color: #10b981; border-color: #10b981;">
+                🏷️ Gerar Etiqueta SuperFrete
+              </button>
+              <a v-if="order.codigo_rastreio" :href="order.url_rastreio" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;">
+                🖨️ Imprimir Etiqueta
+              </a>
+
               <!-- Exceções aplicáveis a qualquer momento -->
               <button v-if="order.status !== 'cancelado' && order.status !== 'entregue'" @click="advanceStatus('cancelado')" class="btn btn-danger">
                 🚫 Cancelar Pedido
@@ -334,6 +342,12 @@ function submitTracking() {
       showTrackingModal.value = false
     }
   })
+}
+
+function generateSuperFreteLabel() {
+  if (confirm('Deseja emitir e comprar a etiqueta deste pedido na SuperFrete?')) {
+    router.post(route('admin.orders.generate-label', props.order.id))
+  }
 }
 
 function formatMoney(value) {
