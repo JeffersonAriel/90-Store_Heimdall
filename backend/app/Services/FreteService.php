@@ -147,11 +147,11 @@ class FreteService
                     $price = isset($item['price']) ? floatval($item['price']) : null;
                     if ($price === null) continue;
 
-                    $name = $item['name'] ?? 'SuperFrete';
+                    $name = $item['name'] ?? 'Correios';
                     $deadline = isset($item['delivery']) ? intval($item['delivery']) : 5;
 
                     $cotacoes[] = [
-                        'servico' => "{$name} (SuperFrete)",
+                        'servico' => $name,
                         'prazo_dias' => $deadline,
                         'valor' => $price,
                         'tipo' => 'nacional'
@@ -182,13 +182,13 @@ class FreteService
     {
         return [
             [
-                'servico' => 'Correios PAC (SuperFrete Failsafe)',
+                'servico' => 'Correios PAC (Valor Aproximado)',
                 'prazo_dias' => 7,
                 'valor' => round(19.90 + ($pesoKg * 2.2), 2),
                 'tipo' => 'nacional'
             ],
             [
-                'servico' => 'Correios SEDEX (SuperFrete Failsafe)',
+                'servico' => 'Correios SEDEX (Valor Aproximado)',
                 'prazo_dias' => 3,
                 'valor' => round(29.90 + ($pesoKg * 3.8), 2),
                 'tipo' => 'nacional'
