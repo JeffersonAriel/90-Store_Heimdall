@@ -32,8 +32,9 @@ Route::get('/orders/public/{id}', [\App\Http\Controllers\Api\CustomerOrderContro
 // ─── ROTAS PROTEGIDAS VIA SANCTUM ───
 Route::middleware('auth:sanctum')->group(function () {
     // Perfil
-    Route::get('/profile', [CustomerAuthController::class, 'profile']);
-    Route::post('/logout', [CustomerAuthController::class, 'logout']);
+    Route::get('/profile',  [CustomerAuthController::class, 'profile']);
+    Route::put('/profile',  [CustomerAuthController::class, 'updateProfile']);
+    Route::post('/logout',  [CustomerAuthController::class, 'logout']);
 
     // Endereços múltiplos do cliente
     Route::get('/addresses', [AddressController::class, 'index']);

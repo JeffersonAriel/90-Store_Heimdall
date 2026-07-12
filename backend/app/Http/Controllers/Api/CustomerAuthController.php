@@ -166,15 +166,53 @@ class CustomerAuthController extends Controller
         return response()->json([
             'success' => true,
             'cliente' => [
-                'id' => $cliente->id,
+                'id'            => $cliente->id,
                 'nome_completo' => $cliente->nome_completo,
-                'email' => $cliente->email,
-                'cpf' => $cliente->cpf, // Descriptografado automaticamente pelo cast
-                'telefone' => $cliente->telefone,
-                'whatsapp' => $cliente->whatsapp,
-                'pontos_saldo' => $cliente->pontos_saldo,
+                'email'         => $cliente->email,
+                'cpf'           => $cliente->cpf,
+                'telefone'      => $cliente->telefone,
+                'whatsapp'      => $cliente->whatsapp,
+                'pontos_saldo'  => $cliente->pontos_saldo,
                 'referral_code' => $cliente->referral_code,
-                'enderecos' => $cliente->enderecos,
+                'enderecos'     => $cliente->enderecos,
+            ]
+        ]);
+    }
+
+    /**
+     * Atualiza dados cadastrais do cliente autenticado
+     */
+    public function updateProfile(Request $request)
+    {
+        $cliente = $request->user();
+
+        $rules = [
+            'nome_completo' => 'sometimes|required|string|max:255',
+            'email'         => 'sometimes|required|email|max:255|unique:clientes,email,' . $cliente->id,
+            'telefone'      => 'sometimes|nullable|string|max:20',
+            'password'      => 'sometimes|nullable|string|min:8|confirmed',
+        ];
+
+        $request->validate($rules);
+
+        if ($request->filled('nome_completo')) $cliente->nome_completo = $request->nome_completo;
+        if ($request->filled('email'))         $cliente->email         = $request->email;
+        if ($request->filled('telefone'))      $cliente->telefone      = $request->telefone;
+        if ($request->filled('password'))      $cliente->password      = Hash::make($request->password);
+
+        $cliente->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Dados atualizados com sucesso.',
+            'cliente' => [
+                'id'            => $cliente->id,
+                'nome_completo' => $cliente->nome_completo,
+                'email'         => $cliente->email,
+                'cpf'           => $cliente->cpf,
+                'telefone'      => $cliente->telefone,
+                'pontos_saldo'  => $cliente->pontos_saldo,
+                'referral_code' => $cliente->referral_code,
             ]
         ]);
     }
