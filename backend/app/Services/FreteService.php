@@ -190,9 +190,34 @@ class FreteService
                 ]);
 
                 return $cotacoes;
+            } else {
+                // Salva erro de validação/requisição da API
+                DB::table('logs_api')->insert([
+                    'api_config_id' => $api->id,
+                    'rota' => 'quote_shipping_failed',
+                    'metodo' => 'POST',
+                    'response_json' => json_encode(['error' => $response->body()]),
+                    'status_http' => $response->status(),
+                    'duracao_ms' => $durationMs,
+                    'sucesso' => false,
+                    'created_at' => now(),
+                ]);
             }
         } catch (\Exception $e) {
             Log::error('FreteService: Falha ao cotar SuperFrete: ' . $e->getMessage());
+            
+            try {
+                DB::table('logs_api')->insert([
+                    'api_config_id' => $api->id,
+                    'rota' => 'quote_shipping_exception',
+                    'metodo' => 'POST',
+                    'response_json' => json_encode(['exception' => $e->getMessage()]),
+                    'status_http' => 500,
+                    'duracao_ms' => 0,
+                    'sucesso' => false,
+                    'created_at' => now(),
+                ]);
+            } catch (\Exception $ex) {}
         }
 
         return $this->failsafeSuperFrete($pesoKg);
