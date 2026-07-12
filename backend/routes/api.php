@@ -37,9 +37,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout',  [CustomerAuthController::class, 'logout']);
 
     // Endereços múltiplos do cliente
-    Route::get('/addresses', [AddressController::class, 'index']);
-    Route::post('/addresses', [AddressController::class, 'store']);
-    Route::delete('/addresses/{id}', [AddressController::class, 'destroy']);
+    Route::get('/addresses',                    [AddressController::class, 'index']);
+    Route::post('/addresses',                   [AddressController::class, 'store']);
+    Route::put('/addresses/{id}',               [AddressController::class, 'update']);
+    Route::patch('/addresses/{id}/principal',   [AddressController::class, 'setPrincipal']);
+    Route::delete('/addresses/{id}',            [AddressController::class, 'destroy']);
 
     // Pedidos
     Route::get('/orders/pix-key', [CustomerOrderController::class, 'pixKey']);

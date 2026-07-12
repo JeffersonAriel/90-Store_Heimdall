@@ -61,6 +61,51 @@ class AddressController extends Controller
     }
 
     /**
+     * Atualiza um endereço do cliente
+     */
+    public function update(Request $request, int $id)
+    {
+        $address = $request->user()->enderecos()->findOrFail($id);
+
+        $validated = $request->validate([
+            'apelido'         => 'nullable|string|max:60',
+            'cep'             => 'required|string|max:10',
+            'logradouro'      => 'required|string|max:255',
+            'numero'          => 'required|string|max:20',
+            'complemento'     => 'nullable|string|max:100',
+            'bairro'          => 'required|string|max:255',
+            'cidade'          => 'required|string|max:255',
+            'estado'          => 'required|string|max:2',
+            'ponto_referencia'=> 'nullable|string|max:255',
+        ]);
+
+        $address->update($validated);
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Endereço atualizado com sucesso.',
+            'endereco' => $address->fresh(),
+        ]);
+    }
+
+    /**
+     * Define um endereço como principal
+     */
+    public function setPrincipal(Request $request, int $id)
+    {
+        $cliente = $request->user();
+        $address = $cliente->enderecos()->findOrFail($id);
+
+        $cliente->enderecos()->update(['is_principal' => false]);
+        $address->update(['is_principal' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Endereço principal atualizado.',
+        ]);
+    }
+
+    /**
      * Remove um endereço
      */
     public function destroy(Request $request, int $id)

@@ -146,22 +146,84 @@
           </div>
         </div>
 
-        <!-- ── ENDEREÇOS ─────────────────────────────────── -->
+        <!-- ── ENDEREÇOS ────────────────────────────────── -->
         <div v-if="currentTab === 'enderecos'" class="tab-pane">
           <div class="flex-between mb-6">
             <h2 class="title-md">Endereços Salvos</h2>
+            <button class="btn btn-outline" @click="openAddressForm(null)">+ Novo Endereço</button>
           </div>
 
-          <div v-if="!profile?.enderecos?.length" class="text-center py-8 text-gray">
+          <!-- Lista de endereços -->
+          <div v-if="loadingAddresses" class="text-center py-4 text-gray">Carregando...</div>
+          <div v-else-if="addresses.length === 0" class="text-center py-8 text-gray">
             Nenhum endereço cadastrado.
           </div>
-          <div v-else class="grid grid-cols-2 gap-6">
-            <div v-for="addr in profile.enderecos" :key="addr.id" class="address-card">
-              <div class="badge badge-dark mb-2">{{ addr.apelido ?? 'Endereço' }}</div>
-              <p>{{ addr.logradouro }}, {{ addr.numero }}<span v-if="addr.complemento"> — {{ addr.complemento }}</span></p>
+          <div v-else class="addr-grid">
+            <div v-for="addr in addresses" :key="addr.id" class="address-card" :class="{ 'addr-principal': addr.is_principal }">
+              <div class="addr-top">
+                <span class="badge badge-dark">{{ addr.apelido || 'Endereço' }}</span>
+                <span v-if="addr.is_principal" class="badge-principal">★ Principal</span>
+              </div>
+              <p><strong>{{ addr.logradouro }}, {{ addr.numero }}</strong><span v-if="addr.complemento"> — {{ addr.complemento }}</span></p>
               <p>{{ addr.bairro }} — {{ addr.cidade }}/{{ addr.estado }}</p>
               <p>CEP: {{ addr.cep }}</p>
+              <div class="address-actions mt-4">
+                <button class="link-btn" @click="openAddressForm(addr)">Editar</button>
+                <button v-if="!addr.is_principal" class="link-btn" @click="setPrincipalAddr(addr.id)">Tornar Principal</button>
+                <button v-if="!addr.is_principal" class="link-btn text-red" @click="deleteAddress(addr.id)">Excluir</button>
+              </div>
             </div>
+          </div>
+
+          <!-- Formulário de adicionar/editar endereço -->
+          <div v-if="showAddressForm" class="addr-form-wrap mt-6">
+            <h3 class="title-sm mb-4">{{ editingAddress ? 'Editar Endereço' : 'Novo Endereço' }}</h3>
+            <form class="profile-form" @submit.prevent="saveAddress">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="input-group">
+                  <label class="input-label">Apelido (ex: Casa, Trabalho)</label>
+                  <input type="text" v-model="addrForm.apelido" class="input-field" placeholder="Casa" />
+                </div>
+                <div class="input-group">
+                  <label class="input-label">CEP</label>
+                  <input type="text" v-model="addrForm.cep" class="input-field" placeholder="00000-000" maxlength="9"
+                    @blur="lookupCep" @input="formatCepInput" />
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Logradouro</label>
+                  <input type="text" v-model="addrForm.logradouro" class="input-field" required />
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Número</label>
+                  <input type="text" v-model="addrForm.numero" class="input-field" required />
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Complemento</label>
+                  <input type="text" v-model="addrForm.complemento" class="input-field" placeholder="Apto, Bloco..." />
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Bairro</label>
+                  <input type="text" v-model="addrForm.bairro" class="input-field" required />
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Cidade</label>
+                  <input type="text" v-model="addrForm.cidade" class="input-field" required />
+                </div>
+                <div class="input-group">
+                  <label class="input-label">Estado (UF)</label>
+                  <input type="text" v-model="addrForm.estado" class="input-field" maxlength="2" placeholder="SP" required />
+                </div>
+              </div>
+
+              <div v-if="addrMsg" class="profile-msg" :class="addrMsgType">{{ addrMsg }}</div>
+
+              <div class="flex gap-4 mt-4">
+                <button type="submit" class="btn btn-primary" :disabled="savingAddress">
+                  {{ savingAddress ? 'Salvando...' : (editingAddress ? 'Salvar Alterações' : 'Adicionar Endereço') }}
+                </button>
+                <button type="button" class="btn btn-outline" @click="closeAddressForm">Cancelar</button>
+              </div>
+            </form>
           </div>
         </div>
 
@@ -275,6 +337,114 @@ const loadingOrders = ref(false)
 // ── Points ─────────────────────────────────────────────────
 const pointsHistory = ref([])
 const loadingPoints = ref(false)
+
+// ── Addresses ────────────────────────────────────
+
+const addresses      = ref([])
+const loadingAddresses = ref(false)
+const showAddressForm  = ref(false)
+const editingAddress   = ref(null)   // null = novo, obj = editar
+const savingAddress    = ref(false)
+const addrMsg          = ref('')
+const addrMsgType      = ref('success')
+
+const addrFormDefault = () => ({
+  apelido: '', cep: '', logradouro: '', numero: '',
+  complemento: '', bairro: '', cidade: '', estado: '',
+})
+const addrForm = ref(addrFormDefault())
+
+async function fetchAddresses() {
+  loadingAddresses.value = true
+  try {
+    const res = await axios.get('/api/addresses', authHeaders())
+    addresses.value = res.data.enderecos ?? []
+  } catch (e) {
+    console.error(e)
+  } finally {
+    loadingAddresses.value = false
+  }
+}
+
+function openAddressForm(addr) {
+  editingAddress.value = addr
+  addrForm.value = addr
+    ? { apelido: addr.apelido ?? '', cep: addr.cep, logradouro: addr.logradouro,
+        numero: addr.numero, complemento: addr.complemento ?? '',
+        bairro: addr.bairro, cidade: addr.cidade, estado: addr.estado }
+    : addrFormDefault()
+  addrMsg.value    = ''
+  showAddressForm.value = true
+  // scroll suave até o formulário
+  setTimeout(() => document.querySelector('.addr-form-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+}
+
+function closeAddressForm() {
+  showAddressForm.value = false
+  editingAddress.value  = null
+  addrForm.value        = addrFormDefault()
+}
+
+async function saveAddress() {
+  savingAddress.value = true
+  addrMsg.value = ''
+  try {
+    if (editingAddress.value) {
+      await axios.put(`/api/addresses/${editingAddress.value.id}`, addrForm.value, authHeaders())
+    } else {
+      await axios.post('/api/addresses', addrForm.value, authHeaders())
+    }
+    addrMsg.value    = '✅ Endereço salvo com sucesso!'
+    addrMsgType.value = 'success'
+    await fetchAddresses()
+    setTimeout(closeAddressForm, 1200)
+  } catch (e) {
+    const errors = e.response?.data?.errors
+    addrMsg.value    = errors ? Object.values(errors).flat().join(' | ') : (e.response?.data?.message ?? 'Erro ao salvar.')
+    addrMsgType.value = 'error'
+  } finally {
+    savingAddress.value = false
+  }
+}
+
+async function setPrincipalAddr(id) {
+  try {
+    await axios.patch(`/api/addresses/${id}/principal`, {}, authHeaders())
+    await fetchAddresses()
+  } catch (e) {
+    alert(e.response?.data?.message ?? 'Erro ao definir endereço principal.')
+  }
+}
+
+async function deleteAddress(id) {
+  if (!confirm('Deseja realmente excluir este endereço?')) return
+  try {
+    await axios.delete(`/api/addresses/${id}`, authHeaders())
+    await fetchAddresses()
+  } catch (e) {
+    alert(e.response?.data?.message ?? 'Erro ao excluir endereço.')
+  }
+}
+
+async function lookupCep() {
+  const cep = addrForm.value.cep.replace(/\D/g, '')
+  if (cep.length !== 8) return
+  try {
+    const res = await axios.get(`/api/cep/${cep}`)
+    if (res.data) {
+      addrForm.value.logradouro = res.data.logradouro ?? addrForm.value.logradouro
+      addrForm.value.bairro     = res.data.bairro     ?? addrForm.value.bairro
+      addrForm.value.cidade     = res.data.localidade ?? addrForm.value.cidade
+      addrForm.value.estado     = res.data.uf         ?? addrForm.value.estado
+    }
+  } catch { /* ignora erro de CEP */ }
+}
+
+function formatCepInput() {
+  let v = addrForm.value.cep.replace(/\D/g, '')
+  if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5, 8)
+  addrForm.value.cep = v
+}
 
 // ── Coupons ────────────────────────────────────────────────
 const coupons       = ref([])
@@ -395,6 +565,7 @@ async function fetchCoupons() {
 function setTab(tabName) {
   currentTab.value = tabName
   if (tabName === 'pedidos'  && orders.value.length === 0) fetchOrders()
+  if (tabName === 'enderecos') fetchAddresses()
   if (tabName === 'pontos')   fetchPoints()
   if (tabName === 'cupons')   fetchCoupons()
 }
@@ -677,6 +848,41 @@ function getStatusClass(status) {
 .mt-8  { margin-top: var(--spacing-8); }
 .mt-3  { margin-top: 0.75rem; }
 .border-dark { border-color: var(--color-black-lighter); }
+
+/* ── UI Endereços ───────────────── */
+.addr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-6);
+}
+.address-card.addr-principal {
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.03);
+}
+.addr-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-3);
+}
+.badge-principal {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: bold;
+}
+.address-actions {
+  display: flex;
+  gap: var(--spacing-4);
+  border-top: 1px solid var(--color-black-lighter);
+  padding-top: var(--spacing-3);
+}
+.addr-form-wrap {
+  background-color: var(--color-black-light);
+  border: 1px solid var(--color-black-lighter);
+  border-radius: var(--border-radius-sm);
+  padding: var(--spacing-6);
+}
+
 
 @media (max-width: 768px) {
   .account-layout { flex-direction: column; }
