@@ -32,11 +32,12 @@ class StoreSettingsController extends Controller
         $tree = $this->buildCategoryTree(null);
 
         return response()->json([
-            'banners' => $banners,
-            'megaMenuBanners' => $megaMenuBanners,
-            'benefits' => $benefits,
-            'categories' => $tree,
-            'paymentMethods' => $gateways
+            'banners'        => $banners,
+            'megaMenuBanners'=> $megaMenuBanners,
+            'benefits'       => $benefits,
+            'categories'     => $tree,
+            'paymentMethods' => $gateways,
+            'whatsapp'       => env('STORE_WHATSAPP', null),
         ]);
     }
 
