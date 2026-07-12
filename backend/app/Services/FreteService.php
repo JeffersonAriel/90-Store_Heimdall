@@ -116,7 +116,7 @@ class FreteService
 
             $startTime = microtime(true);
             
-            // A SuperFrete exige que o payload tenha informações de dimensões padrão
+            // A SuperFrete exige que o payload tenha informações de dimensões
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$token}",
                 'Content-Type' => 'application/json',
@@ -126,10 +126,10 @@ class FreteService
             ->post('https://api.superfrete.com.br/v1/calculator', [
                 'from'            => $cepOrigem,
                 'to'              => $cepDestino,
-                'weight'          => $pesoKg < 0.1 ? 0.1 : $pesoKg, // Garantir peso mínimo
-                'width'           => 15,
-                'height'          => 15,
-                'length'          => 15,
+                'weight'          => $pesoKg < 0.3 ? 0.3 : $pesoKg, // Mínimo de 300g (0.3 kg)
+                'width'           => 20, // 20 cm padrão
+                'height'          => 3,  // 3 cm padrão
+                'length'          => 30, // 30 cm padrão
                 'insurance_value' => 0,
                 'quantity'        => 1
             ]);
