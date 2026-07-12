@@ -115,7 +115,7 @@ class FreteService
             }
 
             $startTime = microtime(true);
-            
+
             // Regra por produto solicitado:
             // Cada produto = 1kg de peso, 3cm de altura, 40cm de largura e 50cm de comprimento
             $pesoFinal   = $pesoKg < (1.0 * $itensCount) ? (1.0 * $itensCount) : $pesoKg;
@@ -125,19 +125,31 @@ class FreteService
 
             $response = Http::withHeaders([
                 'Authorization' => "Bearer {$token}",
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json'
+                'User-Agent'    => 'Heimdall 90-Store integration (integracao@90store.com.br)',
+                'Content-Type'  => 'application/json',
+                'Accept'        => 'application/json'
             ])
-            ->timeout(5)
-            ->post('https://api.superfrete.com.br/v1/calculator', [
-                'from'            => $cepOrigem,
-                'to'              => $cepDestino,
-                'weight'          => $pesoFinal,
-                'width'           => $larguraFinal,
-                'height'          => $alturaFinal,
-                'length'          => $comprimentoFinal,
-                'insurance_value' => 0,
-                'quantity'        => 1
+            ->timeout(6)
+            ->post('https://api.superfrete.com/api/v0/calculator', [
+                'from' => [
+                    'postal_code' => $cepOrigem
+                ],
+                'to' => [
+                    'postal_code' => $cepDestino
+                ],
+                'services' => '1,2,17,3,31', // PAC, SEDEX, Mini Envios, Jadlog, Loggi
+                'options' => [
+                    'own_hand'            => false,
+                    'receipt'             => false,
+                    'insurance_value'     => 0,
+                    'use_insurance_value' => false
+                ],
+                'package' => [
+                    'weight' => $pesoFinal,
+                    'width'  => $larguraFinal,
+                    'height' => $alturaFinal,
+                    'length' => $comprimentoFinal
+                ]
             ]);
 
             $durationMs = round((microtime(true) - $startTime) * 1000);
@@ -146,15 +158,17 @@ class FreteService
                 $cotacoes = [];
                 $dados = $response->json();
                 
-                // Formato retornado pela SuperFrete (geralmente uma lista de opções/serviços)
                 foreach ($dados as $item) {
-                    if (isset($item['error']) && $item['error']) continue;
+                    if (isset($item['has_error']) && $item['has_error']) continue;
                     
                     $price = isset($item['price']) ? floatval($item['price']) : null;
                     if ($price === null) continue;
 
                     $name = $item['name'] ?? 'Correios';
-                    $deadline = isset($item['delivery']) ? intval($item['delivery']) : 5;
+                    if (isset($item['company']['name'])) {
+                        $name = $name . ' (' . ucfirst($item['company']['name']) . ')';
+                    }
+                    $deadline = isset($item['delivery_time']) ? intval($item['delivery_time']) : 5;
 
                     $cotacoes[] = [
                         'servico' => $name,
