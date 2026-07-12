@@ -297,8 +297,11 @@ async function advanceToShipping() {
   if (cleanCep.length >= 8) {
      loadingShipping.value = true
      try {
-       // Peso mockado fixo ou pegando do carrinho. (Aqui enviando 1kg mock)
-       const res = await axios.post('/api/shipping/quote', { cep: cleanCep, peso_total: 1 })
+       // Pega o peso total real dos itens no carrinho (Pinia store)
+       const res = await axios.post('/api/shipping/quote', {
+         cep: cleanCep,
+         peso_total: store.cartWeight
+       })
        shippingOptions.value = res.data.opcoes || []
        
        if (shippingOptions.value.length > 0) {
