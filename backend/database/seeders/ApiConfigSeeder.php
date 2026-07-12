@@ -118,7 +118,7 @@ class ApiConfigSeeder extends Seeder
                 'nome'            => 'Melhor Envio',
                 'tipo'            => 'frete',
                 'fallback_ordem'  => 99,
-                'ativo'           => true,
+                'ativo'           => false,
                 'sandbox'         => true,
                 'template_campos_json' => [
                     ['campo' => 'token',              'label' => 'Token de API',          'obrigatorio' => true,  'tipo' => 'password'],
@@ -126,6 +126,21 @@ class ApiConfigSeeder extends Seeder
                     ['campo' => 'client_secret',      'label' => 'Client Secret',          'obrigatorio' => true,  'tipo' => 'password'],
                 ],
                 'credenciais_json' => null,
+                'webhook_url'     => null,
+            ],
+            [
+                'slug'            => 'superfrete',
+                'nome'            => 'SuperFrete',
+                'tipo'            => 'frete',
+                'fallback_ordem'  => 1,
+                'ativo'           => true,
+                'sandbox'         => false,
+                'template_campos_json' => [
+                    ['campo' => 'token',              'label' => 'Token de API',          'obrigatorio' => true,  'tipo' => 'password'],
+                ],
+                'credenciais_json' => [
+                    'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3ODM4MjEwMDUsInN1YiI6IjdSZEU4N1lCMU9WNkxJN3Y3N09KSk93UnFaTDIifQ.PTTy4dTooL-zFq_YbhBhqX5TCWl-YLSuiRJfQugUIQk'
+                ],
                 'webhook_url'     => null,
             ],
             [

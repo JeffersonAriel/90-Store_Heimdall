@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 class FreteService
 {
     /**
-     * Calcula as opções de frete disponíveis (opções locais se até 50km de São Miguel Paulista, senão Melhor Envio).
+     * Calcula as opções de frete disponíveis (opções locais se até 50km de São Miguel Paulista, senão SuperFrete).
      */
     public function calcular(string $cepDestino, float $pesoKg): array
     {
@@ -24,7 +24,7 @@ class FreteService
 
         $options = [];
 
-        // 1. Verifica distância para entrega local
+        // 1. Verifica distância para entrega local (Uber Moto / Metrô)
         $coordenadas = $this->obterCoordenadasPorCep($cepDestino);
 
         if ($coordenadas) {
@@ -52,12 +52,9 @@ class FreteService
             }
         }
 
-        // 2. Cotação Melhor Envio (Correios/Jadlog)
-        $melhorEnvio = $this->cotarMelhorEnvio($regras->cep_origem, $cepDestino, $pesoKg);
-        $options = array_merge($options, $melhorEnvio);
-
-        // 3. Aplica regra de frete grátis se atingir o valor mínimo parametrizado
-        // A lógica de frete grátis será tratada no carrinho baseando-se no 'valor_minimo_gratis' configurado.
+        // 2. Cotação SuperFrete (Correios PAC/SEDEX/Mini Envios)
+        $superFrete = $this->cotarSuperFrete($regras->cep_origem, $cepDestino, $pesoKg);
+        $options = array_merge($options, $superFrete);
 
         return $options;
     }
@@ -98,83 +95,74 @@ class FreteService
         return $earthRadius * $c;
     }
 
-    private function calcularTarifaLocal(string $apiSlug, float $distanciaKm): float
-    {
-        $base = $apiSlug === 'uber_flash' ? 12.90 : 10.50;
-        $kmValor = 1.80;
-
-        return round($base + ($distanciaKm * $kmValor), 2);
-    }
-
     /**
-     * Simula ou consome credenciais reais do Melhor Envio
+     * Cotação via API da SuperFrete
      */
-    private function cotarMelhorEnvio(string $cepOrigem, string $cepDestino, float $pesoKg): array
+    private function cotarSuperFrete(string $cepOrigem, string $cepDestino, float $pesoKg): array
     {
-        $api = ApiConfiguracao::where('slug', 'melhor_envio')->first();
+        $api = ApiConfiguracao::where('slug', 'superfrete')->first();
 
-        // Cotação simulada se não houver credenciais configuradas (Sandbox/Fallback ativo)
-        if (!$api || !$api->ativo || empty($api->credenciais_json)) {
-            return [
-                [
-                    'servico' => 'Correios PAC (Melhor Envio)',
-                    'prazo_dias' => 6,
-                    'valor' => round(18.50 + ($pesoKg * 2.5), 2),
-                    'tipo' => 'nacional'
-                ],
-                [
-                    'servico' => 'Correios SEDEX (Melhor Envio)',
-                    'prazo_dias' => 2,
-                    'valor' => round(29.90 + ($pesoKg * 4.0), 2),
-                    'tipo' => 'nacional'
-                ]
-            ];
+        if (!$api || !$api->ativo) {
+            return $this->failsafeSuperFrete($pesoKg);
         }
 
         try {
             $credenciais = json_decode($api->credenciais_json, true);
             $token = $credenciais['token'] ?? '';
-            $url = $api->sandbox ? 'https://sandbox.melhorenvio.com.br' : 'https://melhorenvio.com.br';
+            
+            if (empty($token)) {
+                return $this->failsafeSuperFrete($pesoKg);
+            }
 
             $startTime = microtime(true);
-            $response = Http::withToken($token)
-                ->timeout(4)
-                ->post("{$url}/api/v2/me/shipment/calculate", [
-                    'from' => ['postal_code' => $cepOrigem],
-                    'to' => ['postal_code' => $cepDestino],
-                    'products' => [
-                        [
-                            'id' => '1',
-                            'weight' => $pesoKg,
-                            'width' => 15,
-                            'height' => 15,
-                            'length' => 15,
-                            'insurance_value' => 100,
-                            'quantity' => 1
-                        ]
-                    ]
-                ]);
+            
+            // A SuperFrete exige que o payload tenha informações de dimensões padrão
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$token}",
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json'
+            ])
+            ->timeout(5)
+            ->post('https://api.superfrete.com.br/v1/calculator', [
+                'from'            => $cepOrigem,
+                'to'              => $cepDestino,
+                'weight'          => $pesoKg < 0.1 ? 0.1 : $pesoKg, // Garantir peso mínimo
+                'width'           => 15,
+                'height'          => 15,
+                'length'          => 15,
+                'insurance_value' => 0,
+                'quantity'        => 1
+            ]);
 
             $durationMs = round((microtime(true) - $startTime) * 1000);
 
             if ($response->successful()) {
                 $cotacoes = [];
-                foreach ($response->json() as $item) {
-                    if (isset($item['error'])) continue;
+                $dados = $response->json();
+                
+                // Formato retornado pela SuperFrete (geralmente uma lista de opções/serviços)
+                foreach ($dados as $item) {
+                    if (isset($item['error']) && $item['error']) continue;
+                    
+                    $price = isset($item['price']) ? floatval($item['price']) : null;
+                    if ($price === null) continue;
+
+                    $name = $item['name'] ?? 'SuperFrete';
+                    $deadline = isset($item['delivery']) ? intval($item['delivery']) : 5;
 
                     $cotacoes[] = [
-                        'servico' => "{$item['name']} ({$item['company']['name']})",
-                        'prazo_dias' => $item['delivery_time'],
-                        'valor' => floatval($item['price']),
+                        'servico' => "{$name} (SuperFrete)",
+                        'prazo_dias' => $deadline,
+                        'valor' => $price,
                         'tipo' => 'nacional'
                     ];
                 }
-                
+
                 DB::table('logs_api')->insert([
                     'api_config_id' => $api->id,
-                    'rota' => 'calcular_frete',
+                    'rota' => 'quote_shipping',
                     'metodo' => 'POST',
-                    'response_json' => json_encode($response->json()),
+                    'response_json' => json_encode($dados),
                     'status_http' => $response->status(),
                     'duracao_ms' => $durationMs,
                     'sucesso' => true,
@@ -184,15 +172,25 @@ class FreteService
                 return $cotacoes;
             }
         } catch (\Exception $e) {
-            Log::error('FreteService: Falha ao cotar Melhor Envio: ' . $e->getMessage());
+            Log::error('FreteService: Falha ao cotar SuperFrete: ' . $e->getMessage());
         }
 
-        // Retorna simulador em caso de falha de conexão na API externa
+        return $this->failsafeSuperFrete($pesoKg);
+    }
+
+    private function failsafeSuperFrete(float $pesoKg): array
+    {
         return [
             [
-                'servico' => 'PAC Correios (Failsafe)',
+                'servico' => 'Correios PAC (SuperFrete Failsafe)',
                 'prazo_dias' => 7,
-                'valor' => 22.10,
+                'valor' => round(19.90 + ($pesoKg * 2.2), 2),
+                'tipo' => 'nacional'
+            ],
+            [
+                'servico' => 'Correios SEDEX (SuperFrete Failsafe)',
+                'prazo_dias' => 3,
+                'valor' => round(29.90 + ($pesoKg * 3.8), 2),
                 'tipo' => 'nacional'
             ]
         ];
