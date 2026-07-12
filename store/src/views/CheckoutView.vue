@@ -297,10 +297,10 @@ async function advanceToShipping() {
   if (cleanCep.length >= 8) {
      loadingShipping.value = true
      try {
-       // Pega o peso total real dos itens no carrinho (Pinia store)
+       // Pega o peso total real dos itens no carrinho (Pinia store) com fallback mínimo de 0.3kg
        const res = await axios.post('/api/shipping/quote', {
          cep: cleanCep,
-         peso_total: store.cartWeight
+         peso_total: store.cartWeight > 0 ? store.cartWeight : 0.3
        })
        shippingOptions.value = res.data.opcoes || []
        

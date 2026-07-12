@@ -132,15 +132,20 @@ class StoreApiController extends Controller
     {
         $request->validate([
             'cep' => 'required|string',
-            'peso_total' => 'required|numeric|min:0.1',
+            'peso_total' => 'nullable|numeric',
         ]);
+
+        $pesoTotal = floatval($request->input('peso_total', 0.3));
+        if ($pesoTotal <= 0) {
+            $pesoTotal = 0.3;
+        }
 
         // Como cada produto possui peso mínimo de 0.3kg ou 1.0kg nas configurações passadas, 
         // podemos inferir uma quantidade de itens dividindo o peso_total por 0.3 (peso padrão do produto),
         // garantindo que no mínimo seja 1 item.
-        $itensCount = max(1, round($request->peso_total / 0.3));
+        $itensCount = max(1, round($pesoTotal / 0.3));
 
-        $options = $this->freteService->calcular($request->cep, $request->peso_total, $itensCount);
+        $options = $this->freteService->calcular($request->cep, $pesoTotal, $itensCount);
 
         return response()->json([
             'success' => true,
