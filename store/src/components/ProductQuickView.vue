@@ -80,6 +80,7 @@
 import { ref, watch, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { getRatingCount, getRatingAverage, getStarsString } from '../utils/rating'
+import { useStore } from '../store/main'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
@@ -87,6 +88,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
+const store = useStore()
 
 const availableSizes = computed(() => {
   if (!props.product || !props.product.variacoes) return [];
@@ -143,8 +145,18 @@ function addToCart() {
     alert('Por favor, selecione um tamanho.')
     return
   }
-  alert(`Adicionado ao carrinho: ${props.product.nome} - Tam: ${selectedSize.value}`)
+
+  // Encontra a variação correspondente ao tamanho selecionado
+  const variation = props.product.variacoes.find(v => v.tamanho === selectedSize.value)
+
+  if (!variation) {
+    alert('Este tamanho está indisponível.')
+    return
+  }
+
+  store.addToCart(props.product, variation, 1)
   close()
+  window.dispatchEvent(new CustomEvent('open-cart-drawer'))
 }
 
 function formatMoney(val) {

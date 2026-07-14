@@ -122,10 +122,30 @@ class AddressController extends Controller
         try {
             $address->delete();
         } catch (\Illuminate\Database\QueryException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Este endereço não pode ser excluído pois já está vinculado a um ou mais pedidos efetuados.'
-            ], 400);
+            // Se falhar por chave estrangeira, tenta reassociar os pedidos ao endereço principal do cliente
+            $principalAddress = $request->user()->enderecos()->where('is_principal', true)->first();
+            
+            if ($principalAddress && $principalAddress->id !== $address->id) {
+                try {
+                    \Illuminate\Support\Facades\DB::table('pedidos')
+                        ->where('cliente_id', $request->user()->id)
+                        ->where('endereco_id', $address->id)
+                        ->update(['endereco_id' => $principalAddress->id]);
+                    
+                    // Tenta a exclusão novamente após reassociar
+                    $address->delete();
+                } catch (\Exception $ex) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Este endereço está vinculado a pedidos existentes e não pôde ser reassociado automaticamente.'
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este endereço não pode ser excluído pois está vinculado a um ou mais pedidos efetuados.'
+                ], 400);
+            }
         }
 
         return response()->json([

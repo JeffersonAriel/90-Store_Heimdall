@@ -31,7 +31,7 @@
         <div class="order-body mt-4">
           <div class="order-items">
             <div v-for="item in order.itens" :key="item.id" class="order-item flex items-center mb-3 pb-3 border-b border-dark">
-              <img :src="item.produto?.foto_capa || 'https://via.placeholder.com/60'" class="item-img" />
+              <img :src="item.produto?.foto_capa?.url || item.produto?.fotos?.[0]?.url || 'https://via.placeholder.com/60'" class="item-img" style="width: 60px; height: 60px; min-width: 60px; min-height: 60px; object-fit: cover; border-radius: 4px;" />
               <div class="item-details ml-4 flex-1">
                 <p class="font-bold">{{ item.produto?.nome }}</p>
                 <p class="text-gray text-sm">Tamanho: {{ item.variacao?.tamanho }} | Cor: {{ item.variacao?.cor }}</p>

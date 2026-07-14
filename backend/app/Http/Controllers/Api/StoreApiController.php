@@ -89,8 +89,26 @@ class StoreApiController extends Controller
 
         $categories = CategoriaTipoProduto::where('ativo', true)->orderBy('ordem')->get();
 
-        $brands = Produto::where('ativo', true)
-            ->whereNotNull('marca')
+        // Filtra as marcas de acordo com a categoria e busca atuais para só exibir marcas com produtos
+        $brandsQuery = Produto::where('ativo', true)
+            ->when($request->input('categoria'), function ($query, $slug) {
+                $category = CategoriaTipoProduto::where('slug', $slug)->first();
+                if ($category) {
+                    $categoryIds = CategoriaTipoProduto::where('id', $category->id)
+                        ->orWhere('parent_id', $category->id)
+                        ->pluck('id');
+                    $query->whereIn('categoria_id', $categoryIds);
+                }
+            })
+            ->when($request->input('search'), function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nome', 'like', "%{$search}%")
+                      ->orWhere('descricao', 'like', "%{$search}%")
+                      ->orWhere('marca', 'like', "%{$search}%");
+                });
+            });
+
+        $brands = $brandsQuery->whereNotNull('marca')
             ->where('marca', '<>', '')
             ->distinct()
             ->pluck('marca')
