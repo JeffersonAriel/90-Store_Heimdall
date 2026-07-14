@@ -136,8 +136,8 @@
           <div class="social-links">
             <a href="https://www.instagram.com/sou90mais/" target="_blank" rel="noopener noreferrer">Instagram</a>
             <a href="https://wa.me/5511945342493" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-            <a href="#">YouTube</a>
-            <a href="#">TikTok</a>
+            <a href="https://www.youtube.com/@Sou90Mais" target="_blank" rel="noopener noreferrer">YouTube</a>
+            <a href="https://www.tiktok.com/@90_mais" target="_blank" rel="noopener noreferrer">TikTok</a>
           </div>
         </div>
 
