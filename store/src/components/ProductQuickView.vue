@@ -41,13 +41,19 @@
           </div>
 
           <!-- Variações -->
-          <div class="variations mt-6">
+          <div class="variations mt-6" v-if="availableSizes.length > 0">
             <div class="variation-group">
               <label>Tamanho:</label>
               <div class="variation-options">
-                <button class="var-btn" :class="{ active: selectedSize === 'P' }" @click="selectedSize = 'P'">P</button>
-                <button class="var-btn" :class="{ active: selectedSize === 'M' }" @click="selectedSize = 'M'">M</button>
-                <button class="var-btn" :class="{ active: selectedSize === 'G' }" @click="selectedSize = 'G'">G</button>
+                <button 
+                  v-for="size in availableSizes" 
+                  :key="size" 
+                  class="var-btn" 
+                  :class="{ active: selectedSize === size }" 
+                  @click="selectedSize = size"
+                >
+                  {{ size }}
+                </button>
               </div>
             </div>
           </div>
@@ -71,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { getRatingCount, getRatingAverage, getStarsString } from '../utils/rating'
 
@@ -81,6 +87,12 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close'])
+
+const availableSizes = computed(() => {
+  if (!props.product || !props.product.variacoes) return [];
+  const sizes = props.product.variacoes.map(v => v.tamanho).filter(Boolean);
+  return [...new Set(sizes)];
+})
 
 const mainImage = ref('')
 const selectedSize = ref('')
