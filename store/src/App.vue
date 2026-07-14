@@ -164,51 +164,18 @@
             <span class="badge badge-dark">VISA</span>
             <span class="badge badge-dark">MASTERCARD</span>
           </div>
-          <div class="security-badges mt-4" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <div class="security-badges mt-4" style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
             <!-- SiteLock Seal -->
             <a href="https://www.sitelock.com/free-website-scan/?domain=www.90store.com.br" target="_blank" rel="noopener noreferrer" title="SiteLock Secure" style="text-decoration: none;">
-              <div style="background: linear-gradient(135deg, #ffffff, #f0f4f8); border: 1px solid #d1d5db; border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; min-width: 110px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s ease-in-out;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.05)'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2s7 2 7 9c0 6-7 11-7 11S5 17 5 11C5 4 12 2 12 2z" fill="#0c56d0" stroke="#0842a0" stroke-width="1.5" stroke-linejoin="round"/>
-                  <path d="M9 11.5l2 2 4-4" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <div style="line-height: 1.1;">
-                  <div style="font-size: 10px; font-weight: 800; color: #0c56d0; letter-spacing: 0.5px; font-family: 'Arial', sans-serif;">SITELOCK</div>
-                  <div style="font-size: 7px; color: #4b5563; font-weight: 600; letter-spacing: 0.5px; font-family: 'Arial', sans-serif;">SECURE</div>
-                </div>
-              </div>
+              <img src="https://www.sitelock.com/images/sitelock-logo.svg" alt="SiteLock Secure" style="height: 40px; background: transparent; transition: transform 0.2s ease-in-out;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" />
             </a>
             <!-- E-bit Seal -->
             <a href="https://www.ebit.com.br/" target="_blank" rel="noopener noreferrer" title="E-bit Excelente" style="text-decoration: none;">
-              <div style="background: linear-gradient(135deg, #ffffff, #fffbeb); border: 1px solid #fde68a; border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; min-width: 110px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s ease-in-out;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.05)'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <!-- Ribbon -->
-                  <path d="M7 16l-3 6 4-2 3 3v-7M17 16l3 6-4-2-3 3v-7" fill="#fbbf24" stroke="#d97706" stroke-width="1" stroke-linejoin="round"/>
-                  <!-- Medal Body -->
-                  <circle cx="12" cy="10" r="9" fill="#fbbf24" stroke="#d97706" stroke-width="1.5"/>
-                  <circle cx="12" cy="10" r="7" fill="#f59e0b"/>
-                  <path d="M12 5L13.5 8l3 .5-2 2.5 0 3L12 12.5 9.5 14l0-3-2-2.5 3-.5L12 5z" fill="#fff"/>
-                </svg>
-                <div style="line-height: 1.1;">
-                  <div style="font-size: 10px; font-weight: 800; color: #d97706; letter-spacing: 0.5px; font-family: 'Arial', sans-serif;">E-BIT</div>
-                  <div style="font-size: 7px; color: #4b5563; font-weight: 600; letter-spacing: 0.5px; font-family: 'Arial', sans-serif;">EXCELENTE</div>
-                </div>
-              </div>
+              <img src="https://www.agenciaeplus.com.br/wp-content/uploads/2019/09/medalha_diamante_excelente.png" alt="E-bit Excelente" style="height: 48px; background: transparent; transition: transform 0.2s ease-in-out;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" />
             </a>
-            <!-- Reclame Aqui -->
-            <a href="https://www.reclameaqui.com.br/" target="_blank" rel="noopener noreferrer" title="Reclame Aqui - Ótimo" style="text-decoration: none;">
-              <div style="background: linear-gradient(135deg, #ffffff, #ecfdf5); border: 1px solid #a7f3d0; border-radius: 8px; padding: 6px 12px; display: flex; align-items: center; gap: 8px; min-width: 110px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: all 0.2s ease-in-out;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.05)'">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" fill="#10b981" stroke="#059669" stroke-width="1" stroke-linejoin="round"/>
-                  <circle cx="9" cy="10" r="1.5" fill="#fff"/>
-                  <circle cx="15" cy="10" r="1.5" fill="#fff"/>
-                  <path d="M8 14.5c1.5 2 4.5 2 6 0" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-                <div style="line-height: 1.1;">
-                  <div style="font-size: 10px; font-weight: 800; color: #059669; letter-spacing: 0.5px; font-family: 'Arial', sans-serif;">RECLAME AQUI</div>
-                  <div style="font-size: 7px; color: #4b5563; font-weight: 600; letter-spacing: 0.5px; font-family: 'Arial', sans-serif;">ÓTIMO</div>
-                </div>
-              </div>
+            <!-- Reclame Aqui RA1000 Seal -->
+            <a href="https://www.reclameaqui.com.br/" target="_blank" rel="noopener noreferrer" title="Reclame Aqui RA1000" style="text-decoration: none;">
+              <img src="https://br.adp.com/-/media/adpbr/images/about-us/press-centre/certificado-ra1000.png?rev=1f64aa1c20cd4d9fae1192e159fe0a15&hash=904D041FFD1E3455B62A7087601944EC" alt="Reclame Aqui RA1000" style="height: 48px; background: transparent; transition: transform 0.2s ease-in-out;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" />
             </a>
           </div>
         </div>
