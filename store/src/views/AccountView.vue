@@ -123,8 +123,9 @@
                 <div class="mt-4 border-t border-dark pt-4">
                   <div v-for="item in order.itens" :key="item.id" class="flex items-center mb-3">
                     <img
-                      :src="item.produto?.foto_capa?.url || 'https://via.placeholder.com/60'"
+                      :src="item.produto?.foto_capa?.url || item.produto?.fotos?.[0]?.url || 'https://via.placeholder.com/60'"
                       class="w-12 h-12 object-cover rounded mr-4 bg-dark"
+                      style="width: 48px; height: 48px; min-width: 48px; min-height: 48px; object-fit: cover; border-radius: 4px; margin-right: 1rem;"
                       :alt="item.nome_snapshot"
                     />
                     <div class="flex-1">
