@@ -24,8 +24,13 @@
         
         <!-- Galeria -->
         <div class="product-gallery">
-          <div class="main-image-wrapper">
+          <div class="main-image-wrapper" style="position: relative;">
             <img :src="mainImage" class="main-image" :alt="product.nome" />
+            <button class="favorite-btn" title="Favoritar" @click.prevent="toggleFavorite" :class="{ 'is-favorited': isFavorite }">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" :fill="isFavorite ? 'var(--color-red)' : 'none'" :stroke="isFavorite ? 'var(--color-red)' : 'currentColor'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </button>
           </div>
           <div class="thumbnails mt-4">
              <img 
@@ -50,8 +55,8 @@
           <h1 class="product-title">{{ product.nome }}</h1>
           
           <div class="rating">
-            <span class="stars">★★★★★</span>
-            <span class="reviews-count">(12 avaliações)</span>
+            <span class="stars">{{ getStarsString(getRatingAverage(product.id)) }}</span>
+            <span class="reviews-count">({{ getRatingCount(product.id) }} avaliações)</span>
           </div>
 
           <div class="price-section mt-6">
@@ -65,7 +70,6 @@
             <template v-else>
               <div class="price-new">R$ {{ formatMoney(product.preco_venda) }}</div>
             </template>
-            <p class="installments">ou em até 10x de R$ {{ formatMoney((product.preco_desconto || product.preco_venda) / 10) }} sem juros</p>
           </div>
 
           <!-- Seletor de Variações -->
@@ -157,22 +161,14 @@
 
       <!-- Avaliações -->
       <div class="product-reviews mt-12">
-        <h3 class="section-title">AVALIAÇÕES (12)</h3>
-        <div class="review-item">
+        <h3 class="section-title">AVALIAÇÕES ({{ getRatingCount(product.id) }})</h3>
+        <div v-for="review in getProductReviews(product.id)" :key="review.id" class="review-item">
           <div class="review-header">
-            <span class="stars">★★★★★</span>
-            <strong>João S.</strong>
-            <span class="review-date">10/10/2025</span>
+            <span class="stars">{{ review.estrelas }}</span>
+            <strong>{{ review.autor }}</strong>
+            <span class="review-date">{{ review.data }}</span>
           </div>
-          <p class="review-text">Produto excelente! Qualidade do material me surpreendeu e chegou antes do prazo.</p>
-        </div>
-        <div class="review-item">
-          <div class="review-header">
-            <span class="stars">★★★★☆</span>
-            <strong>Maria C.</strong>
-            <span class="review-date">05/10/2025</span>
-          </div>
-          <p class="review-text">Muito bom, o tamanho P ficou perfeito. Só achei que a cor era um pouco mais escura.</p>
+          <p class="review-text">{{ review.texto }}</p>
         </div>
       </div>
 
@@ -200,8 +196,16 @@ import { useHead } from '@vueuse/head'
 import axios from 'axios'
 import ProductCard from '../components/ProductCard.vue'
 import { useStore } from '../store/main'
+import { getRatingCount, getRatingAverage, getStarsString, getProductReviews } from '../utils/rating'
 
 const store = useStore()
+const isFavorite = computed(() => store.favorites?.some(item => item.id === product.value?.id))
+
+function toggleFavorite() {
+  if (product.value) {
+    store.toggleFavorite(product.value)
+  }
+}
 
 const route = useRoute()
 
@@ -603,7 +607,17 @@ function formatMoney(val) {
   color: var(--color-white);
   text-align: center;
   font-weight: 600;
+  padding: 0;
+  line-height: 50px;
+  -moz-appearance: textfield;
 }
+
+.qty-selector input::-webkit-outer-spin-button,
+.qty-selector input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .qty-selector input:focus {
   outline: none;
 }
@@ -701,5 +715,29 @@ function formatMoney(val) {
   .action-section { flex-direction: column; }
   .qty-selector { width: 100%; justify-content: space-between; }
   .qty-selector input { flex: 1; }
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: var(--color-gray);
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  z-index: 10;
+}
+
+.favorite-btn:hover {
+  color: var(--color-red);
+  background-color: var(--color-white);
+  transform: scale(1.05);
 }
 </style>

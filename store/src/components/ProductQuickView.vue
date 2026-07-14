@@ -25,7 +25,10 @@
         <div class="product-info mt-4">
           <div class="brand">{{ product.fornecedor?.nome_fantasia || 'Marca Original' }}</div>
           <h2 class="name">{{ product.nome }}</h2>
-          <div class="star-rating">★★★★★ <small>(12 avaliações)</small></div>
+          <div class="star-rating">
+            {{ getStarsString(getRatingAverage(product.id)) }} 
+            <small>({{ getRatingCount(product.id) }} avaliações)</small>
+          </div>
           
           <div class="price-box mt-4">
             <template v-if="product.tem_desconto">
@@ -70,6 +73,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
+import { getRatingCount, getRatingAverage, getStarsString } from '../utils/rating'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },

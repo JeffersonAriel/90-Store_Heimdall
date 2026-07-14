@@ -29,8 +29,8 @@
       <div class="section-header">
         <h2 class="title-md">VEJA POR LANÇAMENTOS</h2>
         <div class="carousel-nav">
-          <button class="nav-btn">←</button>
-          <button class="nav-btn">→</button>
+          <button class="nav-btn" @click="scrollSlider('left')">←</button>
+          <button class="nav-btn" @click="scrollSlider('right')">→</button>
         </div>
       </div>
 
@@ -39,13 +39,16 @@
         <p>Carregando lançamentos...</p>
       </div>
 
-      <div v-else class="grid grid-cols-4 gap-6">
-        <ProductCard 
-          v-for="product in latestProducts" 
-          :key="product.id" 
-          :product="product" 
-          @quick-view="openQuickView"
-        />
+      <div v-else class="slider-wrapper">
+        <div ref="sliderRef" class="products-slider">
+          <ProductCard 
+            v-for="product in latestProducts" 
+            :key="product.id" 
+            :product="product" 
+            @quick-view="openQuickView"
+            class="slider-item"
+          />
+        </div>
       </div>
     </section>
 
@@ -118,6 +121,18 @@ const quickViewProduct = ref(null)
 const currentBannerIndex = ref(0)
 let bannerInterval = null
 
+const sliderRef = ref(null)
+
+function scrollSlider(direction) {
+  if (!sliderRef.value) return
+  const scrollAmount = 320 // largura de scroll (card + gap)
+  if (direction === 'left') {
+    sliderRef.value.scrollLeft -= scrollAmount
+  } else {
+    sliderRef.value.scrollLeft += scrollAmount
+  }
+}
+
 const brandsList = ref([
   { name: 'Adidas', slug: 'adidas', logo: './images/brands/adidas.svg', error: false },
   { name: 'Nike', slug: 'nike', logo: './images/brands/nike.svg', error: false },
@@ -153,7 +168,7 @@ async function fetchHomeData() {
       }, 5000)
     }
 
-    const resLanc = await axios.get('/api/catalog?sort=newest&limit=4')
+    const resLanc = await axios.get('/api/catalog?sort=newest&limit=12')
     latestProducts.value = resLanc.data.produtos || []
 
     const resBest = await axios.get('/api/catalog?limit=4')
@@ -444,5 +459,46 @@ onUnmounted(() => {
   .newsletter-grid { flex-direction: column; text-align: center; }
   .hero-banner { height: 400px; }
   .title-xl { font-size: 2.5rem; }
+}
+
+.slider-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.products-slider {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  padding: 0.5rem 0;
+  scrollbar-width: none; /* Firefox */
+}
+
+.products-slider::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+.slider-item {
+  flex: 0 0 calc(25% - 1.125rem); /* Mostra 4 itens */
+  min-width: 250px;
+}
+
+@media (max-width: 1024px) {
+  .slider-item {
+    flex: 0 0 calc(33.333% - 1rem); /* Mostra 3 itens */
+  }
+}
+
+@media (max-width: 768px) {
+  .slider-item {
+    flex: 0 0 calc(50% - 0.75rem); /* Mostra 2 itens */
+  }
+}
+
+@media (max-width: 480px) {
+  .slider-item {
+    flex: 0 0 100%; /* Mostra 1 item */
+  }
 }
 </style>

@@ -476,11 +476,26 @@ function existingPhotosByColor(cor) {
 // Toggle excluir foto
 function toggleDeletePhoto(fotoId) {
   const index = form.deleted_photos.indexOf(fotoId);
+  const foto = props.product?.fotos?.find(f => f.id === fotoId);
+  if (!foto) return;
+
+  const cor = foto.cor || 'Geral';
+  let currentUrls = (form.fotos_url_por_cor[cor] || '')
+    .split('\n')
+    .map(u => u.trim())
+    .filter(Boolean);
+
   if (index > -1) {
     form.deleted_photos.splice(index, 1);
+    if (!currentUrls.includes(foto.url)) {
+      currentUrls.push(foto.url);
+    }
   } else {
     form.deleted_photos.push(fotoId);
+    currentUrls = currentUrls.filter(u => u !== foto.url);
   }
+
+  form.fotos_url_por_cor[cor] = currentUrls.join('\n');
 }
 
 // Upload de imagens

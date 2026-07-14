@@ -41,6 +41,13 @@ class StoreApiController extends Controller
             ->when($request->input('marca'), function ($query, $marca) {
                 $query->where('marca', 'like', $marca);
             })
+            ->when($request->input('search'), function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nome', 'like', "%{$search}%")
+                      ->orWhere('descricao', 'like', "%{$search}%")
+                      ->orWhere('marca', 'like', "%{$search}%");
+                });
+            })
             ->when($request->input('min_price'), function ($query, $minPrice) {
                 $query->where(function ($q) use ($minPrice) {
                     $q->where('preco_venda', '>=', $minPrice)

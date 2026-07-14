@@ -23,8 +23,8 @@
 
     <div class="card-body">
       <div class="star-rating">
-        <span>★★★★★</span>
-        <small class="rating-count">(12)</small>
+        <span>{{ getStarsString(getRatingAverage(product.id)) }}</span>
+        <small class="rating-count">({{ getRatingCount(product.id) }})</small>
       </div>
       
       <div class="brand">{{ product.marca || 'MARCA ORIGINAL' }}</div>
@@ -41,7 +41,6 @@
         <template v-else>
           <span class="price-new">R$ {{ formatMoney(product.preco_venda) }}</span>
         </template>
-        <span class="installment">ou 10x de R$ {{ formatMoney((product.preco_desconto || product.preco_venda) / 10) }}</span>
       </div>
       
       <button class="btn btn-primary add-cart-btn" @click.prevent="$emit('quick-view', product)">
@@ -55,6 +54,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useStore } from '../store/main'
+import { getRatingCount, getRatingAverage, getStarsString } from '../utils/rating'
 
 const props = defineProps({
   product: { type: Object, required: true }

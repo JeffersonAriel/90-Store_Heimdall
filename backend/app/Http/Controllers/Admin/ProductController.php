@@ -335,16 +335,39 @@ class ProductController extends Controller
                 }
             }
 
-            // Processa novas URLs de imagens por cor (upsert: não duplica se URL já existir)
-            if ($request->filled('fotos_url_por_cor')) {
+            // Processa novas URLs de imagens por cor (sincronização: adiciona novas e remove deletadas)
+            if ($request->has('fotos_url_por_cor')) {
                 foreach ($request->input('fotos_url_por_cor') as $cor => $urlText) {
-                    if (empty($urlText)) continue;
-                    // Suporta separação por nova linha e por vírgula
-                    $rawUrls = preg_split('/[\n,]+/', str_replace("\r", "", $urlText));
+                    $corValue = ($cor === 'Geral') ? null : $cor;
+                    
+                    // Parseia as URLs enviadas
+                    $submittedUrls = [];
+                    if (!empty($urlText)) {
+                        $rawUrls = preg_split('/[\n,]+/', str_replace("\r", "", $urlText));
+                        foreach ($rawUrls as $url) {
+                            $url = trim($url);
+                            if (!empty($url)) {
+                                $submittedUrls[] = $url;
+                            }
+                        }
+                    }
+                    
+                    // Busca as fotos atuais desta cor no banco e deleta as que foram removidas
+                    $existingPhotosOfColor = $product->fotos()->where('cor', $corValue)->get();
+                    foreach ($existingPhotosOfColor as $foto) {
+                        if (!in_array($foto->url, $submittedUrls)) {
+                            // Se for arquivo local, remove da storage
+                            if (strpos($foto->url, '/storage/') === 0) {
+                                $path = str_replace('/storage/', '', $foto->url);
+                                \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
+                            }
+                            $foto->delete();
+                        }
+                    }
+                    
+                    // Cria novas fotos ou atualiza as cores se mudaram
                     $hasCover = $product->fotos()->where('is_capa', true)->exists();
-                    foreach ($rawUrls as $index => $url) {
-                        $url = trim($url);
-                        if (empty($url)) continue;
+                    foreach ($submittedUrls as $index => $url) {
                         $existing = $product->fotos()->where('url', $url)->first();
                         if (!$existing) {
                             $isCapa = !$hasCover;
@@ -352,12 +375,11 @@ class ProductController extends Controller
                             $product->fotos()->create([
                                 'url' => $url,
                                 'ordem' => $index + 100,
-                                'cor' => ($cor === 'Geral') ? null : $cor,
+                                'cor' => $corValue,
                                 'is_capa' => $isCapa,
                             ]);
-                        } else if (!empty($cor) && $cor !== 'Geral' && empty($existing->cor)) {
-                            // Atualiza a cor se a foto existia sem cor associada
-                            $existing->update(['cor' => $cor]);
+                        } else if ($existing->cor !== $corValue) {
+                            $existing->update(['cor' => $corValue]);
                         }
                     }
                 }

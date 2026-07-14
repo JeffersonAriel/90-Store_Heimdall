@@ -76,11 +76,47 @@
             <div class="grid-2">
               <div class="form-group">
                 <label class="form-label">Senha</label>
-                <input v-model="form.password" type="password" class="modern-input" placeholder="Mínimo 8 dígitos" required />
+                <div class="password-wrapper" style="position: relative;">
+                  <input 
+                    v-model="form.password" 
+                    :type="showPassword ? 'text' : 'password'" 
+                    class="modern-input" 
+                    placeholder="Mínimo 8 dígitos" 
+                    style="padding-right: 3rem;"
+                    required 
+                  />
+                  <button 
+                    type="button" 
+                    class="password-toggle-btn" 
+                    @click="showPassword = !showPassword"
+                    title="Mostrar/Ocultar Senha"
+                  >
+                    <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
               </div>
               <div class="form-group">
                 <label class="form-label">Confirmar Senha</label>
-                <input v-model="form.password_confirmation" type="password" class="modern-input" placeholder="Repita a senha" required />
+                <div class="password-wrapper" style="position: relative;">
+                  <input 
+                    v-model="form.password_confirmation" 
+                    :type="showPassword ? 'text' : 'password'" 
+                    class="modern-input" 
+                    placeholder="Repita a senha" 
+                    style="padding-right: 3rem;"
+                    required 
+                  />
+                  <button 
+                    type="button" 
+                    class="password-toggle-btn" 
+                    @click="showPassword = !showPassword"
+                    title="Mostrar/Ocultar Senha"
+                  >
+                    <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -162,6 +198,7 @@ import axios from 'axios'
 const store = useStore()
 const router = useRouter()
 const route = useRoute()
+const showPassword = ref(false)
 
 const form = ref({
   nome_completo: '',
@@ -250,8 +287,36 @@ async function fetchAddress() {
 }
 
 async function submit() {
-  loading.value = true
   error.value = ''
+
+  // Validações básicas de frontend em PT-BR
+  if (form.value.password !== form.value.password_confirmation) {
+    error.value = 'As senhas informadas não coincidem.'
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
+
+  if (form.value.password.length < 8) {
+    error.value = 'A senha deve conter no mínimo 8 caracteres.'
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
+
+  const cleanCpf = form.value.cpf.replace(/\D/g, '')
+  if (cleanCpf.length !== 11) {
+    error.value = 'O CPF deve conter exatamente 11 dígitos numéricos.'
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
+
+  const cleanCep = form.value.cep.replace(/\D/g, '')
+  if (cleanCep.length !== 8) {
+    error.value = 'O CEP deve conter exatamente 8 dígitos numéricos.'
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
+
+  loading.value = true
   
   try {
     const payload = { ...form.value }
@@ -268,8 +333,43 @@ async function submit() {
   } catch (err) {
     if (err.response?.status === 422) {
       const msgs = []
-      for (const key in err.response.data.errors) {
-        msgs.push(err.response.data.errors[key][0])
+      const errors = err.response.data.errors
+      
+      const translations = {
+        'nome_completo': 'Nome Completo',
+        'nome_social': 'Nome Social',
+        'cpf': 'CPF',
+        'data_nascimento': 'Data de Nascimento',
+        'email': 'E-mail',
+        'password': 'Senha',
+        'telefone': 'Telefone',
+        'cep': 'CEP',
+        'logradouro': 'Rua / Logradouro',
+        'numero': 'Número',
+        'bairro': 'Bairro',
+        'cidade': 'Cidade',
+        'estado': 'Estado'
+      }
+
+      for (const key in errors) {
+        let msg = errors[key][0]
+        
+        // Traduz mensagens conhecidas do Laravel para PT-BR
+        if (msg.includes('required') || msg.includes('obrigatório')) {
+          msg = `O campo ${translations[key] || key} é obrigatório.`
+        } else if (msg.includes('already been taken') || msg.includes('has already been taken') || msg.includes('cadastrado')) {
+          msg = `Este ${translations[key] || key} já está cadastrado.`
+        } else if (msg.includes('confirmation does not match') || msg.includes('confirmed') || msg.includes('coincidem')) {
+          msg = `A confirmação da senha não coincide.`
+        } else if (msg.includes('must be at least')) {
+          const match = msg.match(/\d+/)
+          const min = match ? match[0] : '8'
+          msg = `O campo ${translations[key] || key} deve ter no mínimo ${min} caracteres.`
+        } else if (msg.includes('must be a valid email') || msg.includes('válido')) {
+          msg = `Informe um endereço de e-mail válido.`
+        }
+        
+        msgs.push(msg)
       }
       error.value = msgs.join(' ')
     } else {
@@ -591,5 +691,41 @@ async function submit() {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--color-gray);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: var(--transition);
+}
+
+.password-toggle-btn:hover {
+  color: var(--color-white);
+}
+
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  font-weight: bold;
+  color: var(--color-white);
+  pointer-events: none;
 }
 </style>

@@ -10,8 +10,14 @@
         </div>
         
         <div class="search-container">
-          <input type="text" placeholder="O que você procura? (ex: chuteira nike)" class="search-input" />
-          <button class="search-btn">🔍</button>
+          <input 
+            type="text" 
+            placeholder="O que você procura? (ex: chuteira nike)" 
+            class="search-input" 
+            v-model="searchQuery"
+            @keyup.enter="handleSearch"
+          />
+          <button class="search-btn" @click="handleSearch">🔍</button>
         </div>
 
         <div class="header-actions">
@@ -54,15 +60,15 @@
                       <div v-for="(grandchild, idx) in child.children" :key="grandchild.id" class="dropdown-column" :class="{ 'has-divider': idx > 0 }">
                         <h4>{{ grandchild.nome }}</h4>
                         <ul class="grandchild-list">
-                          <li v-for="sub in (grandchild.children || []).slice(0, 7)" :key="sub.id" class="grandchild-item">
+                          <li v-for="sub in (isColumnExpanded(grandchild.id) ? (grandchild.children || []) : (grandchild.children || []).slice(0, 7))" :key="sub.id" class="grandchild-item">
                             <RouterLink :to="`/catalogo?categoria=${sub.slug}`" class="grandchild-link-plain">
                               {{ sub.nome }}
                             </RouterLink>
                           </li>
                           <li v-if="(grandchild.children || []).length > 7" class="ver-mais-li">
-                            <RouterLink :to="`/catalogo?categoria=${grandchild.slug}`" class="sub-grandchild-ver-mais">
-                              Ver Mais +
-                            </RouterLink>
+                            <button type="button" @click.prevent="toggleColumn(grandchild.id)" class="sub-grandchild-ver-mais">
+                              {{ isColumnExpanded(grandchild.id) ? 'Ver Menos -' : 'Ver Mais +' }}
+                            </button>
                           </li>
                         </ul>
                       </div>
@@ -190,15 +196,31 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
 import axios from 'axios'
 import CartDrawer from './components/CartDrawer.vue'
 import FavoritesDrawer from './components/FavoritesDrawer.vue'
 import { useStore } from './store/main'
 
+const router = useRouter()
 const store = useStore()
 const cartCount = computed(() => store.cart.reduce((total, item) => total + item.quantidade, 0))
 const favoriteCount = computed(() => store.favorites?.length || 0)
+
+const searchQuery = ref('')
+const expandedColumns = ref(new Set())
+
+function toggleColumn(columnId) {
+  if (expandedColumns.value.has(columnId)) {
+    expandedColumns.value.delete(columnId)
+  } else {
+    expandedColumns.value.add(columnId)
+  }
+}
+
+function isColumnExpanded(columnId) {
+  return expandedColumns.value.has(columnId)
+}
 
 const isCartOpen = ref(false)
 const isFavoritesOpen = ref(false)
@@ -242,6 +264,15 @@ function getPromoBanner(slug) {
     image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&auto=format&fit=crop',
     title: 'Coleção Alta Performance',
     buttonText: 'Aproveite'
+  }
+}
+
+function handleSearch() {
+  if (searchQuery.value.trim()) {
+    router.push({
+      path: '/catalogo',
+      query: { search: searchQuery.value.trim() }
+    })
   }
 }
 </script>
@@ -533,6 +564,10 @@ function getPromoBanner(slug) {
   transition: all 0.2s ease;
   display: inline-block;
   padding: 2px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 .sub-grandchild-ver-mais:hover {

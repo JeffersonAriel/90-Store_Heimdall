@@ -32,6 +32,11 @@
             </li>
             <li>
               <label class="checkbox-label">
+                <input type="checkbox" v-model="filters.categories" value="infantil" @change="applyFilters"> Infantil
+              </label>
+            </li>
+            <li>
+              <label class="checkbox-label">
                 <input type="checkbox" v-model="filters.categories" value="calcados" @change="applyFilters"> Calçados
               </label>
             </li>
@@ -66,6 +71,7 @@
         <!-- Toolbar (Sort) -->
         <div class="catalog-toolbar">
           <div class="active-filters">
+             <span v-if="filters.search" class="badge badge-dark">Busca: "{{ filters.search }}"</span>
              <span v-if="filters.categories.length" class="badge badge-dark">Categorias: {{ filters.categories.length }}</span>
              <span v-if="filters.brands.length" class="badge badge-dark">Marcas: {{ filters.brands.length }}</span>
           </div>
@@ -93,20 +99,18 @@
 
         <div v-else class="grid grid-cols-3 gap-6">
           <ProductCard 
-            v-for="product in products" 
+            v-for="product in products.slice(0, visibleCount)" 
             :key="product.id" 
             :product="product" 
             @quick-view="openQuickView"
           />
         </div>
 
-        <!-- Paginação -->
-        <div v-if="products.length > 0" class="pagination mt-8">
-          <button class="page-btn">Anterior</button>
-          <button class="page-btn active">1</button>
-          <button class="page-btn">2</button>
-          <button class="page-btn">3</button>
-          <button class="page-btn">Próxima</button>
+        <!-- Botão Ver Mais -->
+        <div v-if="products.length > visibleCount" class="load-more-container mt-12 text-center" style="display: flex; justify-content: center; width: 100%;">
+          <button class="btn btn-primary" style="padding: var(--spacing-3) var(--spacing-8); font-family: var(--font-title); font-size: 1.1rem;" @click="visibleCount += 12">
+            Ver Mais
+          </button>
         </div>
       </div>
     </div>
@@ -135,13 +139,15 @@ const products = ref([])
 const totalProducts = ref(0)
 const loading = ref(true)
 const quickViewProduct = ref(null)
+const visibleCount = ref(12)
 
 const filters = reactive({
   categories: [],
   brands: [],
   minPrice: '',
   maxPrice: '',
-  sort: 'relevance'
+  sort: 'relevance',
+  search: ''
 })
 
 useHead({
@@ -162,6 +168,9 @@ onMounted(() => {
   if (route.query.marca) {
     filters.brands.push(route.query.marca.toLowerCase())
   }
+  if (route.query.search) {
+    filters.search = route.query.search
+  }
   fetchProducts()
 })
 
@@ -169,6 +178,7 @@ onMounted(() => {
 watch(() => route.query, () => {
   filters.categories = []
   filters.brands = []
+  filters.search = route.query.search || ''
   if (route.query.categoria) filters.categories.push(route.query.categoria)
   if (route.query.genero) filters.categories.push(route.query.genero)
   if (route.query.marca) filters.brands.push(route.query.marca.toLowerCase())
@@ -177,11 +187,13 @@ watch(() => route.query, () => {
 
 async function fetchProducts() {
   loading.value = true
+  visibleCount.value = 12
   try {
     // Montando a querystring baseada nos filtros
     let qs = '?'
     if (filters.categories.length) qs += `categoria=${filters.categories[0]}&`
     if (filters.brands.length) qs += `marca=${filters.brands[0]}&`
+    if (filters.search) qs += `search=${encodeURIComponent(filters.search)}&`
     if (filters.sort) qs += `sort=${filters.sort}`
     
     // Na vida real passaríamos os arrays de marcas/categorias pro endpoint
@@ -207,6 +219,8 @@ function clearFilters() {
   filters.minPrice = ''
   filters.maxPrice = ''
   filters.sort = 'relevance'
+  filters.search = ''
+  visibleCount.value = 12
   router.push('/catalogo')
   fetchProducts()
 }
