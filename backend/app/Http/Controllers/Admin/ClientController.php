@@ -46,6 +46,24 @@ class ClientController extends Controller
         ]);
     }
 
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'nome_completo' => 'required|string|max:255',
+            'cpf' => 'required|string|max:14',
+            'email' => 'required|email|max:255|unique:clientes,email',
+            'telefone' => 'nullable|string|max:20',
+            'whatsapp' => 'nullable|string|max:20',
+        ]);
+
+        $data['password'] = bcrypt(\Illuminate\Support\Str::random(12));
+        $data['ativo'] = true;
+
+        Cliente::create($data);
+
+        return back()->with('success', 'Cliente cadastrado com sucesso!');
+    }
+
     public function update(Request $request, Cliente $client)
     {
         $data = $request->validate([

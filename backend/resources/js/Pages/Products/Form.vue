@@ -168,9 +168,16 @@
                 </div>
               </div>
 
-              <div class="mt-6 flex items-center">
-                <input v-model="form.ativo" type="checkbox" id="ativo" class="w-5 h-5 rounded" style="accent-color: var(--color-brand)" />
-                <label for="ativo" class="ml-2 form-label mb-0 font-bold cursor-pointer">Este produto está ativo e visível na vitrine</label>
+              <div class="mt-6 flex flex-wrap gap-6">
+                <div class="flex items-center">
+                  <input v-model="form.ativo" type="checkbox" id="ativo" class="w-5 h-5 rounded" style="accent-color: var(--color-brand)" />
+                  <label for="ativo" class="ml-2 form-label mb-0 font-bold cursor-pointer">Este produto está ativo e visível na vitrine</label>
+                </div>
+                
+                <div class="flex items-center">
+                  <input v-model="form.esgotado" type="checkbox" id="esgotado" class="w-5 h-5 rounded" style="accent-color: var(--color-brand)" />
+                  <label for="esgotado" class="ml-2 form-label mb-0 font-bold cursor-pointer" style="color: var(--color-danger)">Marcar como ESGOTADO (Ativa "Me Avise")</label>
+                </div>
               </div>
             </div>
           </div>
@@ -263,9 +270,18 @@
                       📸 Fotos da Cor: <span style="color: var(--color-brand)">{{ cor }}</span>
                     </label>
                     <div v-if="isEdit && existingPhotosByColor(cor).length > 0" class="flex flex-wrap gap-2 mt-2 mb-4">
-                      <div v-for="foto in existingPhotosByColor(cor)" :key="foto.id" class="relative group" style="width: 64px; height: 64px; flex-shrink: 0;">
+                      <div 
+                        v-for="(foto, idx) in existingPhotosByColor(cor)" 
+                        :key="foto.id" 
+                        class="relative group" 
+                        style="width: 64px; height: 64px; flex-shrink: 0; cursor: move;"
+                        draggable="true"
+                        @dragstart="onDragStart($event, idx, cor)"
+                        @dragover.prevent
+                        @drop="onDrop($event, idx, cor)"
+                      >
                         <img :src="foto.url" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 1px solid var(--color-border);" :class="{ 'opacity-50 grayscale': form.deleted_photos.includes(foto.id) }" />
-                        <button type="button" @click="toggleDeletePhoto(foto.id)" class="absolute -top-2 -right-2 bg-white rounded-full text-red-500 shadow hover:text-red-700 flex items-center justify-center font-bold" style="width: 24px; height: 24px;">
+                        <button type="button" @click="toggleDeletePhoto(foto.id)" class="absolute -top-2 -right-2 bg-white rounded-full text-red-500 shadow hover:text-red-700 flex items-center justify-center font-bold" style="width: 24px; height: 24px; cursor: pointer;">
                           {{ form.deleted_photos.includes(foto.id) ? '↺' : '×' }}
                         </button>
                       </div>
@@ -290,10 +306,19 @@
                     <label class="form-label font-bold" style="color: var(--color-text-primary)">
                       📸 Fotos Gerais do Produto
                     </label>
-                    <div v-if="isEdit && existingPhotosByColor(null).length > 0" class="flex flex-wrap gap-2 mt-2 mb-4">
-                      <div v-for="foto in existingPhotosByColor(null)" :key="foto.id" class="relative group" style="width: 64px; height: 64px; flex-shrink: 0;">
+                    <div v-if="isEdit && existingPhotosByColor('Geral').length > 0" class="flex flex-wrap gap-2 mt-2 mb-4">
+                      <div 
+                        v-for="(foto, idx) in existingPhotosByColor('Geral')" 
+                        :key="foto.id" 
+                        class="relative group" 
+                        style="width: 64px; height: 64px; flex-shrink: 0; cursor: move;"
+                        draggable="true"
+                        @dragstart="onDragStart($event, idx, 'Geral')"
+                        @dragover.prevent
+                        @drop="onDrop($event, idx, 'Geral')"
+                      >
                         <img :src="foto.url" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px; border: 1px solid var(--color-border);" :class="{ 'opacity-50 grayscale': form.deleted_photos.includes(foto.id) }" />
-                        <button type="button" @click="toggleDeletePhoto(foto.id)" class="absolute -top-2 -right-2 bg-white rounded-full text-red-500 shadow hover:text-red-700 flex items-center justify-center font-bold" style="width: 24px; height: 24px;">
+                        <button type="button" @click="toggleDeletePhoto(foto.id)" class="absolute -top-2 -right-2 bg-white rounded-full text-red-500 shadow hover:text-red-700 flex items-center justify-center font-bold" style="width: 24px; height: 24px; cursor: pointer;">
                           {{ form.deleted_photos.includes(foto.id) ? '↺' : '×' }}
                         </button>
                       </div>
@@ -441,6 +466,7 @@ const form = useForm({
   retro_year: props.product?.retro_year || '',
   estoque_critico: props.product?.estoque_critico || 2,
   ativo: props.product ? props.product.ativo : true,
+  esgotado: props.product ? !!props.product.esgotado : false,
   is_destaque: props.product?.is_destaque || false,
   peso_kg: props.product?.peso_kg || 0,
   variacoes: props.product?.variacoes?.length ? [...props.product.variacoes] : [
@@ -464,19 +490,58 @@ const uniqueColors = computed(() => {
   return [...new Set(cores)];
 });
 
+// Fotos locais reativas para suportar reordenação arrastável (drag & drop)
+const localPhotos = ref([]);
+watch(() => props.product?.fotos, (newPhotos) => {
+  if (newPhotos) {
+    localPhotos.value = [...newPhotos];
+  }
+}, { immediate: true });
+
 // Fotos existentes por cor
 function existingPhotosByColor(cor) {
-  if (!props.product || !props.product.fotos) return [];
-  return props.product.fotos.filter(f => {
-    if (!cor) return !f.cor || f.cor === 'Geral';
+  return localPhotos.value.filter(f => {
+    if (!cor || cor === 'Geral') return !f.cor || f.cor === 'Geral';
     return f.cor === cor;
   });
+}
+
+// Lógica de Drag & Drop para ordenar imagens
+let draggedIndex = null;
+let draggedColor = null;
+
+function onDragStart(event, index, cor) {
+  draggedIndex = index;
+  draggedColor = cor;
+  event.dataTransfer.effectAllowed = 'move';
+}
+
+function onDrop(event, targetIndex, cor) {
+  if (draggedColor !== cor) return;
+  
+  const currentPhotos = existingPhotosByColor(cor);
+  if (!currentPhotos || currentPhotos.length === 0) return;
+  
+  const item = currentPhotos[draggedIndex];
+  currentPhotos.splice(draggedIndex, 1);
+  currentPhotos.splice(targetIndex, 0, item);
+  
+  // Atualiza localPhotos mantendo as fotos de outras cores
+  const otherPhotos = localPhotos.value.filter(f => {
+    const isCurrentColor = !cor || cor === 'Geral' ? (!f.cor || f.cor === 'Geral') : f.cor === cor;
+    return !isCurrentColor;
+  });
+  
+  localPhotos.value = [...otherPhotos, ...currentPhotos];
+  
+  // Atualiza a caixa de texto de URLs externas com a nova ordem das imagens
+  form.fotos_url_por_cor[cor] = currentPhotos.map(f => f.url).join('\n');
 }
 
 // Toggle excluir foto
 function toggleDeletePhoto(fotoId) {
   const index = form.deleted_photos.indexOf(fotoId);
-  const foto = props.product?.fotos?.find(f => f.id === fotoId);
+  const foto = localPhotos.value.find(f => f.id === fotoId);
   if (!foto) return;
 
   const cor = foto.cor || 'Geral';

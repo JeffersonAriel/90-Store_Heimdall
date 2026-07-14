@@ -77,6 +77,7 @@ class ProductController extends Controller
             'tem_desconto' => 'boolean',
             'preco_desconto' => 'nullable|numeric|min:0',
             'ativo' => 'boolean',
+            'esgotado' => 'boolean',
             'is_destaque' => 'boolean',
             'is_retro' => 'boolean',
             'retro_year' => 'nullable|integer',
@@ -208,6 +209,7 @@ class ProductController extends Controller
             'tem_desconto' => 'boolean',
             'preco_desconto' => 'nullable|numeric|min:0',
             'ativo' => 'boolean',
+            'esgotado' => 'boolean',
             'is_destaque' => 'boolean',
             'is_retro' => 'boolean',
             'retro_year' => 'nullable|integer',
@@ -378,8 +380,11 @@ class ProductController extends Controller
                                 'cor' => $corValue,
                                 'is_capa' => $isCapa,
                             ]);
-                        } else if ($existing->cor !== $corValue) {
-                            $existing->update(['cor' => $corValue]);
+                        } else {
+                            $existing->update([
+                                'cor' => $corValue,
+                                'ordem' => $index + 100
+                            ]);
                         }
                     }
                 }

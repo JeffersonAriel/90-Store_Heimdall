@@ -84,7 +84,7 @@
           </div>
 
           <!-- Seletor de Variações -->
-          <div class="variations-section mt-6" v-if="availableColors.length > 0 || availableSizes.length > 0">
+          <div class="variations-section mt-6" v-if="!product.esgotado && (availableColors.length > 0 || availableSizes.length > 0)">
             <div class="variation-group" v-if="availableColors.length > 0">
               <label>Cor: <strong>{{ selectedColor || 'Selecione' }}</strong></label>
               <div class="color-options">
@@ -121,12 +121,12 @@
             </div>
           </div>
 
-          <div v-if="stockWarning" class="stock-warning mt-4">
+          <div v-if="!product.esgotado && stockWarning" class="stock-warning mt-4">
             ⚠️ Últimas unidades em estoque!
           </div>
 
-          <!-- Ações -->
-          <div class="action-section mt-6">
+          <!-- Ações padrão -->
+          <div class="action-section mt-6" v-if="!product.esgotado">
             <div class="qty-selector">
               <button @click="quantity > 1 ? quantity-- : 1">-</button>
               <input type="number" v-model="quantity" min="1" readonly />
@@ -135,6 +135,21 @@
             <button class="btn btn-primary add-to-cart-btn" @click="addToCart">
               🛒 ADICIONAR AO CARRINHO
             </button>
+          </div>
+
+          <!-- Form Me Avise se Esgotado -->
+          <div class="notify-me-section mt-6 p-6 rounded-lg" style="background: var(--color-black-light); border: 1px solid var(--color-black-lighter);" v-else>
+            <h4 class="font-bold text-lg mb-2 text-white" style="font-family: var(--font-title); letter-spacing: 1px;">PRODUTO ESGOTADO</h4>
+            <p class="text-gray text-sm mb-4">Deixe seu nome e e-mail abaixo. Avisaremos você assim que este item estiver disponível em estoque!</p>
+            
+            <form @submit.prevent="submitNotifyMe" class="flex flex-col gap-3">
+              <input type="text" v-model="notifyForm.nome" placeholder="Seu nome completo" class="input-field" required style="width: 100%;" />
+              <input type="email" v-model="notifyForm.email" placeholder="Seu melhor e-mail" class="input-field" required style="width: 100%;" />
+              <button type="submit" class="btn btn-primary" :disabled="notifyLoading" style="width: 100%;">
+                {{ notifyLoading ? 'Enviando...' : 'ME AVISE QUANDO CHEGAR' }}
+              </button>
+            </form>
+            <p v-if="notifySuccess" class="mt-3 text-sm font-bold" style="color: var(--color-red);">✓ {{ notifySuccess }}</p>
           </div>
 
           <!-- Frete -->
@@ -205,7 +220,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useHead } from '@vueuse/head'
 import axios from 'axios'
@@ -232,7 +247,28 @@ const mainImage = ref('')
 const selectedColor = ref('')
 const selectedSize = ref('')
 const quantity = ref(1)
-const stockWarning = ref(true) // Simulando alerta de estoque crítico
+const stockWarning = ref(true)
+
+// Formulário "Me Avise Quando Chegar"
+const notifyForm = reactive({ nome: '', email: '' })
+const notifyLoading = ref(false)
+const notifySuccess = ref('')
+
+async function submitNotifyMe() {
+  if (!product.value) return
+  notifyLoading.value = true
+  notifySuccess.value = ''
+  try {
+    const res = await axios.post(`/api/products/${product.value.id}/notify`, notifyForm)
+    notifySuccess.value = res.data.message || 'Solicitação enviada com sucesso!'
+    notifyForm.nome = ''
+    notifyForm.email = ''
+  } catch (err) {
+    alert(err.response?.data?.message || 'Erro ao enviar solicitação.')
+  } finally {
+    notifyLoading.value = false
+  }
+}
 
 const allPhotos = computed(() => {
   if (!product.value) return [];

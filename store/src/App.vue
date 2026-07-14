@@ -164,8 +164,13 @@
             <span class="badge badge-dark">VISA</span>
             <span class="badge badge-dark">MASTERCARD</span>
           </div>
-          <div class="security-badges mt-4">
-            <span class="badge badge-dark">🔒 SITE SEGURO</span>
+          <div class="security-badges mt-4" style="display: flex; gap: var(--spacing-3); align-items: center;">
+            <a href="https://www.sitelock.com/free-website-scan/?domain=www.90store.com.br" target="_blank" rel="noopener noreferrer" class="security-seal" title="SiteLock Security">
+              <img src="https://shield.sitelock.com/shield/www.90store.com.br" alt="SiteLock Security" style="height: 38px;" />
+            </a>
+            <a href="#" class="security-seal" @click.prevent title="Ebit Excelente">
+              <img src="https://imgs.ebit.com.br/ebit-reputacao/selo_ebit.png" alt="Ebit Excelente" style="height: 38px; background: white; padding: 2px; border-radius: 4px;" />
+            </a>
           </div>
         </div>
       </div>

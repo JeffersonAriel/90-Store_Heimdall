@@ -4,11 +4,14 @@
       <span>Operações / Pedidos</span>
     </template>
 
-    <div class="page-header mb-6">
+    <div class="page-header mb-6 flex justify-between items-center flex-wrap gap-4">
       <div>
         <h1 class="page-title">📋 Gestão de Pedidos</h1>
         <p class="text-secondary mt-1">Gerencie os pedidos recebidos, avance os status sequencialmente e confirme pagamentos.</p>
       </div>
+      <Link :href="route('admin.orders.create')" class="btn btn-primary">
+        + Novo Pedido Manual
+      </Link>
     </div>
 
     <!-- Filtros de Busca e Status -->

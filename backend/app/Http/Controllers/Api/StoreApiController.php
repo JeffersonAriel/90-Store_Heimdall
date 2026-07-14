@@ -192,4 +192,31 @@ class StoreApiController extends Controller
             'opcoes' => $options
         ]);
     }
+
+    /**
+     * Registra solicitação de "Me Avise Quando Chegar" para um produto esgotado
+     */
+    public function registerNotificationRequest(Request $request, $id)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+        ]);
+
+        $product = Produto::findOrFail($id);
+
+        \Illuminate\Support\Facades\DB::table('solicitacoes_avise_me')->insert([
+            'produto_id' => $product->id,
+            'nome' => $request->nome,
+            'email' => $request->email,
+            'status' => 'pendente',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sua solicitação foi registrada com sucesso. Avisaremos você assim que o estoque for reposto!'
+        ]);
+    }
 }

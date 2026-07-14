@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\CustomerOrderController;
 Route::get('/store-settings', [StoreSettingsController::class, 'index']);
 Route::get('/catalog', [StoreApiController::class, 'getCatalog']);
 Route::get('/products/{slug}', [StoreApiController::class, 'getProductDetail']);
+Route::post('/products/{id}/notify', [StoreApiController::class, 'registerNotificationRequest']);
 Route::get('/cep/{cep}', [StoreApiController::class, 'lookupCep']);
 Route::post('/shipping/quote', [StoreApiController::class, 'quoteShipping']);
 

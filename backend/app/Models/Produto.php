@@ -30,6 +30,7 @@ class Produto extends Model
         'retro_year',
         'estoque_critico',
         'ativo',
+        'esgotado',
         'is_destaque',
         'peso_kg',
         'dimensoes_json',

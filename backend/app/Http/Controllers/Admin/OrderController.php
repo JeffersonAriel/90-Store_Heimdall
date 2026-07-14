@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Pedido;
 use App\Models\Cliente;
+use App\Models\Produto;
+use App\Models\EnderecoCliente;
+use App\Models\MovimentacaoEstoque;
 use App\Services\OrderStatusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,10 +17,12 @@ use Inertia\Inertia;
 class OrderController extends Controller
 {
     protected $statusService;
+    protected $financialService;
 
-    public function __construct(OrderStatusService $statusService)
+    public function __construct(OrderStatusService $statusService, \App\Services\FinancialService $financialService)
     {
         $this->statusService = $statusService;
+        $this->financialService = $financialService;
     }
 
     public function index(Request $request)
@@ -44,6 +49,160 @@ class OrderController extends Controller
             'orders' => $orders,
             'filters' => $request->only('search', 'status')
         ]);
+    }
+
+    public function create()
+    {
+        $clients = Cliente::where('ativo', true)->orderBy('nome_completo')->get();
+        // Carrega produtos ativos com variações ativas
+        $products = Produto::where('ativo', true)
+            ->with(['variacoes' => function ($q) {
+                $q->where('ativo', true);
+            }, 'fotoCapa'])
+            ->get();
+
+        return Inertia::render('Orders/Create', [
+            'clients' => $clients,
+            'products' => $products
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            // Cliente existente ou novo
+            'cliente_id' => 'nullable|exists:clientes,id',
+            'novo_cliente' => 'nullable|array',
+            'novo_cliente.nome_completo' => 'required_if:cliente_id,null|string|max:255',
+            'novo_cliente.cpf' => 'required_if:cliente_id,null|string|max:14',
+            'novo_cliente.email' => 'required_if:cliente_id,null|email|max:255|unique:clientes,email',
+            'novo_cliente.telefone' => 'nullable|string|max:20',
+            'novo_cliente.whatsapp' => 'nullable|string|max:20',
+
+            // Endereço
+            'endereco' => 'required|array',
+            'endereco.cep' => 'required|string|max:10',
+            'endereco.logradouro' => 'required|string|max:255',
+            'endereco.numero' => 'required|string|max:20',
+            'endereco.complemento' => 'nullable|string|max:255',
+            'endereco.bairro' => 'required|string|max:100',
+            'endereco.cidade' => 'required|string|max:100',
+            'endereco.estado' => 'required|string|max:2',
+            'endereco.apelido' => 'nullable|string|max:60',
+
+            // Itens
+            'itens' => 'required|array|min:1',
+            'itens.*.variacao_id' => 'required|exists:variacoes_produto,id',
+            'itens.*.quantidade' => 'required|integer|min:1',
+            'itens.*.preco_venda_snapshot' => 'required|numeric|min:0',
+
+            // Outros
+            'valor_frete' => 'required|numeric|min:0',
+            'gateway_pagamento' => 'required|string',
+            'status' => 'required|in:aguardando_pagamento,em_separacao,em_envio,enviado,entregue,cancelado',
+        ]);
+
+        $order = DB::transaction(function () use ($validated) {
+            // 1. Resolve Cliente
+            $clienteId = $validated['cliente_id'];
+            if (!$clienteId) {
+                $clientData = $validated['novo_cliente'];
+                $clientData['password'] = bcrypt(\Illuminate\Support\Str::random(12));
+                $clientData['ativo'] = true;
+                $newClient = Cliente::create($clientData);
+                $clienteId = $newClient->id;
+            }
+
+            // 2. Resolve Endereço
+            $addrData = $validated['endereco'];
+            $addrData['cliente_id'] = $clienteId;
+            $addrData['apelido'] = $addrData['apelido'] ?? 'Manual';
+            $addrData['is_principal'] = false;
+            
+            $endereco = EnderecoCliente::create($addrData);
+
+            // 3. Calcula Totais
+            $subtotal = 0;
+            $itemsToCreate = [];
+
+            foreach ($validated['itens'] as $itemData) {
+                // Carrega a variação e o produto
+                $variation = \App\Models\VariacaoProduto::with('produto')->findOrFail($itemData['variacao_id']);
+                $subtotal += $itemData['preco_venda_snapshot'] * $itemData['quantidade'];
+
+                // Valida/Decrementa estoque
+                if ($variation->tipo_estoque === 'proprio') {
+                    $estoqueAntes = $variation->estoque_quantidade;
+                    $estoqueDepois = max(0, $estoqueAntes - $itemData['quantidade']);
+                    $variation->update(['estoque_quantidade' => $estoqueDepois]);
+
+                    // Registra log de movimentação de estoque
+                    MovimentacaoEstoque::create([
+                        'variacao_id' => $variation->id,
+                        'quantidade' => $itemData['quantidade'],
+                        'estoque_antes' => $estoqueAntes,
+                        'estoque_depois' => $estoqueDepois,
+                        'tipo' => 'baixa_confirmada',
+                        'motivo' => 'Pedido manual criado pelo Administrador',
+                    ]);
+                }
+
+                $itemsToCreate[] = [
+                    'produto_id' => $variation->produto_id,
+                    'variacao_id' => $variation->id,
+                    'quantidade' => $itemData['quantidade'],
+                    'nome_snapshot' => $variation->produto->nome,
+                    'sku_snapshot' => $variation->sku,
+                    'preco_custo_snapshot' => $variation->produto->preco_custo,
+                    'preco_venda_snapshot' => $itemData['preco_venda_snapshot'],
+                    'tipo_estoque_snapshot' => $variation->tipo_estoque,
+                    'subtotal' => $itemData['preco_venda_snapshot'] * $itemData['quantidade'],
+                ];
+            }
+
+            $total = $subtotal + $validated['valor_frete'];
+
+            // 4. Cria o Pedido
+            $order = Pedido::create([
+                'cliente_id' => $clienteId,
+                'endereco_id' => $endereco->id,
+                'subtotal' => $subtotal,
+                'valor_frete' => $validated['valor_frete'],
+                'total' => $total,
+                'status' => $validated['status'],
+                'observacoes' => 'Pedido criado manualmente pelo painel administrador.',
+            ]);
+
+            // 5. Associa Itens ao Pedido
+            foreach ($itemsToCreate as $item) {
+                $order->itens()->create($item);
+            }
+
+            // 6. Registra o Pagamento
+            $order->pagamentos()->create([
+                'gateway' => $validated['gateway_pagamento'],
+                'metodo' => $validated['gateway_pagamento'] === 'pix_manual' ? 'pix' : 'outro',
+                'status' => $validated['status'] === 'aguardando_pagamento' ? 'pendente' : 'aprovado',
+                'valor' => $total,
+                'paid_at' => $validated['status'] === 'aguardando_pagamento' ? null : now(),
+            ]);
+
+            // 7. Registra histórico de status
+            $order->historicoStatus()->create([
+                'status_novo' => $validated['status'],
+                'funcionario_id' => Auth::guard('admin')->id(),
+                'observacao' => 'Criação manual do pedido via painel de administração',
+            ]);
+
+            // 8. Registra Lançamento Financeiro se já pago
+            if ($validated['status'] !== 'aguardando_pagamento' && $validated['status'] !== 'cancelado') {
+                $this->financialService->registerSaleEntry($order->id, $total, $validated['gateway_pagamento']);
+            }
+
+            return $order;
+        });
+
+        return redirect()->route('admin.orders.index')->with('success', 'Pedido manual criado com sucesso!');
     }
 
     public function show(int $id)

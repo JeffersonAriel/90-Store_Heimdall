@@ -41,7 +41,7 @@
           </div>
 
           <!-- Variações -->
-          <div class="variations mt-6" v-if="sizesToShow.length > 0">
+          <div class="variations mt-6" v-if="!product.esgotado && sizesToShow.length > 0">
             <div class="variation-group">
               <label>Tamanho:</label>
               <div class="variation-options">
@@ -62,10 +62,28 @@
             </div>
           </div>
 
-          <!-- Ações -->
-          <div class="actions mt-6">
+          <!-- Ações padrão -->
+          <div class="actions mt-6" v-if="!product.esgotado">
             <button class="btn btn-primary w-full" @click="addToCart">ADICIONAR AO CARRINHO</button>
             <RouterLink :to="`/produto/${product.slug}`" class="btn btn-outline w-full mt-2">
+              Ver Detalhes Completos
+            </RouterLink>
+          </div>
+
+          <!-- Form Me Avise se Esgotado -->
+          <div class="notify-me-section mt-6 p-4 rounded-lg" style="background: var(--color-black-light); border: 1px solid var(--color-black-lighter);" v-else>
+            <h4 class="font-bold text-md mb-1 text-white" style="font-family: var(--font-title); letter-spacing: 1px;">PRODUTO ESGOTADO</h4>
+            <p class="text-gray text-xs mb-3">Deixe seu nome e e-mail. Avisaremos você assim que o estoque for reposto!</p>
+            
+            <form @submit.prevent="submitNotifyMe" class="flex flex-col gap-2">
+              <input type="text" v-model="notifyForm.nome" placeholder="Seu nome" class="input-field text-sm py-2" required style="width: 100%;" />
+              <input type="email" v-model="notifyForm.email" placeholder="Seu e-mail" class="input-field text-sm py-2" required style="width: 100%;" />
+              <button type="submit" class="btn btn-primary text-sm py-2 w-full" :disabled="notifyLoading">
+                {{ notifyLoading ? 'Enviando...' : 'ME AVISE QUANDO CHEGAR' }}
+              </button>
+            </form>
+            <p v-if="notifySuccess" class="mt-2 text-xs font-bold" style="color: var(--color-red);">✓ {{ notifySuccess }}</p>
+            <RouterLink :to="`/produto/${product.slug}`" class="btn btn-outline text-sm py-2 w-full mt-3">
               Ver Detalhes Completos
             </RouterLink>
           </div>
@@ -81,8 +99,9 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import axios from 'axios'
 import { getRatingCount, getRatingAverage, getStarsString } from '../utils/rating'
 import { useStore } from '../store/main'
 
@@ -93,6 +112,26 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 const store = useStore()
+
+const notifyForm = reactive({ nome: '', email: '' })
+const notifyLoading = ref(false)
+const notifySuccess = ref('')
+
+async function submitNotifyMe() {
+  if (!props.product) return
+  notifyLoading.value = true
+  notifySuccess.value = ''
+  try {
+    const res = await axios.post(`/api/products/${props.product.id}/notify`, notifyForm)
+    notifySuccess.value = res.data.message || 'Solicitação enviada com sucesso!'
+    notifyForm.nome = ''
+    notifyForm.email = ''
+  } catch (err) {
+    alert(err.response?.data?.message || 'Erro ao enviar solicitação.')
+  } finally {
+    notifyLoading.value = false
+  }
+}
 
 const availableSizes = computed(() => {
   if (!props.product || !props.product.variacoes) return [];

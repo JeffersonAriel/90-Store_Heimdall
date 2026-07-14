@@ -263,8 +263,19 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ]
   },
+  "resources/js/Pages/Orders/Create.vue": {
+    "file": "assets/Create-p9-RYLY4.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Orders/Create.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-EzIoi6P2.js",
+      "_AdminLayout-CgrLKy3a.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ]
+  },
   "resources/js/Pages/Orders/Index.vue": {
-    "file": "assets/Index-EzVo3psJ.js",
+    "file": "assets/Index-DUIWJ-ue.js",
     "name": "Index",
     "src": "resources/js/Pages/Orders/Index.vue",
     "isDynamicEntry": true,
@@ -274,7 +285,7 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/Index-B4_6ssxs.css"
+      "assets/Index-BZ5co-Ao.css"
     ]
   },
   "resources/js/Pages/Orders/Show.vue": {
@@ -292,7 +303,7 @@
     ]
   },
   "resources/js/Pages/Products/Form.vue": {
-    "file": "assets/Form-DEP9V60g.js",
+    "file": "assets/Form-B8VRsukT.js",
     "name": "Form",
     "src": "resources/js/Pages/Products/Form.vue",
     "isDynamicEntry": true,
@@ -302,7 +313,7 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/Form-By_95uiP.css"
+      "assets/Form-DZbRIDsF.css"
     ]
   },
   "resources/js/Pages/Products/Index.vue": {
@@ -412,7 +423,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Ds-M77Vu.js",
+    "file": "assets/app-DQenSKBW.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -438,6 +449,7 @@
       "resources/js/Pages/Marketing/Coupons.vue",
       "resources/js/Pages/Marketing/Points.vue",
       "resources/js/Pages/Marketing/Referrals.vue",
+      "resources/js/Pages/Orders/Create.vue",
       "resources/js/Pages/Orders/Index.vue",
       "resources/js/Pages/Orders/Show.vue",
       "resources/js/Pages/Products/Form.vue",

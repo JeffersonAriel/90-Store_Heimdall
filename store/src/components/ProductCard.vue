@@ -2,8 +2,9 @@
   <div class="product-card">
     <div class="card-header">
       <div class="badges">
-        <span v-if="product.is_destaque" class="badge badge-red">Lançamento</span>
-        <span v-if="product.tem_desconto" class="badge badge-dark">Oferta</span>
+        <span v-if="product.esgotado" class="badge badge-gray" style="background-color: #1a1a1a; border: 1px solid #333; color: #999;">Esgotado</span>
+        <span v-else-if="product.is_destaque" class="badge badge-red">Lançamento</span>
+        <span v-if="product.tem_desconto && !product.esgotado" class="badge badge-dark">Oferta</span>
       </div>
       <button class="favorite-btn" title="Favoritar" @click.prevent="toggleFavorite" :class="{ 'is-favorited': isFavorite }">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" :fill="isFavorite ? 'var(--color-red)' : 'none'" :stroke="isFavorite ? 'var(--color-red)' : 'currentColor'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -44,7 +45,7 @@
       </div>
       
       <button class="btn btn-primary add-cart-btn" @click.prevent="$emit('quick-view', product)">
-        Comprar
+        {{ product.esgotado ? 'Me Avise' : 'Comprar' }}
       </button>
     </div>
   </div>
