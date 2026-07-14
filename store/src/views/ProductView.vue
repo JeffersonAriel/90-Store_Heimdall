@@ -103,7 +103,7 @@
             <div class="variation-group mt-4" v-if="sizesToShow.length > 0">
               <div class="size-header">
                 <label>Tamanho: <strong>{{ selectedSize || 'Selecione' }}</strong></label>
-                <button class="size-guide-btn">Tabela de Medidas</button>
+                <a href="https://acrobat.adobe.com/id/urn:aaid:sc:VA6C2:34be0fea-0095-4468-8fab-05d9e2f474e9" target="_blank" rel="noopener noreferrer" class="size-guide-btn">Tabela de Medidas</a>
               </div>
               <div class="size-options">
                 <button 
