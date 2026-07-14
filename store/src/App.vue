@@ -164,12 +164,32 @@
             <span class="badge badge-dark">VISA</span>
             <span class="badge badge-dark">MASTERCARD</span>
           </div>
-          <div class="security-badges mt-4" style="display: flex; gap: var(--spacing-3); align-items: center;">
-            <a href="https://www.sitelock.com/free-website-scan/?domain=www.90store.com.br" target="_blank" rel="noopener noreferrer" class="security-seal" title="SiteLock Security">
-              <img src="https://shield.sitelock.com/shield/www.90store.com.br" alt="SiteLock Security" style="height: 38px;" />
+          <div class="security-badges mt-4" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <!-- SiteLock Seal -->
+            <a href="https://www.sitelock.com/free-website-scan/?domain=www.90store.com.br" target="_blank" rel="noopener noreferrer" title="SiteLock Secure" style="text-decoration: none;">
+              <div style="background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; gap: 5px; min-width: 90px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6L12 2z" fill="#1a7fd4"/>
+                  <path d="M10 14l-3-3 1.4-1.4L10 11.2l5.6-5.6L17 7l-7 7z" fill="#fff"/>
+                </svg>
+                <div style="line-height: 1.1;">
+                  <div style="font-size: 7px; font-weight: 700; color: #1a7fd4; letter-spacing: 0.5px;">SITELOCK</div>
+                  <div style="font-size: 6px; color: #555; letter-spacing: 0.3px;">SECURE</div>
+                </div>
+              </div>
             </a>
-            <a href="#" class="security-seal" @click.prevent title="Ebit Excelente">
-              <img src="https://imgs.ebit.com.br/ebit-reputacao/selo_ebit.png" alt="Ebit Excelente" style="height: 38px; background: white; padding: 2px; border-radius: 4px;" />
+            <!-- E-bit Seal -->
+            <a href="https://www.ebit.com.br/" target="_blank" rel="noopener noreferrer" title="E-bit Excelente" style="text-decoration: none;">
+              <div style="background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; gap: 5px; min-width: 90px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" fill="#f0a500"/>
+                  <path d="M8 12h8M8 9h5M8 15h6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <div style="line-height: 1.1;">
+                  <div style="font-size: 7px; font-weight: 700; color: #f0a500; letter-spacing: 0.5px;">E-BIT</div>
+                  <div style="font-size: 6px; color: #555; letter-spacing: 0.3px;">EXCELENTE</div>
+                </div>
+              </div>
             </a>
           </div>
         </div>
