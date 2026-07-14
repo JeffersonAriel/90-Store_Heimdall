@@ -202,7 +202,7 @@
           
           <div class="cart-items-mini">
             <div class="cart-item-mini" v-for="item in store.cart" :key="item.variacao.id">
-              <img :src="item.produto.foto_capa || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100'" />
+              <img :src="item.produto.foto_capa?.url || item.produto.fotos?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100'" />
               <div class="mini-details">
                 <p>{{ item.produto.nome }} ({{ item.variacao.tamanho }} / {{ item.variacao.cor }})</p>
                 <span>{{ item.quantidade }}x {{ formatCurrency(item.produto.tem_desconto ? item.produto.preco_desconto : item.produto.preco_venda) }}</span>
@@ -266,7 +266,8 @@ const checkoutData = reactive({
   cidade: '',
   estado: '',
   shipping: '',
-  paymentMethod: 'pix'
+  paymentMethod: 'pix',
+  endereco_id: null
 })
 
 const shippingOptions = ref([])
@@ -274,6 +275,15 @@ const paymentOptions = ref([])
 const loadingShipping = ref(false)
 
 onMounted(async () => {
+  // Carrega o perfil do cliente logado para auto-preenchimento
+  if (store.token) {
+    try {
+      await store.fetchUser()
+    } catch (err) {
+      console.error("Erro ao carregar perfil do usuário no checkout", err)
+    }
+  }
+
   try {
     const res = await axios.get('/api/store-settings')
     paymentOptions.value = res.data.paymentMethods || []
@@ -334,6 +344,7 @@ watch(() => store.user, (user) => {
     // Puxar o primeiro endereço salvo (Principal)
     if (user.enderecos && user.enderecos.length > 0) {
       const end = user.enderecos[0]
+      checkoutData.endereco_id = end.id
       let zip = end.cep || ''
       if (zip.length === 8) zip = zip.replace(/(\d{5})(\d{3})/, "$1-$2")
       
@@ -409,6 +420,7 @@ async function finalizeOrder() {
   }))
 
   const payload = {
+    endereco_id: checkoutData.endereco_id,
     cep: checkoutData.cep,
     logradouro: checkoutData.rua,
     numero: checkoutData.numero,

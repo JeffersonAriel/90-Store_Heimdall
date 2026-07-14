@@ -8,18 +8,18 @@
       
       <div class="drawer-body" v-if="product">
         <!-- Galeria simples -->
-        <div class="gallery">
+        <div class="gallery" style="position: relative;">
+          <!-- Seta Esquerda -->
+          <button v-if="allPhotos.length > 1" class="gallery-nav-btn left" @click.prevent="navigatePhoto('prev')" title="Foto Anterior">
+            ‹
+          </button>
+
           <img :src="mainImage" class="main-image" :alt="product.nome" />
-          <div class="thumbnails">
-             <!-- Placeholder para miniaturas se houver mais fotos -->
-             <img 
-               v-for="(foto, idx) in product.fotos || [product.foto_capa]" 
-               :key="idx" 
-               :src="foto?.url" 
-               class="thumbnail"
-               @click="mainImage = foto?.url"
-             />
-          </div>
+
+          <!-- Seta Direita -->
+          <button v-if="allPhotos.length > 1" class="gallery-nav-btn right" @click.prevent="navigatePhoto('next')" title="Próxima Foto">
+            ›
+          </button>
         </div>
 
         <div class="product-info mt-4">
@@ -94,6 +94,33 @@ const availableSizes = computed(() => {
   return [...new Set(sizes)];
 })
 
+const allPhotos = computed(() => {
+  if (!props.product) return [];
+  const list = props.product.fotos || [];
+  if (list.length === 0 && props.product.foto_capa) {
+    return [props.product.foto_capa];
+  }
+  return list;
+});
+
+function navigatePhoto(direction) {
+  const photos = allPhotos.value;
+  if (photos.length <= 1) return;
+  
+  const currentIndex = photos.findIndex(p => p.url === mainImage.value);
+  let nextIndex = currentIndex;
+  
+  if (direction === 'next') {
+    nextIndex = (currentIndex + 1) % photos.length;
+  } else {
+    nextIndex = (currentIndex - 1 + photos.length) % photos.length;
+  }
+  
+  if (photos[nextIndex] && photos[nextIndex].url) {
+    mainImage.value = photos[nextIndex].url;
+  }
+}
+
 const mainImage = ref('')
 const selectedSize = ref('')
 
@@ -101,6 +128,9 @@ watch(() => props.product, (newVal) => {
   if (newVal) {
     mainImage.value = newVal.foto_capa?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500'
     selectedSize.value = ''
+    if (availableSizes.value.length === 1) {
+      selectedSize.value = availableSizes.value[0]
+    }
   }
 })
 
@@ -279,5 +309,39 @@ function formatMoney(val) {
   color: var(--color-gray);
   font-size: 0.9rem;
   line-height: 1.6;
+}
+
+.gallery-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.6);
+  color: var(--color-white);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.75rem;
+  line-height: 1;
+  transition: var(--transition);
+  z-index: 5;
+  user-select: none;
+}
+
+.gallery-nav-btn:hover {
+  background-color: var(--color-red);
+  color: var(--color-white);
+}
+
+.gallery-nav-btn.left {
+  left: 0.5rem;
+}
+
+.gallery-nav-btn.right {
+  right: 0.5rem;
 }
 </style>

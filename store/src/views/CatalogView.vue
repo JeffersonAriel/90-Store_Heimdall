@@ -43,10 +43,10 @@
           </ul>
         </div>
 
-        <div class="filter-section">
+        <div class="filter-section" v-if="availableBrands.length > 0">
           <h3 class="filter-title">Marcas</h3>
           <ul class="filter-list">
-            <li v-for="brand in ['Nike', 'Adidas', 'Puma', 'Lacoste', 'New Balance', 'Under Armour']" :key="brand">
+            <li v-for="brand in availableBrands" :key="brand">
               <label class="checkbox-label">
                 <input type="checkbox" v-model="filters.brands" :value="brand.toLowerCase()" @change="applyFilters"> {{ brand }}
               </label>
@@ -136,6 +136,7 @@ const route = useRoute()
 const router = useRouter()
 
 const products = ref([])
+const availableBrands = ref([])
 const totalProducts = ref(0)
 const loading = ref(true)
 const quickViewProduct = ref(null)
@@ -202,6 +203,9 @@ async function fetchProducts() {
     const res = await axios.get(`/api/catalog${qs}`)
     products.value = res.data.produtos || []
     totalProducts.value = products.value.length
+    if (res.data.marcas) {
+      availableBrands.value = res.data.marcas
+    }
   } catch (err) {
     console.error('Erro ao buscar produtos', err)
   } finally {

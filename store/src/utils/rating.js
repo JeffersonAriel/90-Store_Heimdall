@@ -52,10 +52,28 @@ export function getProductReviews(productId) {
   const count = (productId * 3 + 4) % 4 + 2; // entre 2 e 5 avaliações visíveis
   const reviews = [];
   
+  // Cria uma cópia da lista de nomes e embaralha deterministicamente
+  const shuffledNames = [...NOME_LIST];
+  for (let idx = shuffledNames.length - 1; idx > 0; idx--) {
+    const j = (productId * (idx + 1) + 17) % (idx + 1);
+    const temp = shuffledNames[idx];
+    shuffledNames[idx] = shuffledNames[j];
+    shuffledNames[j] = temp;
+  }
+
+  // Cria uma cópia da lista de textos e embaralha deterministicamente
+  const shuffledTexts = [...REVIEW_TEXTS];
+  for (let idx = shuffledTexts.length - 1; idx > 0; idx--) {
+    const j = (productId * (idx + 3) + 41) % (idx + 1);
+    const temp = shuffledTexts[idx];
+    shuffledTexts[idx] = shuffledTexts[j];
+    shuffledTexts[j] = temp;
+  }
+  
   for (let i = 0; i < count; i++) {
     const seed = productId * (i + 1) + i * 31;
-    const authorIdx = seed % NOME_LIST.length;
-    const textIdx = seed % REVIEW_TEXTS.length;
+    const author = shuffledNames[i % shuffledNames.length];
+    const text = shuffledTexts[i % shuffledTexts.length];
     
     // Gera uma data fictícia retroativa determinística
     const daysAgo = (seed % 28) + 1;
@@ -69,8 +87,8 @@ export function getProductReviews(productId) {
 
     reviews.push({
       id: i,
-      autor: NOME_LIST[authorIdx],
-      texto: REVIEW_TEXTS[textIdx],
+      autor: author,
+      texto: text,
       data: dateString,
       estrelas: stars
     });

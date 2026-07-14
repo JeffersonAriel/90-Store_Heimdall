@@ -52,18 +52,29 @@ class CheckoutController extends Controller
 
         $enderecoId = $request->endereco_id;
         if (!$enderecoId) {
-            // Cria endereço se não enviou ID
-            $address = $cliente->enderecos()->create([
-                'cep' => $request->cep,
-                'logradouro' => $request->logradouro,
-                'numero' => $request->numero,
-                'complemento' => $request->complemento,
-                'bairro' => $request->bairro,
-                'cidade' => $request->cidade,
-                'estado' => $request->estado,
-                'is_principal' => !$cliente->enderecos()->exists()
-            ]);
-            $enderecoId = $address->id;
+            // Verifica se já existe um endereço idêntico para evitar duplicação
+            $existingAddress = $cliente->enderecos()
+                ->where('cep', $request->cep)
+                ->where('logradouro', $request->logradouro)
+                ->where('numero', $request->numero)
+                ->first();
+
+            if ($existingAddress) {
+                $enderecoId = $existingAddress->id;
+            } else {
+                // Cria endereço se não existe idêntico
+                $address = $cliente->enderecos()->create([
+                    'cep' => $request->cep,
+                    'logradouro' => $request->logradouro,
+                    'numero' => $request->numero,
+                    'complemento' => $request->complemento,
+                    'bairro' => $request->bairro,
+                    'cidade' => $request->cidade,
+                    'estado' => $request->estado,
+                    'is_principal' => !$cliente->enderecos()->exists()
+                ]);
+                $enderecoId = $address->id;
+            }
         }
 
         $order = DB::transaction(function () use ($request, $cliente, $enderecoId) {

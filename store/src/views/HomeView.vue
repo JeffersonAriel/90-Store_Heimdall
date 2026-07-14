@@ -73,11 +73,18 @@
 
       <div class="grid grid-cols-4 gap-6">
         <ProductCard 
-          v-for="product in bestSellers" 
+          v-for="product in bestSellers.slice(0, visibleBestSellers)" 
           :key="product.id" 
           :product="product" 
           @quick-view="openQuickView"
         />
+      </div>
+
+      <!-- Botão Ver Mais -->
+      <div v-if="bestSellers.length > visibleBestSellers" class="load-more-container mt-12 text-center" style="display: flex; justify-content: center; width: 100%;">
+        <button class="btn btn-primary" style="padding: var(--spacing-3) var(--spacing-8); font-family: var(--font-title); font-size: 1.1rem;" @click="visibleBestSellers += 4">
+          Ver Mais
+        </button>
       </div>
     </section>
 
@@ -118,6 +125,7 @@ const bestSellers = ref([])
 const banners = ref([])
 const loading = ref(true)
 const quickViewProduct = ref(null)
+const visibleBestSellers = ref(4)
 const currentBannerIndex = ref(0)
 let bannerInterval = null
 
@@ -171,7 +179,7 @@ async function fetchHomeData() {
     const resLanc = await axios.get('/api/catalog?sort=newest&limit=12')
     latestProducts.value = resLanc.data.produtos || []
 
-    const resBest = await axios.get('/api/catalog?limit=4')
+    const resBest = await axios.get('/api/catalog?limit=16')
     bestSellers.value = resBest.data.produtos || []
   } catch (err) {
     console.error('Erro ao carregar vitrines', err)

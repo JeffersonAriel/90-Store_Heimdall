@@ -119,7 +119,14 @@ class AddressController extends Controller
             ], 400);
         }
 
-        $address->delete();
+        try {
+            $address->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este endereço não pode ser excluído pois já está vinculado a um ou mais pedidos efetuados.'
+            ], 400);
+        }
 
         return response()->json([
             'success' => true,

@@ -318,6 +318,16 @@ async function fetchProduct() {
     if (res.data.success && res.data.produto) {
       product.value = res.data.produto
       mainImage.value = product.value.foto_capa?.url || product.value.fotos?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500'
+      
+      // Seleciona automaticamente se houver apenas 1 cor disponível
+      if (availableColors.value.length === 1) {
+        selectedColor.value = availableColors.value[0]
+      }
+      // Seleciona automaticamente se houver apenas 1 tamanho disponível
+      if (availableSizes.value.length === 1) {
+        selectedSize.value = availableSizes.value[0]
+      }
+      
       fetchRelated()
     } else {
       product.value = null
@@ -344,12 +354,17 @@ function calculateDiscountPercent() {
 }
 
 function addToCart() {
-  if (!selectedSize.value || !selectedColor.value) {
-    alert('Selecione cor e tamanho para continuar.')
+  const hasColors = availableColors.value.length > 0
+  if (!selectedSize.value || (hasColors && !selectedColor.value)) {
+    alert(hasColors ? 'Selecione cor e tamanho para continuar.' : 'Selecione o tamanho para continuar.')
     return
   }
 
-  const variation = product.value.variacoes.find(v => v.tamanho === selectedSize.value && v.cor === selectedColor.value)
+  const variation = product.value.variacoes.find(v => {
+    const matchSize = v.tamanho === selectedSize.value
+    const matchColor = !hasColors || v.cor === selectedColor.value
+    return matchSize && matchColor
+  })
   
   if (!variation) {
     alert('Esta combinação de cor e tamanho está indisponível.')

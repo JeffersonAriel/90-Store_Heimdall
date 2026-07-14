@@ -442,6 +442,8 @@ function handleSearch() {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   transform: translateY(10px);
   z-index: var(--z-dropdown);
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .menu-item.has-dropdown:hover .mega-dropdown {

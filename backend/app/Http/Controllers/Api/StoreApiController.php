@@ -89,10 +89,25 @@ class StoreApiController extends Controller
 
         $categories = CategoriaTipoProduto::where('ativo', true)->orderBy('ordem')->get();
 
+        $brands = Produto::where('ativo', true)
+            ->whereNotNull('marca')
+            ->where('marca', '<>', '')
+            ->distinct()
+            ->pluck('marca')
+            ->map(function ($marca) {
+                return trim($marca);
+            })
+            ->filter(function ($marca) {
+                return !empty($marca);
+            })
+            ->unique()
+            ->values();
+
         return response()->json([
             'success' => true,
             'produtos' => $products,
-            'categorias' => $categories
+            'categorias' => $categories,
+            'marcas' => $brands
         ]);
     }
 
