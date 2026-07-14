@@ -41,15 +41,19 @@
           </div>
 
           <!-- Variações -->
-          <div class="variations mt-6" v-if="availableSizes.length > 0">
+          <div class="variations mt-6" v-if="sizesToShow.length > 0">
             <div class="variation-group">
               <label>Tamanho:</label>
               <div class="variation-options">
                 <button 
-                  v-for="size in availableSizes" 
+                  v-for="size in sizesToShow" 
                   :key="size" 
                   class="var-btn" 
-                  :class="{ active: selectedSize === size }" 
+                  :class="{ 
+                    active: selectedSize === size,
+                    disabled: !availableSizes.includes(size)
+                  }" 
+                  :disabled="!availableSizes.includes(size)"
                   @click="selectedSize = size"
                 >
                   {{ size }}
@@ -95,6 +99,18 @@ const availableSizes = computed(() => {
   const sizes = props.product.variacoes.map(v => v.tamanho).filter(Boolean);
   return [...new Set(sizes)];
 })
+
+const sizesToShow = computed(() => {
+  if (!props.product || !props.product.variacoes) return [];
+  const actualSizes = props.product.variacoes.map(v => v.tamanho).filter(Boolean);
+  const isClothing = actualSizes.some(s => ['P', 'M', 'G', 'GG', 'GGG', 'PP', 'XG'].includes(s.toUpperCase()));
+  if (isClothing) {
+    const standard = ['P', 'M', 'G', 'GG', 'GGG'];
+    const merged = [...new Set([...standard, ...actualSizes])];
+    return merged;
+  }
+  return [...new Set(actualSizes)];
+});
 
 const allPhotos = computed(() => {
   if (!props.product) return [];
@@ -307,6 +323,19 @@ function formatMoney(val) {
   background-color: var(--color-white);
   color: var(--color-black);
   border-color: var(--color-white);
+}
+
+.var-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: linear-gradient(to top right, transparent calc(50% - 1px), var(--color-gray) 50%, transparent calc(50% + 1px)) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: var(--color-gray) !important;
+}
+
+.var-btn.disabled:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: var(--color-gray) !important;
 }
 
 .w-full {

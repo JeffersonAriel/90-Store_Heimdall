@@ -100,17 +100,21 @@
               </div>
             </div>
             
-            <div class="variation-group mt-4" v-if="availableSizes.length > 0">
+            <div class="variation-group mt-4" v-if="sizesToShow.length > 0">
               <div class="size-header">
                 <label>Tamanho: <strong>{{ selectedSize || 'Selecione' }}</strong></label>
                 <button class="size-guide-btn">Tabela de Medidas</button>
               </div>
               <div class="size-options">
                 <button 
-                  v-for="size in availableSizes" 
+                  v-for="size in sizesToShow" 
                   :key="size"
                   class="size-btn" 
-                  :class="{ active: selectedSize === size }" 
+                  :class="{ 
+                    active: selectedSize === size,
+                    disabled: !availableSizes.includes(size)
+                  }" 
+                  :disabled="!availableSizes.includes(size)"
                   @click="selectedSize = size"
                 >{{ size }}</button>
               </div>
@@ -271,6 +275,19 @@ const availableSizes = computed(() => {
   }
   const sizes = vars.map(v => v.tamanho).filter(Boolean);
   return [...new Set(sizes)];
+});
+
+const sizesToShow = computed(() => {
+  if (!product.value || !product.value.variacoes) return [];
+  const actualSizes = product.value.variacoes.map(v => v.tamanho).filter(Boolean);
+  const isClothing = actualSizes.some(s => ['P', 'M', 'G', 'GG', 'GGG', 'PP', 'XG'].includes(s.toUpperCase()));
+  if (isClothing) {
+    const standard = ['P', 'M', 'G', 'GG', 'GGG'];
+    // Filtra duplicados mantendo a ordem do padrão e adicionando outros que existam
+    const merged = [...new Set([...standard, ...actualSizes])];
+    return merged;
+  }
+  return [...new Set(actualSizes)];
 });
 
 function getColorCode(colorName) {
@@ -617,6 +634,19 @@ function formatMoney(val) {
   background-color: var(--color-white);
   color: var(--color-black);
   border-color: var(--color-white);
+}
+
+.size-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: linear-gradient(to top right, transparent calc(50% - 1px), var(--color-gray) 50%, transparent calc(50% + 1px)) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: var(--color-gray) !important;
+}
+
+.size-btn.disabled:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: var(--color-gray) !important;
 }
 
 .stock-warning {
