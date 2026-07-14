@@ -25,7 +25,18 @@
         <!-- Galeria -->
         <div class="product-gallery">
           <div class="main-image-wrapper" style="position: relative;">
+            <!-- Seta Esquerda -->
+            <button v-if="allPhotos.length > 1" class="gallery-nav-btn left" @click.prevent="navigatePhoto('prev')" title="Foto Anterior">
+              ‹
+            </button>
+
             <img :src="mainImage" class="main-image" :alt="product.nome" />
+
+            <!-- Seta Direita -->
+            <button v-if="allPhotos.length > 1" class="gallery-nav-btn right" @click.prevent="navigatePhoto('next')" title="Próxima Foto">
+              ›
+            </button>
+
             <button class="favorite-btn" title="Favoritar" @click.prevent="toggleFavorite" :class="{ 'is-favorited': isFavorite }">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" :fill="isFavorite ? 'var(--color-red)' : 'none'" :stroke="isFavorite ? 'var(--color-red)' : 'currentColor'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -218,6 +229,33 @@ const selectedColor = ref('')
 const selectedSize = ref('')
 const quantity = ref(1)
 const stockWarning = ref(true) // Simulando alerta de estoque crítico
+
+const allPhotos = computed(() => {
+  if (!product.value) return [];
+  const list = product.value.fotos || [];
+  if (list.length === 0 && product.value.foto_capa) {
+    return [product.value.foto_capa];
+  }
+  return list;
+});
+
+function navigatePhoto(direction) {
+  const photos = allPhotos.value;
+  if (photos.length <= 1) return;
+  
+  const currentIndex = photos.findIndex(p => p.url === mainImage.value);
+  let nextIndex = currentIndex;
+  
+  if (direction === 'next') {
+    nextIndex = (currentIndex + 1) % photos.length;
+  } else {
+    nextIndex = (currentIndex - 1 + photos.length) % photos.length;
+  }
+  
+  if (photos[nextIndex] && photos[nextIndex].url) {
+    mainImage.value = photos[nextIndex].url;
+  }
+}
 
 const availableColors = computed(() => {
   if (!product.value || !product.value.variacoes) return [];
@@ -739,5 +777,39 @@ function formatMoney(val) {
   color: var(--color-red);
   background-color: var(--color-white);
   transform: scale(1.05);
+}
+
+.gallery-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.6);
+  color: var(--color-white);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 2rem;
+  line-height: 1;
+  transition: var(--transition);
+  z-index: 5;
+  user-select: none;
+}
+
+.gallery-nav-btn:hover {
+  background-color: var(--color-red);
+  color: var(--color-white);
+}
+
+.gallery-nav-btn.left {
+  left: 1rem;
+}
+
+.gallery-nav-btn.right {
+  right: 1rem;
 }
 </style>
