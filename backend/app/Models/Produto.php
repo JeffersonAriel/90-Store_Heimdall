@@ -47,6 +47,7 @@ class Produto extends Model
         'retro_year' => 'integer',
         'estoque_critico' => 'integer',
         'ativo' => 'boolean',
+        'esgotado' => 'boolean',
         'is_destaque' => 'boolean',
         'peso_kg' => 'decimal:3',
         'dimensoes_json' => 'array',
