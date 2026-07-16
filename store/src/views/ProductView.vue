@@ -273,7 +273,7 @@ const isSizebayOpen = ref(false)
 const sizebayUrl = computed(() => {
   const tenantId = import.meta.env.VITE_SIZEBAY_TENANT_ID || '1356' // Tenant ID configurado ou fallback padrão
   const productId = product.value?.id || '123'
-  return `https://vfr-v3-production.sizebay.technology/v4/index.html?tenantId=${tenantId}&id=${productId}&lang=pt`
+  return `https://vfr-v3-production.sizebay.technology/V4/index.html?tenantId=${tenantId}&id=${productId}&lang=pt`
 })
 
 // Formulário "Me Avise Quando Chegar"
