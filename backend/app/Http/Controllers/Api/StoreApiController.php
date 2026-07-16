@@ -32,9 +32,7 @@ class StoreApiController extends Controller
             ->when($request->input('categoria'), function ($query, $slug) {
                 $category = CategoriaTipoProduto::where('slug', $slug)->first();
                 if ($category) {
-                    $categoryIds = CategoriaTipoProduto::where('id', $category->id)
-                        ->orWhere('parent_id', $category->id)
-                        ->pluck('id');
+                    $categoryIds = $this->getAllCategoryDescendants($category->id);
                     $query->whereIn('categoria_id', $categoryIds);
                 }
             })
@@ -94,9 +92,7 @@ class StoreApiController extends Controller
             ->when($request->input('categoria'), function ($query, $slug) {
                 $category = CategoriaTipoProduto::where('slug', $slug)->first();
                 if ($category) {
-                    $categoryIds = CategoriaTipoProduto::where('id', $category->id)
-                        ->orWhere('parent_id', $category->id)
-                        ->pluck('id');
+                    $categoryIds = $this->getAllCategoryDescendants($category->id);
                     $query->whereIn('categoria_id', $categoryIds);
                 }
             })
@@ -218,5 +214,26 @@ class StoreApiController extends Controller
             'success' => true,
             'message' => 'Sua solicitação foi registrada com sucesso. Avisaremos você assim que o estoque for reposto!'
         ]);
+    }
+
+    /**
+     * Retorna recursivamente todos os IDs de categorias descendentes
+     */
+    private function getAllCategoryDescendants($categoryId)
+    {
+        $ids = [$categoryId];
+        $allCategories = CategoriaTipoProduto::all();
+        
+        $added = true;
+        while ($added) {
+            $added = false;
+            foreach ($allCategories as $cat) {
+                if (in_array($cat->parent_id, $ids) && !in_array($cat->id, $ids)) {
+                    $ids[] = $cat->id;
+                    $added = true;
+                }
+            }
+        }
+        return $ids;
     }
 }

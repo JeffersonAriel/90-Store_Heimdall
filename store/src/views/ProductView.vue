@@ -219,110 +219,197 @@
       <!-- Guia de Tamanhos / Tabela de Medidas Modal -->
       <div v-if="isSizebayOpen" class="sizebay-modal-overlay" @click.self="isSizebayOpen = false">
         <div class="sizebay-modal-content">
-          <div class="sizebay-modal-header">
-            <h4>Tabela de Medidas</h4>
+          <!-- Tabbed Header -->
+          <div class="sizebay-modal-header-tabs">
+            <div class="tabs-group">
+              <button 
+                type="button"
+                class="modal-tab-btn" 
+                :class="{ active: activeModalTab === 'vfr' }" 
+                @click="activeModalTab = 'vfr'"
+              >
+                Provador Virtual 🤖
+              </button>
+              <button 
+                type="button"
+                class="modal-tab-btn" 
+                :class="{ active: activeModalTab === 'chart' }" 
+                @click="activeModalTab = 'chart'"
+              >
+                Tabela de Medidas 📏
+              </button>
+            </div>
             <button class="close-modal-btn" @click="isSizebayOpen = false" title="Fechar">×</button>
           </div>
           
           <div class="size-guide-content">
-            <!-- Camisetas -->
-            <div v-if="isClothingProduct" class="table-wrapper">
-              <p class="guide-intro">Compare as medidas abaixo com uma camiseta de seu uso para encontrar o tamanho ideal:</p>
-              <table class="size-table">
-                <thead>
-                  <tr>
-                    <th>Tamanho</th>
-                    <th>Largura (A)</th>
-                    <th>Comprimento (B)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>PP</strong></td>
-                    <td>48 cm</td>
-                    <td>68 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>P</strong></td>
-                    <td>50 cm</td>
-                    <td>70 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>M</strong></td>
-                    <td>52 cm</td>
-                    <td>72 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>G</strong></td>
-                    <td>54 cm</td>
-                    <td>74 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>GG</strong></td>
-                    <td>56 cm</td>
-                    <td>76 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>XG / GGG</strong></td>
-                    <td>58 cm</td>
-                    <td>78 cm</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="measurement-instructions">
-                <p><strong>Largura (A):</strong> Medida horizontal sob a costura das mangas (peito).</p>
-                <p><strong>Comprimento (B):</strong> Medida vertical do ponto mais alto do ombro até a barra final da peça.</p>
-                <p class="text-xs text-gray-500 mt-2">* As medidas podem variar em até 2cm para mais ou para menos devido ao processo de fabricação.</p>
+            <!-- ABA 1: PROVADOR VIRTUAL INTERATIVO -->
+            <div v-if="activeModalTab === 'vfr'" class="vfr-tab-wrapper">
+              <div v-if="!vfrResult" class="vfr-form-container">
+                <p class="guide-intro">Informe seus dados para estimarmos o seu tamanho ideal:</p>
+                
+                <!-- Formulário Camisas -->
+                <div v-if="isClothingProduct" class="vfr-form">
+                  <div class="vfr-field-group">
+                    <label>Altura (cm)</label>
+                    <input type="number" v-model="vfrHeight" placeholder="Ex: 175" class="input-field" />
+                  </div>
+                  <div class="vfr-field-group">
+                    <label>Peso (kg)</label>
+                    <input type="number" v-model="vfrWeight" placeholder="Ex: 75" class="input-field" />
+                  </div>
+                  <div class="vfr-field-group">
+                    <label>Idade (anos)</label>
+                    <input type="number" v-model="vfrAge" placeholder="Ex: 28" class="input-field" />
+                  </div>
+                  <div class="vfr-field-group full-width">
+                    <label>Como você prefere o caimento das suas roupas?</label>
+                    <div class="fit-options">
+                      <label class="fit-option">
+                        <input type="radio" v-model="vfrFit" value="justo" /> Justo
+                      </label>
+                      <label class="fit-option">
+                        <input type="radio" v-model="vfrFit" value="regular" /> Regular
+                      </label>
+                      <label class="fit-option">
+                        <input type="radio" v-model="vfrFit" value="folgado" /> Folgado
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Formulário Calçados -->
+                <div v-else class="vfr-form">
+                  <div class="vfr-field-group full-width">
+                    <label>Comprimento do pé (cm)</label>
+                    <input type="number" step="0.1" v-model="vfrFootLength" placeholder="Ex: 26.5" class="input-field" />
+                    <small class="field-hint">Dica: Desenhe o contorno do seu pé em um papel e meça do calcanhar ao dedão com uma régua.</small>
+                  </div>
+                </div>
+
+                <button class="btn btn-primary w-full mt-6" @click="calculateRecommendedSize">
+                  Calcular Meu Tamanho
+                </button>
+              </div>
+
+              <!-- Tela de Resultado -->
+              <div v-else class="vfr-result-container text-center">
+                <div class="vfr-result-icon">👕</div>
+                <h3 class="title-md">Tamanho Recomendado:</h3>
+                <div class="recommended-size-badge">{{ vfrResult }}</div>
+                <p class="vfr-result-desc">Com base nas suas respostas, o tamanho mais indicado para você é o <strong>{{ vfrResult }}</strong>.</p>
+                <div class="vfr-result-actions mt-8">
+                  <button class="btn btn-primary" @click="isSizebayOpen = false; selectedSize = vfrResult">
+                    Escolher Tamanho {{ vfrResult }}
+                  </button>
+                  <button class="btn btn-outline" style="margin-left: 1rem;" @click="resetVfr">
+                    Recomeçar
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- Calçados / Tênis -->
-            <div v-else class="table-wrapper">
-              <p class="guide-intro">Meça a palmilha de um calçado confortável que você já possui:</p>
-              <table class="size-table">
-                <thead>
-                  <tr>
-                    <th>Tamanho</th>
-                    <th>Comprimento da Palmilha</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><strong>37</strong></td>
-                    <td>24,5 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>38</strong></td>
-                    <td>25,0 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>39</strong></td>
-                    <td>25,5 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>40</strong></td>
-                    <td>26,5 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>41</strong></td>
-                    <td>27,5 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>42</strong></td>
-                    <td>28,0 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>43</strong></td>
-                    <td>29,0 cm</td>
-                  </tr>
-                  <tr>
-                    <td><strong>44</strong></td>
-                    <td>30,0 cm</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="measurement-instructions">
-                <p><strong>Como medir a palmilha:</strong> Remova a palmilha de um calçado que você já usa frequentemente e meça com uma régua ou fita métrica do calcanhar até a ponta mais proeminente.</p>
+            <!-- ABA 2: TABELA DE MEDIDAS ESTÁTICA -->
+            <div v-else class="chart-tab-wrapper">
+              <!-- Camisetas -->
+              <div v-if="isClothingProduct" class="table-wrapper">
+                <p class="guide-intro">Compare as medidas abaixo com uma camiseta de seu uso para encontrar o tamanho ideal:</p>
+                <table class="size-table">
+                  <thead>
+                    <tr>
+                      <th>Tamanho</th>
+                      <th>Largura (A)</th>
+                      <th>Comprimento (B)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>PP</strong></td>
+                      <td>48 cm</td>
+                      <td>68 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>P</strong></td>
+                      <td>50 cm</td>
+                      <td>70 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>M</strong></td>
+                      <td>52 cm</td>
+                      <td>72 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>G</strong></td>
+                      <td>54 cm</td>
+                      <td>74 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>GG</strong></td>
+                      <td>56 cm</td>
+                      <td>76 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>XG / GGG</strong></td>
+                      <td>58 cm</td>
+                      <td>78 cm</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="measurement-instructions">
+                  <p><strong>Largura (A):</strong> Medida horizontal sob a costura das mangas (peito).</p>
+                  <p><strong>Comprimento (B):</strong> Medida vertical do ponto mais alto do ombro até a barra final da peça.</p>
+                  <p class="text-xs text-gray-500 mt-2">* As medidas podem variar em até 2cm para mais ou para menos devido ao processo de fabricação.</p>
+                </div>
+              </div>
+
+              <!-- Calçados / Tênis -->
+              <div v-else class="table-wrapper">
+                <p class="guide-intro">Meça a palmilha de um calçado confortável que você já possui:</p>
+                <table class="size-table">
+                  <thead>
+                    <tr>
+                      <th>Tamanho</th>
+                      <th>Comprimento da Palmilha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>37</strong></td>
+                      <td>24,5 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>38</strong></td>
+                      <td>25,0 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>39</strong></td>
+                      <td>25,5 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>40</strong></td>
+                      <td>26,5 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>41</strong></td>
+                      <td>27,5 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>42</strong></td>
+                      <td>28,0 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>43</strong></td>
+                      <td>29,0 cm</td>
+                    </tr>
+                    <tr>
+                      <td><strong>44</strong></td>
+                      <td>30,0 cm</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="measurement-instructions">
+                  <p><strong>Como medir a palmilha:</strong> Remova a palmilha de um calçado que você já usa frequentemente e meça com uma régua ou fita métrica do calcanhar até a ponta mais proeminente.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -370,6 +457,80 @@ const isClothingProduct = computed(() => {
   const actualSizes = product.value.variacoes.map(v => v.tamanho).filter(Boolean)
   return actualSizes.some(s => ['PP', 'P', 'M', 'G', 'GG', 'GGG', 'XG', 'XXG', 'G1', 'G2', 'G3'].includes(s.toUpperCase()))
 })
+
+// Custom Interactive Virtual Size Assistant
+const activeModalTab = ref('vfr')
+const vfrHeight = ref('')
+const vfrWeight = ref('')
+const vfrAge = ref('')
+const vfrFit = ref('regular')
+const vfrResult = ref('')
+const vfrFootLength = ref('')
+
+function calculateRecommendedSize() {
+  if (isClothingProduct.value) {
+    if (!vfrHeight.value || !vfrWeight.value) {
+      alert('Por favor, informe seu peso e sua altura.')
+      return
+    }
+    const w = parseFloat(vfrWeight.value)
+    const h = parseFloat(vfrHeight.value)
+    let size = 'M'
+    
+    if (w < 55) size = 'PP'
+    else if (w < 65) size = 'P'
+    else if (w < 78) size = 'M'
+    else if (w < 90) size = 'G'
+    else if (w < 102) size = 'GG'
+    else size = 'XG'
+
+    if (h > 185 && ['PP', 'P', 'M'].includes(size)) {
+      if (size === 'PP') size = 'P'
+      else if (size === 'P') size = 'M'
+      else if (size === 'M') size = 'G'
+    }
+
+    if (vfrFit.value === 'justo') {
+      if (size === 'XG') size = 'GG'
+      else if (size === 'GG') size = 'G'
+      else if (size === 'G') size = 'M'
+      else if (size === 'M') size = 'P'
+      else if (size === 'P') size = 'PP'
+    } else if (vfrFit.value === 'folgado') {
+      if (size === 'PP') size = 'P'
+      else if (size === 'P') size = 'M'
+      else if (size === 'M') size = 'G'
+      else if (size === 'G') size = 'GG'
+      else if (size === 'GG') size = 'XG'
+    }
+    vfrResult.value = size
+  } else {
+    if (!vfrFootLength.value) {
+      alert('Por favor, informe o comprimento do pé em centímetros.')
+      return
+    }
+    const len = parseFloat(vfrFootLength.value)
+    let size = '40'
+    if (len <= 24.5) size = '37'
+    else if (len <= 25.0) size = '38'
+    else if (len <= 25.5) size = '39'
+    else if (len <= 26.5) size = '40'
+    else if (len <= 27.5) size = '41'
+    else if (len <= 28.0) size = '42'
+    else if (len <= 29.0) size = '43'
+    else size = '44'
+    vfrResult.value = size
+  }
+}
+
+function resetVfr() {
+  vfrHeight.value = ''
+  vfrWeight.value = ''
+  vfrAge.value = ''
+  vfrFit.value = 'regular'
+  vfrResult.value = ''
+  vfrFootLength.value = ''
+}
 
 // Formulário "Me Avise Quando Chegar"
 const notifyForm = reactive({ nome: '', email: '' })
@@ -1055,21 +1216,130 @@ function formatMoney(val) {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
-.sizebay-modal-header {
+.sizebay-modal-header-tabs {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: 0 1.5rem;
   border-bottom: 1px solid #29292e;
   background-color: #1a1a1e;
 }
 
-.sizebay-modal-header h4 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #ffffff;
+.tabs-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.modal-tab-btn {
+  padding: 1.2rem 1rem;
+  color: var(--color-gray);
   font-family: var(--font-title);
   text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border: none;
+  background: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.95rem;
+}
+
+.modal-tab-btn.active {
+  color: var(--color-white);
+  border-bottom-color: var(--color-red);
+}
+
+.modal-tab-btn:hover {
+  color: var(--color-white);
+}
+
+/* VFR Styles */
+.vfr-tab-wrapper {
+  color: var(--color-white);
+}
+
+.vfr-form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-4);
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.vfr-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.vfr-field-group.full-width {
+  grid-column: span 3;
+}
+
+.vfr-field-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-white);
+}
+
+.field-hint {
+  color: var(--color-gray);
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+}
+
+.fit-options {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.fit-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: var(--color-gray);
+  font-size: 0.95rem;
+}
+
+.fit-option input[type="radio"] {
+  accent-color: var(--color-red);
+  width: 16px;
+  height: 16px;
+}
+
+.vfr-result-container {
+  padding: 2rem 1.5rem;
+}
+
+.vfr-result-icon {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.recommended-size-badge {
+  font-family: var(--font-title);
+  font-size: 4.5rem;
+  color: var(--color-red);
+  line-height: 1;
+  margin: 1rem 0;
+  font-weight: 800;
+}
+
+.vfr-result-desc {
+  color: var(--color-gray);
+  font-size: 1.1rem;
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.vfr-result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
 }
 
 .close-modal-btn {
@@ -1085,13 +1355,6 @@ function formatMoney(val) {
 
 .close-modal-btn:hover {
   color: var(--color-red);
-}
-
-.sizebay-iframe-container {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  background-color: #ffffff;
 }
 
 .size-guide-content {
