@@ -339,6 +339,10 @@ function handleSearch() {
   object-fit: contain;
 }
 
+.footer .logo-img {
+  height: 160px;
+}
+
 .header-top .logo-link {
   position: relative;
   width: 160px;
