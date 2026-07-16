@@ -205,7 +205,7 @@
 
     <!-- Botão Flutuante do WhatsApp -->
     <a 
-      href="https://wa.me/5511945342493?text=Ol%C3%A1!%20Gostaria%20de%20obter%20mais%20informa%C3%A7%C3%B5es." 
+      href="https://wa.me/5511945342493?text=Ol%C3%A1%20Time%2090%2B%2C%20gostaria%20de%20obter%20mais%20informa%C3%A7%C3%B5es.%20Vim%20do%20site." 
       target="_blank" 
       rel="noopener noreferrer" 
       class="whatsapp-float"
