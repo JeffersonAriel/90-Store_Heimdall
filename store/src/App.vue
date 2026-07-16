@@ -335,7 +335,7 @@ function handleSearch() {
 }
 
 .logo-img {
-  height: 40px;
+  height: 80px;
   object-fit: contain;
 }
 
