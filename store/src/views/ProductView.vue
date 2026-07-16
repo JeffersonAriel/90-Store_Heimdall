@@ -104,7 +104,7 @@
               <div class="size-header">
                 <label>Tamanho: <strong>{{ selectedSize || 'Selecione' }}</strong></label>
                 <button type="button" class="size-guide-btn" style="background: none; border: none; cursor: pointer; text-decoration: underline;" @click.prevent="isSizebayOpen = true">
-                  Provador Virtual / Tabela de Medidas
+                  Tabela de Medidas
                 </button>
               </div>
               <div class="size-options">
@@ -216,20 +216,115 @@
           />
         </div>
       </div>
-      <!-- Sizebay Virtual Fitting Room Modal -->
+      <!-- Guia de Tamanhos / Tabela de Medidas Modal -->
       <div v-if="isSizebayOpen" class="sizebay-modal-overlay" @click.self="isSizebayOpen = false">
         <div class="sizebay-modal-content">
           <div class="sizebay-modal-header">
-            <h4>Provador Virtual / Tabela de Medidas</h4>
+            <h4>Tabela de Medidas</h4>
             <button class="close-modal-btn" @click="isSizebayOpen = false" title="Fechar">×</button>
           </div>
-          <div class="sizebay-iframe-container">
-            <iframe 
-              :src="sizebayUrl" 
-              frameborder="0" 
-              class="sizebay-iframe"
-              allow="geolocation; microphone; camera"
-            ></iframe>
+          
+          <div class="size-guide-content">
+            <!-- Camisetas -->
+            <div v-if="isClothingProduct" class="table-wrapper">
+              <p class="guide-intro">Compare as medidas abaixo com uma camiseta de seu uso para encontrar o tamanho ideal:</p>
+              <table class="size-table">
+                <thead>
+                  <tr>
+                    <th>Tamanho</th>
+                    <th>Largura (A)</th>
+                    <th>Comprimento (B)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>PP</strong></td>
+                    <td>48 cm</td>
+                    <td>68 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>P</strong></td>
+                    <td>50 cm</td>
+                    <td>70 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>M</strong></td>
+                    <td>52 cm</td>
+                    <td>72 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>G</strong></td>
+                    <td>54 cm</td>
+                    <td>74 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>GG</strong></td>
+                    <td>56 cm</td>
+                    <td>76 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>XG / GGG</strong></td>
+                    <td>58 cm</td>
+                    <td>78 cm</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="measurement-instructions">
+                <p><strong>Largura (A):</strong> Medida horizontal sob a costura das mangas (peito).</p>
+                <p><strong>Comprimento (B):</strong> Medida vertical do ponto mais alto do ombro até a barra final da peça.</p>
+                <p class="text-xs text-gray-500 mt-2">* As medidas podem variar em até 2cm para mais ou para menos devido ao processo de fabricação.</p>
+              </div>
+            </div>
+
+            <!-- Calçados / Tênis -->
+            <div v-else class="table-wrapper">
+              <p class="guide-intro">Meça a palmilha de um calçado confortável que você já possui:</p>
+              <table class="size-table">
+                <thead>
+                  <tr>
+                    <th>Tamanho</th>
+                    <th>Comprimento da Palmilha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>37</strong></td>
+                    <td>24,5 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>38</strong></td>
+                    <td>25,0 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>39</strong></td>
+                    <td>25,5 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>40</strong></td>
+                    <td>26,5 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>41</strong></td>
+                    <td>27,5 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>42</strong></td>
+                    <td>28,0 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>43</strong></td>
+                    <td>29,0 cm</td>
+                  </tr>
+                  <tr>
+                    <td><strong>44</strong></td>
+                    <td>30,0 cm</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="measurement-instructions">
+                <p><strong>Como medir a palmilha:</strong> Remova a palmilha de um calçado que você já usa frequentemente e meça com uma régua ou fita métrica do calcanhar até a ponta mais proeminente.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -270,10 +365,10 @@ const stockWarning = ref(true)
 
 // Sizebay Virtual Fitting Room state
 const isSizebayOpen = ref(false)
-const sizebayUrl = computed(() => {
-  const tenantId = import.meta.env.VITE_SIZEBAY_TENANT_ID || '1356' // Tenant ID configurado ou fallback padrão
-  const productId = product.value?.id || '123'
-  return `https://vfr-v3-production.sizebay.technology/V4/index.html?tenantId=${tenantId}&id=${productId}&lang=pt`
+const isClothingProduct = computed(() => {
+  if (!product.value || !product.value.variacoes) return true
+  const actualSizes = product.value.variacoes.map(v => v.tamanho).filter(Boolean)
+  return actualSizes.some(s => ['PP', 'P', 'M', 'G', 'GG', 'GGG', 'XG', 'XXG', 'G1', 'G2', 'G3'].includes(s.toUpperCase()))
 })
 
 // Formulário "Me Avise Quando Chegar"
@@ -999,10 +1094,65 @@ function formatMoney(val) {
   background-color: #ffffff;
 }
 
-.sizebay-iframe {
+.size-guide-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  color: var(--color-white);
+  background-color: #121214;
+}
+
+.guide-intro {
+  color: var(--color-gray);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.size-table {
   width: 100%;
-  height: 100%;
-  border: none;
+  border-collapse: collapse;
+  margin-bottom: 2rem;
+}
+
+.size-table th, .size-table td {
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--color-black-lighter);
+}
+
+.size-table th {
+  background-color: var(--color-black-light);
+  color: var(--color-red);
+  font-family: var(--font-title);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+}
+
+.size-table td {
+  font-size: 0.95rem;
+}
+
+.size-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.measurement-instructions {
+  background-color: var(--color-black-light);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-black-lighter);
+}
+
+.measurement-instructions p {
+  color: var(--color-gray);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.measurement-instructions p strong {
+  color: var(--color-white);
 }
 
 @media (max-width: 768px) {
