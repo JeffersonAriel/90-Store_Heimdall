@@ -879,6 +879,10 @@ function formatMoney(val) {
 }
 
 /* Galeria */
+.product-gallery {
+  align-self: start;
+}
+
 .main-image-wrapper {
   background-color: var(--color-black-lighter);
   border-radius: var(--border-radius);
