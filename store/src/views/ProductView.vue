@@ -128,7 +128,7 @@
           </div>
 
           <!-- Personalização de Camisa -->
-          <div v-if="product.permite_personalizacao" class="personalization-container mt-6">
+          <div v-if="product.permite_personalizacao || isClothingProduct" class="personalization-container mt-6">
             <label class="personalization-toggle">
               <input type="checkbox" v-model="customizationEnabled" />
               <span class="ml-2 font-bold cursor-pointer text-white">Personalizar com Nome e Número (+ R$ 70,00)</span>
@@ -881,6 +881,8 @@ function formatMoney(val) {
 /* Galeria */
 .product-gallery {
   align-self: start;
+  max-width: 500px;
+  width: 100%;
 }
 
 .main-image-wrapper {
