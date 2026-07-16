@@ -82,7 +82,7 @@
 
       <!-- Botão Ver Mais -->
       <div v-if="bestSellers.length > visibleBestSellers" class="load-more-container mt-12 text-center" style="display: flex; justify-content: center; width: 100%;">
-        <button class="btn btn-primary" style="padding: var(--spacing-3) var(--spacing-8); font-family: var(--font-title); font-size: 1.1rem;" @click="visibleBestSellers += 4">
+        <button class="btn btn-primary" style="padding: var(--spacing-3) var(--spacing-8); font-family: var(--font-title); font-size: 1.1rem;" @click="visibleBestSellers += 12">
           Ver Mais
         </button>
       </div>
@@ -125,7 +125,7 @@ const bestSellers = ref([])
 const banners = ref([])
 const loading = ref(true)
 const quickViewProduct = ref(null)
-const visibleBestSellers = ref(4)
+const visibleBestSellers = ref(8)
 const currentBannerIndex = ref(0)
 let bannerInterval = null
 
@@ -179,7 +179,7 @@ async function fetchHomeData() {
     const resLanc = await axios.get('/api/catalog?sort=newest&limit=12')
     latestProducts.value = resLanc.data.produtos || []
 
-    const resBest = await axios.get('/api/catalog?limit=16')
+    const resBest = await axios.get('/api/catalog?limit=32')
     bestSellers.value = resBest.data.produtos || []
   } catch (err) {
     console.error('Erro ao carregar vitrines', err)
