@@ -906,7 +906,7 @@ function formatMoney(val) {
   background-color: var(--color-black-lighter);
   border-radius: var(--border-radius);
   overflow: hidden;
-  aspect-ratio: 3/4;
+  aspect-ratio: 1/1;
 }
 
 .main-image {
@@ -922,8 +922,9 @@ function formatMoney(val) {
 
 .thumbnails {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-2);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: var(--spacing-3);
   scrollbar-width: none;
 }
 
@@ -932,13 +933,14 @@ function formatMoney(val) {
 }
 
 .thumbnail {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   object-fit: cover;
   border-radius: var(--border-radius-sm);
   cursor: pointer;
   border: 2px solid transparent;
   transition: var(--transition);
+  flex-shrink: 0;
 }
 
 .thumbnail:hover, .thumbnail.active {
