@@ -129,12 +129,29 @@
 
           <!-- Personalização de Camisa -->
           <div v-if="product.permite_personalizacao || isClothingProduct" class="personalization-container mt-6">
-            <label class="personalization-toggle">
-              <input type="checkbox" v-model="customizationEnabled" />
-              <span class="ml-2 font-bold cursor-pointer text-white">Personalizar com Nome e Número (+ R$ 70,00)</span>
-            </label>
+            <h3 class="personalization-title">Deseja personalizar seu manto?</h3>
+            <p class="personalization-subtitle">Adicione nome e número oficial nas costas por apenas R$ 70,00</p>
             
-            <div v-if="customizationEnabled" class="personalization-fields mt-4">
+            <div class="personalization-options-pills mt-3">
+              <button 
+                type="button" 
+                class="pill-btn" 
+                :class="{ active: !customizationEnabled }" 
+                @click="customizationEnabled = false"
+              >
+                ❌ Não, sem personalização
+              </button>
+              <button 
+                type="button" 
+                class="pill-btn" 
+                :class="{ active: customizationEnabled }" 
+                @click="customizationEnabled = true"
+              >
+                👕 Sim, personalizar (+ R$ 70,00)
+              </button>
+            </div>
+            
+            <div v-if="customizationEnabled" class="personalization-fields mt-4 animate-fade-in">
               <div class="field-row">
                 <div class="field-item">
                   <label>Nome na Camisa (Max. 10 letras)</label>
@@ -889,7 +906,7 @@ function formatMoney(val) {
   background-color: var(--color-black-lighter);
   border-radius: var(--border-radius);
   overflow: hidden;
-  aspect-ratio: 1/1;
+  aspect-ratio: 3/4;
 }
 
 .main-image {
@@ -905,13 +922,18 @@ function formatMoney(val) {
 
 .thumbnails {
   display: flex;
-  gap: var(--spacing-4);
-  overflow-x: auto;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  scrollbar-width: none;
+}
+
+.thumbnails::-webkit-scrollbar {
+  display: none;
 }
 
 .thumbnail {
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   object-fit: cover;
   border-radius: var(--border-radius-sm);
   cursor: pointer;
@@ -1534,17 +1556,54 @@ function formatMoney(val) {
   border-radius: var(--border-radius);
 }
 
-.personalization-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
+.personalization-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-white);
+  margin-bottom: 0.25rem;
+  font-family: var(--font-title);
+  letter-spacing: 0.5px;
 }
 
-.personalization-toggle input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--color-red);
+.personalization-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-gray);
+  margin-bottom: 1.25rem;
+}
+
+.personalization-options-pills {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.pill-btn {
+  flex: 1;
+  padding: 0.75rem var(--spacing-4);
+  background-color: var(--color-black-lighter);
+  border: 2px solid var(--color-black-lighter);
+  border-radius: var(--border-radius);
+  color: var(--color-gray);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: center;
+  cursor: pointer;
+  font-family: var(--font-title);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: var(--transition);
+}
+
+.pill-btn:hover {
+  color: var(--color-white);
+  border-color: var(--color-gray-dark);
+}
+
+.pill-btn.active {
+  background-color: rgba(227, 6, 19, 0.1);
+  border-color: var(--color-red);
+  color: var(--color-white);
+  box-shadow: 0 0 10px rgba(227, 6, 19, 0.2);
 }
 
 .personalization-fields .field-row {
