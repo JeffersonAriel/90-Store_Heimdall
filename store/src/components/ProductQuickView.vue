@@ -142,11 +142,22 @@ const availableSizes = computed(() => {
 const sizesToShow = computed(() => {
   if (!props.product || !props.product.variacoes) return [];
   const actualSizes = props.product.variacoes.map(v => v.tamanho).filter(Boolean);
-  const isClothing = actualSizes.some(s => ['P', 'M', 'G', 'GG', 'GGG', 'PP', 'XG'].includes(s.toUpperCase()));
+  const isClothing = actualSizes.some(s => ['P', 'M', 'G', 'GG', 'GGG', 'PP', 'XG', 'XXG', 'G1', 'G2', 'G3'].includes(s.toUpperCase()));
   if (isClothing) {
-    const standard = ['P', 'M', 'G', 'GG', 'GGG'];
-    const merged = [...new Set([...standard, ...actualSizes])];
-    return merged;
+    const abntOrder = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'GGG', 'G1', 'G2', 'G3'];
+    const uniqueSizes = [...new Set(actualSizes)];
+    
+    uniqueSizes.sort((a, b) => {
+      const indexA = abntOrder.indexOf(a.toUpperCase());
+      const indexB = abntOrder.indexOf(b.toUpperCase());
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+    return uniqueSizes;
   }
   return [...new Set(actualSizes)];
 });

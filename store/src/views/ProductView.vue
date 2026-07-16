@@ -103,7 +103,9 @@
             <div class="variation-group mt-4" v-if="sizesToShow.length > 0">
               <div class="size-header">
                 <label>Tamanho: <strong>{{ selectedSize || 'Selecione' }}</strong></label>
-                <a href="https://acrobat.adobe.com/id/urn:aaid:sc:VA6C2:34be0fea-0095-4468-8fab-05d9e2f474e9" target="_blank" rel="noopener noreferrer" class="size-guide-btn">Tabela de Medidas</a>
+                <button type="button" class="size-guide-btn" style="background: none; border: none; cursor: pointer; text-decoration: underline;" @click.prevent="isSizebayOpen = true">
+                  Provador Virtual / Tabela de Medidas
+                </button>
               </div>
               <div class="size-options">
                 <button 
@@ -214,6 +216,23 @@
           />
         </div>
       </div>
+      <!-- Sizebay Virtual Fitting Room Modal -->
+      <div v-if="isSizebayOpen" class="sizebay-modal-overlay" @click.self="isSizebayOpen = false">
+        <div class="sizebay-modal-content">
+          <div class="sizebay-modal-header">
+            <h4>Provador Virtual / Tabela de Medidas</h4>
+            <button class="close-modal-btn" @click="isSizebayOpen = false" title="Fechar">×</button>
+          </div>
+          <div class="sizebay-iframe-container">
+            <iframe 
+              :src="sizebayUrl" 
+              frameborder="0" 
+              class="sizebay-iframe"
+              allow="geolocation; microphone; camera"
+            ></iframe>
+          </div>
+        </div>
+      </div>
 
     </template>
   </div>
@@ -248,6 +267,14 @@ const selectedColor = ref('')
 const selectedSize = ref('')
 const quantity = ref(1)
 const stockWarning = ref(true)
+
+// Sizebay Virtual Fitting Room state
+const isSizebayOpen = ref(false)
+const sizebayUrl = computed(() => {
+  const tenantId = import.meta.env.VITE_SIZEBAY_TENANT_ID || '1356' // Tenant ID configurado ou fallback padrão
+  const productId = product.value?.id || '123'
+  return `https://vfr-v3-production.sizebay.technology/v4/index.html?tenantId=${tenantId}&id=${productId}&lang=pt`
+})
 
 // Formulário "Me Avise Quando Chegar"
 const notifyForm = reactive({ nome: '', email: '' })
@@ -316,12 +343,22 @@ const availableSizes = computed(() => {
 const sizesToShow = computed(() => {
   if (!product.value || !product.value.variacoes) return [];
   const actualSizes = product.value.variacoes.map(v => v.tamanho).filter(Boolean);
-  const isClothing = actualSizes.some(s => ['P', 'M', 'G', 'GG', 'GGG', 'PP', 'XG'].includes(s.toUpperCase()));
+  const isClothing = actualSizes.some(s => ['P', 'M', 'G', 'GG', 'GGG', 'PP', 'XG', 'XXG', 'G1', 'G2', 'G3'].includes(s.toUpperCase()));
   if (isClothing) {
-    const standard = ['P', 'M', 'G', 'GG', 'GGG'];
-    // Filtra duplicados mantendo a ordem do padrão e adicionando outros que existam
-    const merged = [...new Set([...standard, ...actualSizes])];
-    return merged;
+    const abntOrder = ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XXG', 'GGG', 'G1', 'G2', 'G3'];
+    const uniqueSizes = [...new Set(actualSizes)];
+    
+    uniqueSizes.sort((a, b) => {
+      const indexA = abntOrder.indexOf(a.toUpperCase());
+      const indexB = abntOrder.indexOf(b.toUpperCase());
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+    return uniqueSizes;
   }
   return [...new Set(actualSizes)];
 });
@@ -892,5 +929,86 @@ function formatMoney(val) {
 
 .gallery-nav-btn.right {
   right: 1rem;
+}
+
+/* Sizebay Modal */
+.sizebay-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+}
+
+.sizebay-modal-content {
+  background-color: #121214;
+  border: 1px solid #29292e;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 900px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.sizebay-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #29292e;
+  background-color: #1a1a1e;
+}
+
+.sizebay-modal-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #ffffff;
+  font-family: var(--font-title);
+  text-transform: uppercase;
+}
+
+.close-modal-btn {
+  background: none;
+  border: none;
+  color: #a8a8b3;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.close-modal-btn:hover {
+  color: var(--color-red);
+}
+
+.sizebay-iframe-container {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  background-color: #ffffff;
+}
+
+.sizebay-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+@media (max-width: 768px) {
+  .sizebay-modal-content {
+    height: 95vh;
+    max-height: 95vh;
+  }
 }
 </style>
