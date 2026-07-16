@@ -5,10 +5,7 @@
       <div class="container header-top">
         <div class="logo">
           <RouterLink to="/" class="logo-link">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 55" class="logo-svg">
-              <text x="0" y="45" font-family="'Oswald', sans-serif" font-size="52" font-weight="700" fill="#ffffff" letter-spacing="-1.5">90</text>
-              <text x="88" y="32" font-family="'Oswald', sans-serif" font-size="34" font-weight="700" fill="#e30613">+</text>
-            </svg>
+            <img src="/logo.svg?v=4" alt="90+ Store" class="logo-img" />
           </RouterLink>
         </div>
         
@@ -133,10 +130,7 @@
       <div class="container footer-grid">
         <div class="footer-col brand-col">
           <div class="logo">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 55" class="logo-svg">
-              <text x="0" y="45" font-family="'Oswald', sans-serif" font-size="52" font-weight="700" fill="#ffffff" letter-spacing="-1.5">90</text>
-              <text x="88" y="32" font-family="'Oswald', sans-serif" font-size="34" font-weight="700" fill="#e30613">+</text>
-            </svg>
+            <img src="/logo.svg?v=4" alt="90+ Store" class="logo-img" />
           </div>
           <p class="footer-desc">A sua loja de artigos esportivos. Alta performance, estilo e as melhores marcas do mundo.</p>
           <div class="social-links">
@@ -340,10 +334,9 @@ function handleSearch() {
   align-items: center;
 }
 
-.logo-svg {
+.logo-img {
   height: 40px;
-  width: auto;
-  display: block;
+  object-fit: contain;
 }
 
 /* Search */
