@@ -332,14 +332,21 @@ function handleSearch() {
 .logo-link {
   display: flex;
   align-items: center;
-  position: relative;
-  width: 180px;
-  height: 40px;
 }
 
 .logo-img {
-  height: 180px;
+  height: 40px;
   object-fit: contain;
+}
+
+.header-top .logo-link {
+  position: relative;
+  width: 160px;
+  height: 40px;
+}
+
+.header-top .logo-img {
+  height: 160px;
   position: absolute;
   top: 50%;
   left: 0;
