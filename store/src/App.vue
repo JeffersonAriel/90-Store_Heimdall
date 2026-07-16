@@ -5,7 +5,7 @@
       <div class="container header-top">
         <div class="logo">
           <RouterLink to="/" class="logo-link">
-            <img src="/logo.svg" alt="90+ Store" class="logo-img" />
+            <img src="/logo.svg?v=2" alt="90+ Store" class="logo-img" />
           </RouterLink>
         </div>
         
@@ -130,7 +130,7 @@
       <div class="container footer-grid">
         <div class="footer-col brand-col">
           <div class="logo">
-            <img src="/logo.svg" alt="90+ Store" class="logo-img" />
+            <img src="/logo.svg?v=2" alt="90+ Store" class="logo-img" />
           </div>
           <p class="footer-desc">A sua loja de artigos esportivos. Alta performance, estilo e as melhores marcas do mundo.</p>
           <div class="social-links">
