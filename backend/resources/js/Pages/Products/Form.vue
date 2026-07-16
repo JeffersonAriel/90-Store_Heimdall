@@ -178,6 +178,11 @@
                   <input v-model="form.esgotado" type="checkbox" id="esgotado" class="w-5 h-5 rounded" style="accent-color: var(--color-brand)" />
                   <label for="esgotado" class="ml-2 form-label mb-0 font-bold cursor-pointer" style="color: var(--color-danger)">Marcar como ESGOTADO (Ativa "Me Avise")</label>
                 </div>
+
+                <div class="flex items-center">
+                  <input v-model="form.permite_personalizacao" type="checkbox" id="permite_personalizacao" class="w-5 h-5 rounded" style="accent-color: var(--color-brand)" />
+                  <label for="permite_personalizacao" class="ml-2 form-label mb-0 font-bold cursor-pointer" style="color: var(--color-success)">Permite Personalização (+ R$ 70,00)</label>
+                </div>
               </div>
             </div>
           </div>
@@ -468,6 +473,7 @@ const form = useForm({
   ativo: props.product ? props.product.ativo : true,
   esgotado: props.product ? !!props.product.esgotado : false,
   is_destaque: props.product?.is_destaque || false,
+  permite_personalizacao: props.product ? !!props.product.permite_personalizacao : false,
   peso_kg: props.product?.peso_kg || 0,
   variacoes: props.product?.variacoes?.length ? [...props.product.variacoes] : [
     {

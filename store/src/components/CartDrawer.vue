@@ -21,7 +21,10 @@
               <div class="item-details">
                 <h4 class="item-name">{{ item.produto.nome }}</h4>
                 <div class="item-meta">Tam: {{ item.variacao.tamanho }} | Cor: {{ item.variacao.cor }}</div>
-                <div class="item-price">R$ {{ formatMoney((item.produto.tem_desconto ? item.produto.preco_desconto : item.produto.preco_venda) + item.variacao.preco_adicional) }}</div>
+                <div v-if="item.customization" class="item-customization-badge">
+                  👕 Personalizado: <strong>{{ item.customization.nome }}</strong> (Nº {{ item.customization.numero }})
+                </div>
+                <div class="item-price">R$ {{ formatMoney(getItemPrice(item)) }}</div>
                 
                 <div class="item-actions">
                   <div class="qty-control">
@@ -29,7 +32,7 @@
                     <span>{{ item.quantidade }}</span>
                     <button @click="updateQty(item, 1)">+</button>
                   </div>
-                  <button class="remove-btn" @click="removeItem(item.variacao.id)">Remover</button>
+                  <button class="remove-btn" @click="removeItem(item)">Remover</button>
                 </div>
               </div>
             </div>
@@ -100,16 +103,25 @@ function close() {
   emit('close')
 }
 
+function getItemPrice(item) {
+  const base = item.produto.tem_desconto ? item.produto.preco_desconto : item.produto.preco_venda
+  let total = parseFloat(base) + parseFloat(item.variacao.preco_adicional || 0)
+  if (item.customization && item.customization.personalizado) {
+    total += parseFloat(item.customization.preco_adicional || 0)
+  }
+  return total
+}
+
 function updateQty(item, delta) {
   if (item.quantidade + delta > 0) {
-    store.addToCart(item.produto, item.variacao, delta)
+    store.addToCart(item.produto, item.variacao, delta, item.customization)
   } else if (item.quantidade + delta === 0) {
-    store.removeFromCart(item.variacao.id)
+    store.removeFromCart(item)
   }
 }
 
-function removeItem(variationId) {
-  store.removeFromCart(variationId)
+function removeItem(item) {
+  store.removeFromCart(item)
 }
 
 function applyCoupon() {

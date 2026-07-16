@@ -10,12 +10,15 @@
     <div v-else class="cart-container">
       <!-- Lista de Itens -->
       <div class="cart-items-panel">
-        <div v-for="item in store.cart" :key="item.variacao.id" class="cart-item">
+        <div v-for="(item, index) in store.cart" :key="index" class="cart-item">
           <img :src="item.produto.fotos[0]?.url" class="item-img" :alt="item.produto.nome" />
           
           <div class="item-details">
             <h4>{{ item.produto.nome }}</h4>
             <p class="text-secondary">Tam: {{ item.variacao.tamanho || 'N/A' }} | Cor: {{ item.variacao.cor || 'N/A' }}</p>
+            <p v-if="item.customization" style="color: var(--color-success); font-size: 0.9rem; margin-top: 0.2rem; font-weight: bold;">
+              👕 Personalizado: {{ item.customization.nome }} (Nº {{ item.customization.numero }})
+            </p>
             <p class="text-muted">Modelo: {{ item.variacao.tipo_estoque === 'proprio' ? 'Estoque Próprio' : 'Dropshipping' }}</p>
           </div>
 
@@ -27,7 +30,7 @@
             <strong>R$ {{ formatMoney(getItemPrice(item)) }}</strong>
           </div>
 
-          <button class="remove-btn" @click="store.removeFromCart(item.variacao.id)">✕</button>
+          <button class="remove-btn" @click="store.removeFromCart(item)">✕</button>
         </div>
       </div>
 
@@ -103,7 +106,11 @@ const shippingOptions = ref([])
 
 function getItemPrice(item) {
   const base = item.produto.tem_desconto ? item.produto.preco_desconto : item.produto.preco_venda
-  return (parseFloat(base) + parseFloat(item.variacao.preco_adicional)) * item.quantidade
+  let total = parseFloat(base) + parseFloat(item.variacao.preco_adicional)
+  if (item.customization && item.customization.personalizado) {
+    total += parseFloat(item.customization.preco_adicional || 0)
+  }
+  return total * item.quantidade
 }
 
 async function calculateShipping() {

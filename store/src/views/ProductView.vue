@@ -72,14 +72,14 @@
 
           <div class="price-section mt-6">
             <template v-if="product.tem_desconto">
-              <span class="price-old">R$ {{ formatMoney(product.preco_venda) }}</span>
+              <span class="price-old">R$ {{ formatMoney(displayedOldPrice) }}</span>
               <div class="price-new">
-                R$ {{ formatMoney(product.preco_desconto) }}
+                R$ {{ formatMoney(displayedPrice) }}
                 <span class="discount-badge">-{{ calculateDiscountPercent() }}%</span>
               </div>
             </template>
             <template v-else>
-              <div class="price-new">R$ {{ formatMoney(product.preco_venda) }}</div>
+              <div class="price-new">R$ {{ formatMoney(displayedPrice) }}</div>
             </template>
           </div>
 
@@ -125,6 +125,42 @@
 
           <div v-if="!product.esgotado && stockWarning" class="stock-warning mt-4">
             ⚠️ Últimas unidades em estoque!
+          </div>
+
+          <!-- Personalização de Camisa -->
+          <div v-if="product.permite_personalizacao" class="personalization-container mt-6">
+            <label class="personalization-toggle">
+              <input type="checkbox" v-model="customizationEnabled" />
+              <span class="ml-2 font-bold cursor-pointer text-white">Personalizar com Nome e Número (+ R$ 70,00)</span>
+            </label>
+            
+            <div v-if="customizationEnabled" class="personalization-fields mt-4">
+              <div class="field-row">
+                <div class="field-item">
+                  <label>Nome na Camisa (Max. 10 letras)</label>
+                  <input 
+                    type="text" 
+                    :value="customizationName" 
+                    @input="handleNameInput" 
+                    placeholder="Ex: SILVA" 
+                    class="input-field" 
+                  />
+                </div>
+                <div class="field-item">
+                  <label>Número (Max. 2 dígitos)</label>
+                  <input 
+                    type="text" 
+                    :value="customizationNumber" 
+                    @input="handleNumberInput" 
+                    placeholder="10" 
+                    class="input-field" 
+                  />
+                </div>
+              </div>
+              <span class="personalization-disclaimer">
+                * Camisas personalizadas não podem ser devolvidas ou trocadas.
+              </span>
+            </div>
           </div>
 
           <!-- Ações padrão -->
@@ -532,6 +568,57 @@ function resetVfr() {
   vfrFootLength.value = ''
 }
 
+// Jersey Personalization State & Logic
+const customizationEnabled = ref(false)
+const customizationName = ref('')
+const customizationNumber = ref('')
+
+const selectedVariation = computed(() => {
+  if (!product.value || !product.value.variacoes) return null
+  const hasColors = availableColors.value.length > 0
+  return product.value.variacoes.find(v => {
+    const matchSize = v.tamanho === selectedSize.value
+    const matchColor = !hasColors || v.cor === selectedColor.value
+    return matchSize && matchColor
+  }) || null
+})
+
+const displayedPrice = computed(() => {
+  if (!product.value) return 0
+  let basePrice = product.value.tem_desconto ? product.value.preco_desconto : product.value.preco_venda
+  if (selectedVariation.value) {
+    basePrice = parseFloat(basePrice) + parseFloat(selectedVariation.value.preco_adicional || 0)
+  }
+  if (customizationEnabled.value) {
+    basePrice = parseFloat(basePrice) + 70.0
+  }
+  return basePrice
+})
+
+const displayedOldPrice = computed(() => {
+  if (!product.value) return 0
+  let basePrice = product.value.preco_venda
+  if (selectedVariation.value) {
+    basePrice = parseFloat(basePrice) + parseFloat(selectedVariation.value.preco_adicional || 0)
+  }
+  if (customizationEnabled.value) {
+    basePrice = parseFloat(basePrice) + 70.0
+  }
+  return basePrice
+})
+
+function handleNameInput(event) {
+  let val = event.target.value.replace(/[^A-Za-zÀ-ÖØ-öø-ÿ\s]/g, '')
+  if (val.length > 10) val = val.substring(0, 10)
+  customizationName.value = val.toUpperCase()
+}
+
+function handleNumberInput(event) {
+  let val = event.target.value.replace(/\D/g, '')
+  if (val.length > 2) val = val.substring(0, 2)
+  customizationNumber.value = val
+}
+
 // Formulário "Me Avise Quando Chegar"
 const notifyForm = reactive({ nome: '', email: '' })
 const notifyLoading = ref(false)
@@ -717,7 +804,22 @@ function addToCart() {
     return
   }
 
-  store.addToCart(product.value, variation, quantity.value)
+  // Personalization validation
+  let customData = null
+  if (customizationEnabled.value) {
+    if (!customizationName.value.trim() || !customizationNumber.value.trim()) {
+      alert('Por favor, informe o Nome e o Número para personalizar sua camisa.')
+      return
+    }
+    customData = {
+      personalizado: true,
+      nome: customizationName.value.trim().toUpperCase(),
+      numero: customizationNumber.value.trim(),
+      preco_adicional: 70.0
+    }
+  }
+
+  store.addToCart(product.value, variation, quantity.value, customData)
   window.dispatchEvent(new CustomEvent('open-cart-drawer'))
 }
 
@@ -1418,7 +1520,70 @@ function formatMoney(val) {
   color: var(--color-white);
 }
 
+/* Personalization Section */
+.personalization-container {
+  background-color: var(--color-black-light);
+  border: 1px solid var(--color-black-lighter);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+}
+
+.personalization-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.personalization-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-red);
+}
+
+.personalization-fields .field-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+.personalization-fields .field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.personalization-fields .field-item label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-gray);
+}
+
+.personalization-fields .field-item .input-field {
+  padding: 0.75rem;
+  background-color: var(--color-black-lighter);
+  border: 1px solid var(--color-black-lighter);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-white);
+  font-family: inherit;
+}
+
+.personalization-fields .field-item .input-field:focus {
+  border-color: var(--color-red);
+  outline: none;
+}
+
+.personalization-disclaimer {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-red);
+  margin-top: 1rem;
+}
+
 @media (max-width: 768px) {
+  .personalization-fields .field-row {
+    grid-template-columns: 1fr;
+  }
   .sizebay-modal-content {
     height: 95vh;
     max-height: 95vh;

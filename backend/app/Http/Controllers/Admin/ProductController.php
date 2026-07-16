@@ -86,6 +86,7 @@ class ProductController extends Controller
             'dimensoes_json' => 'nullable|array',
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
+            'permite_personalizacao' => 'boolean',
             
             // Atributos customizados da categoria
             'atributos' => 'nullable|array',
@@ -218,6 +219,7 @@ class ProductController extends Controller
             'dimensoes_json' => 'nullable|array',
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string',
+            'permite_personalizacao' => 'boolean',
             'atributos' => 'nullable|array',
             'variacoes' => 'required|array|min:1',
             'variacoes.*.id' => 'nullable|integer|exists:variacoes_produto,id',

@@ -36,6 +36,7 @@ class Produto extends Model
         'dimensoes_json',
         'seo_title',
         'seo_description',
+        'permite_personalizacao',
     ];
 
     protected $casts = [
@@ -51,6 +52,7 @@ class Produto extends Model
         'is_destaque' => 'boolean',
         'peso_kg' => 'decimal:3',
         'dimensoes_json' => 'array',
+        'permite_personalizacao' => 'boolean',
     ];
 
     /**

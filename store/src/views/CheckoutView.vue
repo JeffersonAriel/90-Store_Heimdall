@@ -201,11 +201,14 @@
           <h3 class="filter-title">RESUMO DO PEDIDO</h3>
           
           <div class="cart-items-mini">
-            <div class="cart-item-mini" v-for="item in store.cart" :key="item.variacao.id">
+            <div class="cart-item-mini" v-for="(item, index) in store.cart" :key="index">
               <img :src="item.produto.foto_capa?.url || item.produto.fotos?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100'" />
               <div class="mini-details">
                 <p>{{ item.produto.nome }} ({{ item.variacao.tamanho }} / {{ item.variacao.cor }})</p>
-                <span>{{ item.quantidade }}x {{ formatCurrency(item.produto.tem_desconto ? item.produto.preco_desconto : item.produto.preco_venda) }}</span>
+                <div v-if="item.customization" style="color: var(--color-red); font-size: 0.75rem; font-weight: bold; margin-bottom: 2px;">
+                  👕 Personalizado: {{ item.customization.nome }} (Nº {{ item.customization.numero }})
+                </div>
+                <span>{{ item.quantidade }}x {{ formatCurrency((parseFloat(item.produto.tem_desconto ? item.produto.preco_desconto : item.produto.preco_venda) + parseFloat(item.variacao.preco_adicional || 0) + (item.customization ? 70.0 : 0.0))) }}</span>
               </div>
             </div>
             <div v-if="store.cart.length === 0" class="text-center text-gray my-4">Seu carrinho está vazio.</div>
@@ -416,7 +419,10 @@ function formatCurrency(value) {
 async function finalizeOrder() {
   const itens = store.cart.map(item => ({
     variacao_id: item.variacao.id,
-    quantidade: item.quantidade
+    quantidade: item.quantidade,
+    personalizado: item.customization ? true : false,
+    personalizacao_nome: item.customization ? item.customization.nome : null,
+    personalizacao_numero: item.customization ? item.customization.numero : null
   }))
 
   const payload = {

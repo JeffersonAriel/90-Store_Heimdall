@@ -19,7 +19,10 @@ export const useStore = defineStore('main', {
     cartSubtotal: (state) => {
       return state.cart.reduce((total, item) => {
         const preco = item.produto.tem_desconto ? item.produto.preco_desconto : item.produto.preco_venda
-        const precoFinal = parseFloat(preco) + parseFloat(item.variacao.preco_adicional)
+        let precoFinal = parseFloat(preco) + parseFloat(item.variacao.preco_adicional)
+        if (item.customization && item.customization.personalizado) {
+          precoFinal += parseFloat(item.customization.preco_adicional || 0)
+        }
         return total + (precoFinal * item.quantidade)
       }, 0)
     },
@@ -65,22 +68,37 @@ export const useStore = defineStore('main', {
       }
     },
 
-    addToCart(product, variation, quantity = 1) {
-      const existing = this.cart.find(
-        (item) => item.variacao.id === variation.id
-      )
+    addToCart(product, variation, quantity = 1, customization = null) {
+      const existing = this.cart.find((item) => {
+        const sameVar = item.variacao.id === variation.id
+        const sameCustom = (!item.customization && !customization) || (
+          item.customization && customization &&
+          item.customization.nome === customization.nome &&
+          item.customization.numero === customization.numero
+        )
+        return sameVar && sameCustom
+      })
 
       if (existing) {
         existing.quantidade += quantity
       } else {
-        this.cart.push({ produto: product, variacao: variation, quantidade: quantity })
+        this.cart.push({ 
+          produto: product, 
+          variacao: variation, 
+          quantidade: quantity,
+          customization: customization 
+        })
       }
 
       this.saveCart()
     },
 
-    removeFromCart(variationId) {
-      this.cart = this.cart.filter((item) => item.variacao.id !== variationId)
+    removeFromCart(itemOrId) {
+      if (typeof itemOrId === 'object' && itemOrId !== null) {
+        this.cart = this.cart.filter((item) => item !== itemOrId)
+      } else {
+        this.cart = this.cart.filter((item) => item.variacao.id !== itemOrId)
+      }
       this.saveCart()
     },
 
