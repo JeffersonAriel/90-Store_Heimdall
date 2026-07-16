@@ -332,11 +332,19 @@ function handleSearch() {
 .logo-link {
   display: flex;
   align-items: center;
+  position: relative;
+  width: 180px;
+  height: 40px;
 }
 
 .logo-img {
-  height: 80px;
+  height: 180px;
   object-fit: contain;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  z-index: 100;
 }
 
 /* Search */
