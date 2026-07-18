@@ -514,13 +514,29 @@ class ImportService
     {
         $d = $row['data'];
 
-        if ($d['id']) {
-            $supplier = Fornecedor::find($d['id']);
+        // Remove ID do array de dados para evitar conflitos na criação se for nulo/vazio
+        $id = $d['id'] ?? null;
+        unset($d['id']);
+
+        if ($id) {
+            $supplier = Fornecedor::find($id);
             if ($supplier) {
                 $supplier->update($d);
-            } else {
-                Fornecedor::create($d);
+                $summary['atualizados']++;
+                return;
             }
+        }
+
+        // Se já existe um com o mesmo CNPJ ou CPF (caso não tenha vindo ID no excel)
+        $existing = null;
+        if (!empty($d['cnpj'])) {
+            $existing = Fornecedor::where('cnpj', $d['cnpj'])->first();
+        } elseif (!empty($d['cpf'])) {
+            $existing = Fornecedor::where('cpf', $d['cpf'])->first();
+        }
+
+        if ($existing) {
+            $existing->update($d);
             $summary['atualizados']++;
         } else {
             Fornecedor::create($d);
