@@ -28,6 +28,10 @@ class FinancialController extends Controller
         $tipo = $request->input('tipo');
         $categoria = $request->input('categoria');
         $status = $request->input('status');
+        $dataInicio = $request->input('data_inicio');
+        $dataFim = $request->input('data_fim');
+        $contaId = $request->input('conta_id');
+        $search = $request->input('search');
 
         $transactions = LancamentoFinanceiro::query()
             ->with(['conta', 'pedido', 'fornecedor', 'funcionarioCriador'])
@@ -44,6 +48,26 @@ class FinancialController extends Controller
                     $query->where('conciliado', false);
                 }
             })
+            ->when($dataInicio, function ($query, $dataInicio) {
+                $query->where('data_lancamento', '>=', $dataInicio);
+            })
+            ->when($dataFim, function ($query, $dataFim) {
+                $query->where('data_lancamento', '<=', $dataFim);
+            })
+            ->when($contaId, function ($query, $contaId) {
+                $query->where('conta_id', $contaId);
+            })
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('descricao', 'like', "%{$search}%")
+                      ->orWhere('categoria', 'like', "%{$search}%")
+                      ->orWhere('valor', 'like', "%{$search}%")
+                      ->orWhereHas('fornecedor', function ($sub) use ($search) {
+                          $sub->where('razao_social', 'like', "%{$search}%")
+                              ->orWhere('nome_fantasia', 'like', "%{$search}%");
+                      });
+                });
+            })
             ->orderBy('data_lancamento', 'desc')
             ->paginate(15)
             ->withQueryString();
@@ -57,14 +81,33 @@ class FinancialController extends Controller
         
         $contasPagar = LancamentoFinanceiro::where('conciliado', false)->where('tipo', 'saida')->sum('valor');
 
+        // Valor financeiro do estoque (Custo e Venda)
+        $estoqueMetrics = DB::table('variacoes_produto as vp')
+            ->join('produtos as p', 'vp.produto_id', '=', 'p.id')
+            ->whereNull('p.deleted_at')
+            ->whereNull('vp.deleted_at')
+            ->where('p.ativo', true)
+            ->where('vp.ativo', true)
+            ->where('vp.tipo_estoque', 'proprio')
+            ->select(
+                DB::raw('SUM(vp.estoque_quantidade * p.preco_custo) as total_custo'),
+                DB::raw('SUM(vp.estoque_quantidade * (p.preco_venda + vp.preco_adicional)) as total_venda')
+            )
+            ->first();
+
+        $valorEstoqueCusto = floatval($estoqueMetrics->total_custo ?? 0);
+        $valorEstoqueVenda = floatval($estoqueMetrics->total_venda ?? 0);
+
         return Inertia::render('Financial/Index', [
             'transactions' => $transactions,
             'accounts' => $accounts,
-            'filters' => $request->only('tipo', 'categoria', 'status'),
+            'filters' => $request->only('tipo', 'categoria', 'status', 'data_inicio', 'data_fim', 'conta_id', 'search'),
             'metrics' => [
                 'lucro_liquido' => floatval($lucroLiquido),
                 'contas_receber' => floatval($contasReceber),
                 'contas_pagar' => floatval($contasPagar),
+                'valor_estoque_custo' => $valorEstoqueCusto,
+                'valor_estoque_venda' => $valorEstoqueVenda,
             ]
         ]);
     }

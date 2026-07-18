@@ -19,8 +19,8 @@
       </div>
     </div>
 
-    <!-- Métricas Consolidadas (DRE Simples & Contas) -->
-    <div class="grid-3 gap-6 mb-6">
+    <!-- Métricas Consolidadas (DRE Simples, Contas & Estoque) -->
+    <div class="mb-6" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
       <div class="card" style="border-top: 4px solid var(--color-success);">
         <div class="card-body">
           <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Lucro Líquido Realizado</div>
@@ -48,6 +48,24 @@
           <small class="text-secondary mt-1 block">Saídas/Repasses pendentes de conciliação</small>
         </div>
       </div>
+      <div class="card" style="border-top: 4px solid #d97706;">
+        <div class="card-body">
+          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Valor em Estoque (Custo)</div>
+          <div class="mt-2 font-mono font-bold text-warning" style="font-size: 1.75rem; color: #d97706;">
+            R$ {{ formatMoney(metrics.valor_estoque_custo) }}
+          </div>
+          <small class="text-secondary mt-1 block">Total pago pelas peças físicas</small>
+        </div>
+      </div>
+      <div class="card" style="border-top: 4px solid #10b981;">
+        <div class="card-body">
+          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Valor em Estoque (Venda)</div>
+          <div class="mt-2 font-mono font-bold" style="font-size: 1.75rem; color: #10b981;">
+            R$ {{ formatMoney(metrics.valor_estoque_venda) }}
+          </div>
+          <small class="text-secondary mt-1 block">Faturamento potencial do estoque</small>
+        </div>
+      </div>
     </div>
 
     <!-- Contas Bancárias -->
@@ -65,9 +83,12 @@
 
     <!-- Lista de Lançamentos -->
     <div class="card">
-      <div class="card-header flex justify-between items-center">
-        <h3 class="card-title">💵 Extrato de Transações</h3>
-        <form @submit.prevent="handleFilter" class="flex gap-2">
+      <div class="card-header" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <h3 class="card-title" style="margin: 0;">💵 Extrato de Transações</h3>
+        </div>
+        <form @submit.prevent="handleFilter" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; width: 100%;">
+          <input type="text" v-model="form.search" placeholder="Buscar por descrição, fornecedor..." class="form-control form-control-sm" style="flex: 1; min-width: 200px;" />
           <select v-model="form.tipo" class="form-control form-control-sm" style="max-width: 130px;">
             <option value="">Todos Tipos</option>
             <option value="entrada">Receitas</option>
@@ -89,7 +110,17 @@
             <option value="salarios">Salários</option>
             <option value="outros">Outros</option>
           </select>
-          <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+          <select v-model="form.conta_id" class="form-control form-control-sm" style="max-width: 130px;">
+            <option value="">Todas Contas</option>
+            <option v-for="acc in accounts" :key="acc.id" :value="acc.id">{{ acc.nome }}</option>
+          </select>
+          <div style="display: flex; align-items: center; gap: 0.25rem;">
+            <input type="date" v-model="form.data_inicio" class="form-control form-control-sm" style="max-width: 130px;" title="Data Início" />
+            <span style="color: var(--color-text-muted); font-size: 0.75rem;">a</span>
+            <input type="date" v-model="form.data_fim" class="form-control form-control-sm" style="max-width: 130px;" title="Data Fim" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">🔍 Filtrar</button>
+          <button type="button" @click="clearFilters" class="btn btn-secondary btn-sm">Limpar</button>
         </form>
       </div>
       <div class="card-body" style="padding: 0;">
@@ -280,7 +311,11 @@ const props = defineProps({
 const form = ref({
   tipo: props.filters.tipo || '',
   categoria: props.filters.categoria || '',
-  status: props.filters.status || ''
+  status: props.filters.status || '',
+  conta_id: props.filters.conta_id || '',
+  data_inicio: props.filters.data_inicio || '',
+  data_fim: props.filters.data_fim || '',
+  search: props.filters.search || ''
 })
 
 const showModal = ref(false)
@@ -300,6 +335,19 @@ const modalForm = ref({
 
 function handleFilter() {
   router.get(route('admin.financial.index'), form.value, { preserveState: true })
+}
+
+function clearFilters() {
+  form.value = {
+    tipo: '',
+    categoria: '',
+    status: '',
+    conta_id: '',
+    data_inicio: '',
+    data_fim: '',
+    search: ''
+  }
+  handleFilter()
 }
 
 function reconcile(id) {
