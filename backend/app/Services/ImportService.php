@@ -517,6 +517,14 @@ class ImportService
         $id = $d['id'] ?? null;
         unset($d['id']);
 
+        // Remove chaves nulas ou vazias de CNPJ e CPF para evitar erro de constraint unique
+        if (empty($d['cnpj'])) {
+            unset($d['cnpj']);
+        }
+        if (empty($d['cpf'])) {
+            unset($d['cpf']);
+        }
+
         if ($id) {
             $supplier = Fornecedor::find($id);
             if ($supplier) {
