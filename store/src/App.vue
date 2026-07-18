@@ -356,6 +356,7 @@ function handleSearch() {
   left: 0;
   transform: translateY(-50%);
   z-index: 100;
+  pointer-events: none;
 }
 
 /* Search */
