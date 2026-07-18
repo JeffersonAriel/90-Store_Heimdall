@@ -286,7 +286,13 @@ class SecurityController extends Controller
             ]);
             $seederOutput = \Illuminate\Support\Facades\Artisan::output();
 
-            return back()->with('success', 'Banco de dados, APIs e permissões sincronizados com sucesso! Detalhes: ' . trim($migrateOutput) . ' | ' . trim($seederOutput));
+            // Limpa todos os caches de rotas, configuracoes e otimizacoes para evitar o erro 500
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            \Illuminate\Support\Facades\Artisan::call('route:clear');
+            \Illuminate\Support\Facades\Artisan::call('config:clear');
+            \Illuminate\Support\Facades\Artisan::call('view:clear');
+            
+            return back()->with('success', 'Banco de dados, APIs, permissões e caches otimizados com sucesso! Detalhes: ' . trim($migrateOutput) . ' | ' . trim($seederOutput));
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao executar migrações: ' . $e->getMessage());
         }
