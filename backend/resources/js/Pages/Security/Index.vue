@@ -544,6 +544,7 @@ const modules = [
   { key: 'agenda',       label: '📅 Agenda & Tarefas' },
   { key: 'seguranca',    label: '🔐 Segurança & Logs' },
   { key: 'clientes',     label: '👤 Clientes' },
+  { key: 'crm',          label: '📊 CRM Enterprise' },
 ]
 const actions = [
   { key: 'view',   label: 'Ver' },
