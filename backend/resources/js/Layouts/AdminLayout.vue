@@ -33,6 +33,7 @@
         <NavItem v-if="can('estoque', 'view')"   :href="route('admin.stock.index')"    icon="stock"    label="Estoque"  :active="$page.url.startsWith('/heimdall/stock')"   :badge="$page.props.counts?.criticalStock" badge-type="danger" />
         <NavItem v-if="can('financeiro', 'view')" :href="route('admin.financial.index')" icon="financial" label="Financeiro" :active="$page.url.startsWith('/heimdall/financial')" />
         <NavItem v-if="can('agenda', 'view')" :href="route('admin.agenda.index')" icon="calendar" label="Agenda" :active="$page.url.startsWith('/heimdall/agenda')" />
+        <NavItem v-if="can('crm', 'view')" :href="route('admin.crm.dashboard')" icon="analytics" label="CRM Enterprise" :active="$page.url.startsWith('/heimdall/crm')" />
 
         <!-- Configurações -->
         <div class="nav-section-label">Configurações</div>
