@@ -23,60 +23,81 @@
     <div class="mb-6" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
       <div class="card" style="border-top: 4px solid var(--color-success);">
         <div class="card-body">
-          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Lucro Líquido Realizado</div>
+          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold; letter-spacing: 0.05em;">Saldo Líquido Realizado</div>
           <div class="mt-2 font-mono font-bold" :class="metrics.lucro_liquido >= 0 ? 'text-success' : 'text-danger'" style="font-size: 1.75rem;">
             R$ {{ formatMoney(metrics.lucro_liquido) }}
           </div>
-          <small class="text-secondary mt-1 block">Receitas conciliadas - Despesas conciliadas</small>
+          <small class="text-secondary mt-1 block" title="Legenda: Dinheiro que de fato entrou no caixa físico ou virtual, subtraído do que de fato já foi pago.">
+            ℹ️ Receitas confirmadas menos despesas pagas
+          </small>
         </div>
       </div>
       <div class="card" style="border-top: 4px solid #3b82f6;">
         <div class="card-body">
-          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Contas a Receber (Pendente)</div>
+          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold; letter-spacing: 0.05em;">Previsão de Entradas</div>
           <div class="mt-2 font-mono font-bold" style="font-size: 1.75rem; color: #3b82f6;">
             R$ {{ formatMoney(metrics.contas_receber) }}
           </div>
-          <small class="text-secondary mt-1 block">Entradas pendentes de conciliação</small>
+          <small class="text-secondary mt-1 block" title="Legenda: Vendas realizadas ou receitas agendadas que ainda não foram confirmadas (conciliadas) no banco/gateway.">
+            ℹ️ Contas a receber (Aguardando Pix/Boleto)
+          </small>
         </div>
       </div>
       <div class="card" style="border-top: 4px solid var(--color-danger);">
         <div class="card-body">
-          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Contas a Pagar (Pendente)</div>
+          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold; letter-spacing: 0.05em;">Previsão de Saídas</div>
           <div class="mt-2 font-mono font-bold text-danger" style="font-size: 1.75rem;">
             R$ {{ formatMoney(metrics.contas_pagar) }}
           </div>
-          <small class="text-secondary mt-1 block">Saídas/Repasses pendentes de conciliação</small>
+          <small class="text-secondary mt-1 block" title="Legenda: Custos, despesas cadastradas ou repasses a fornecedores agendados que ainda não foram marcados como pagos.">
+            ℹ️ Contas a pagar (Aguardando liquidação)
+          </small>
         </div>
       </div>
       <div class="card" style="border-top: 4px solid #d97706;">
         <div class="card-body">
-          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Valor em Estoque (Custo)</div>
+          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold; letter-spacing: 0.05em;">Patrimônio (Preço de Custo)</div>
           <div class="mt-2 font-mono font-bold text-warning" style="font-size: 1.75rem; color: #d97706;">
             R$ {{ formatMoney(metrics.valor_estoque_custo) }}
           </div>
-          <small class="text-secondary mt-1 block">Total pago pelas peças físicas</small>
+          <small class="text-secondary mt-1 block" title="Legenda: Capital financeiro investido na compra dos produtos que estão fisicamente armazenados no estoque.">
+            ℹ️ Dinheiro investido nas peças em estoque
+          </small>
         </div>
       </div>
       <div class="card" style="border-top: 4px solid #10b981;">
         <div class="card-body">
-          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">Valor em Estoque (Venda)</div>
+          <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; font-weight: bold; letter-spacing: 0.05em;">Potencial de Venda (Estoque)</div>
           <div class="mt-2 font-mono font-bold" style="font-size: 1.75rem; color: #10b981;">
             R$ {{ formatMoney(metrics.valor_estoque_venda) }}
           </div>
-          <small class="text-secondary mt-1 block">Faturamento potencial do estoque</small>
+          <small class="text-secondary mt-1 block" title="Legenda: O faturamento bruto estimado que a loja obterá se vender todas as mercadorias atualmente disponíveis no estoque.">
+            ℹ️ Retorno bruto potencial do estoque atual
+          </small>
         </div>
       </div>
     </div>
 
-    <!-- Contas Bancárias -->
+    <!-- Contas Bancárias & Gateways -->
     <div class="grid-3 gap-6 mb-6">
       <div v-for="acc in accounts" :key="acc.id" class="card">
         <div class="card-body">
-          <div class="text-muted" style="font-size: 0.75rem;">{{ acc.banco }} (Ag: {{ acc.agencia }} / Cc: {{ acc.conta }})</div>
+          <div class="text-muted" style="font-size: 0.75rem; font-weight: 500;">
+            {{ acc.banco }} 
+            <span v-if="acc.agencia || acc.conta" style="opacity: 0.8;">
+              (Ag: {{ acc.agencia || '—' }} / Cc: {{ acc.conta || '—' }})
+            </span>
+            <span v-else style="color: #6366f1; background-color: #e0e7ff; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; margin-left: 4px;">
+              Gateway de Pagamento
+            </span>
+          </div>
           <h3 class="font-bold mt-1" style="font-size: 1.25rem;">{{ acc.nome }}</h3>
           <div class="mt-2 font-mono font-bold" :class="acc.saldo >= 0 ? 'text-success' : 'text-danger'" style="font-size: 1.5rem;">
             R$ {{ formatMoney(acc.saldo) }}
           </div>
+          <small class="text-secondary block mt-1" style="font-size: 0.7rem; line-height: 1.2;">
+            {{ acc.agencia || acc.conta ? 'Conta para conciliação e despesas físicas.' : 'Saldo acumulado dos pagamentos Pix/Cartão recebidos no e-commerce.' }}
+          </small>
         </div>
       </div>
     </div>
