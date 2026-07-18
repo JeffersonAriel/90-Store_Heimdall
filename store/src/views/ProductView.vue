@@ -897,13 +897,13 @@ function formatMoney(val) {
   background-color: var(--color-black-lighter);
   border-radius: var(--border-radius);
   overflow: hidden;
-  aspect-ratio: 1/1;
+  aspect-ratio: 4/5;
 }
 
 .main-image {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   transition: transform 0.3s;
 }
 
