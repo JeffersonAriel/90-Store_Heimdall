@@ -67,14 +67,20 @@ class ClientController extends Controller
     public function update(Request $request, Cliente $client)
     {
         $data = $request->validate([
-            'ativo' => 'required|boolean'
+            'nome_completo' => 'sometimes|required|string|max:255',
+            'nome_social' => 'nullable|string|max:255',
+            'cpf' => 'nullable|string|max:14',
+            'email' => 'sometimes|required|email|max:255|unique:clientes,email,' . $client->id,
+            'telefone' => 'nullable|string|max:20',
+            'whatsapp' => 'nullable|string|max:20',
+            'data_nascimento' => 'nullable|date',
+            'pontos_saldo' => 'nullable|integer',
+            'ativo' => 'sometimes|required|boolean'
         ]);
 
-        $client->update([
-            'ativo' => $data['ativo']
-        ]);
+        $client->update($data);
 
-        return back()->with('success', 'Status do cliente atualizado com sucesso!');
+        return back()->with('success', 'Cadastro do cliente atualizado com sucesso!');
     }
 
     public function destroy(Cliente $client)

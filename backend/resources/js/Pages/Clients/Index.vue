@@ -87,11 +87,13 @@
     </div>
 
     <!-- Modal Detalhes do Cliente -->
-    <div v-if="showModal" class="modal-backdrop" @click.self="showModal = false">
-      <div class="modal-box" style="max-width: 700px; width: 95%;">
+    <div v-if="showModal" class="modal-backdrop" @click.self="closeModal">
+      <div class="modal-box" style="max-width: 750px; width: 95%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 1rem;">
-          <h2 class="modal-title" style="margin: 0;">📋 Ficha do Cliente: {{ selectedClient?.nome_completo }}</h2>
-          <button @click="showModal = false" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-muted);">&times;</button>
+          <h2 class="modal-title" style="margin: 0;">
+            {{ isEditing ? '✏️ Editar Ficha do Cliente' : '📋 Ficha do Cliente: ' + (selectedClient?.nome_completo || '') }}
+          </h2>
+          <button @click="closeModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-muted);">&times;</button>
         </div>
 
         <div v-if="loadingDetails" class="p-6 text-center text-brand">
@@ -99,10 +101,50 @@
         </div>
         <div v-else-if="selectedClient" class="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          <!-- Dados Básicos -->
+          <!-- Dados Básicos / Formulário -->
           <div>
             <h3 style="font-size: 1rem; color: var(--color-brand); margin-bottom: 0.75rem;">Dados Pessoais</h3>
-            <ul style="list-style: none; padding: 0; line-height: 1.8; font-size: 0.875rem;">
+            
+            <form v-if="isEditing" @submit.prevent="saveClient" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block;">Nome Completo *</label>
+                <input type="text" v-model="editForm.nome_completo" class="form-control form-control-sm" style="width: 100%;" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block;">Nome Social</label>
+                <input type="text" v-model="editForm.nome_social" class="form-control form-control-sm" style="width: 100%;" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block;">CPF</label>
+                <input type="text" v-model="editForm.cpf" class="form-control form-control-sm" style="width: 100%;" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block;">Data de Nascimento</label>
+                <input type="date" v-model="editForm.data_nascimento" class="form-control form-control-sm" style="width: 100%;" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block;">E-mail *</label>
+                <input type="email" v-model="editForm.email" class="form-control form-control-sm" style="width: 100%;" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block;">Telefone</label>
+                <input type="text" v-model="editForm.telefone" class="form-control form-control-sm" style="width: 100%;" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block;">WhatsApp</label>
+                <input type="text" v-model="editForm.whatsapp" class="form-control form-control-sm" style="width: 100%;" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem; margin-bottom: 0.25rem; display: block;">Saldo de Pontos</label>
+                <input type="number" v-model="editForm.pontos_saldo" class="form-control form-control-sm" style="width: 100%;" />
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                <input type="checkbox" id="edit-ativo" v-model="editForm.ativo" style="width: auto;" />
+                <label for="edit-ativo" style="font-size: 0.8125rem; font-weight: bold; cursor: pointer; margin: 0;">Cliente Ativo</label>
+              </div>
+            </form>
+
+            <ul v-else style="list-style: none; padding: 0; line-height: 1.8; font-size: 0.875rem;">
               <li><strong>Nome Completo:</strong> {{ selectedClient.nome_completo }}</li>
               <li v-if="selectedClient.nome_social"><strong>Nome Social:</strong> {{ selectedClient.nome_social }}</li>
               <li><strong>CPF:</strong> <span class="font-mono">{{ selectedClient.cpf || 'Não informado' }}</span></li>
@@ -111,6 +153,12 @@
               <li><strong>Telefone:</strong> {{ selectedClient.telefone || '—' }}</li>
               <li><strong>WhatsApp:</strong> {{ selectedClient.whatsapp || '—' }}</li>
               <li><strong>Saldo de Pontos:</strong> {{ selectedClient.pontos_saldo || 0 }}</li>
+              <li>
+                <strong>Status:</strong>
+                <span class="badge ml-1" :class="selectedClient.ativo ? 'badge-success' : 'badge-danger'">
+                  {{ selectedClient.ativo ? 'Ativo' : 'Inativo' }}
+                </span>
+              </li>
             </ul>
           </div>
 
@@ -120,7 +168,7 @@
             <div v-if="!selectedClient.enderecos || selectedClient.enderecos.length === 0" class="text-secondary text-sm">
               Nenhum endereço cadastrado.
             </div>
-            <div v-else style="max-height: 150px; overflow-y: auto;">
+            <div v-else style="max-height: 250px; overflow-y: auto;">
               <div 
                 v-for="end in selectedClient.enderecos" 
                 :key="end.id" 
@@ -170,8 +218,17 @@
 
         </div>
 
-        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem; border-top: 1px solid var(--color-border); padding-top: 1rem;">
-          <button @click="showModal = false" class="btn btn-secondary">Fechar</button>
+        <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; border-top: 1px solid var(--color-border); padding-top: 1rem;">
+          <div v-if="isEditing" style="display: flex; gap: 0.5rem; justify-content: flex-end; width: 100%;">
+            <button @click="cancelEdit" class="btn btn-secondary">Cancelar</button>
+            <button @click="saveClient" class="btn btn-success" :disabled="editForm.processing">
+              {{ editForm.processing ? 'Salvando...' : 'Salvar Alterações' }}
+            </button>
+          </div>
+          <div v-else style="display: flex; justify-content: space-between; width: 100%;">
+            <button @click="startEdit" class="btn btn-primary">✏️ Editar Ficha</button>
+            <button @click="closeModal" class="btn btn-secondary">Fechar</button>
+          </div>
         </div>
       </div>
     </div>
@@ -180,7 +237,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { router, Link } from '@inertiajs/vue3'
+import { router, Link, useForm } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import axios from 'axios'
 
@@ -193,6 +250,20 @@ const search = ref(props.filters.search || '')
 const showModal = ref(false)
 const selectedClient = ref(null)
 const loadingDetails = ref(false)
+const isEditing = ref(false)
+
+const editForm = useForm({
+  id: null,
+  nome_completo: '',
+  nome_social: '',
+  cpf: '',
+  data_nascimento: '',
+  email: '',
+  telefone: '',
+  whatsapp: '',
+  pontos_saldo: 0,
+  ativo: true,
+})
 
 function handleSearch() {
   router.get(route('admin.clients.index'), { search: search.value }, { preserveState: true, replace: true })
@@ -210,6 +281,7 @@ async function viewDetails(client) {
   selectedClient.value = null
   showModal.value = true
   loadingDetails.value = true
+  isEditing.value = false
   try {
     const res = await axios.get(route('admin.clients.show', client.id))
     if (res.data.success) {
@@ -221,6 +293,51 @@ async function viewDetails(client) {
   } finally {
     loadingDetails.value = false
   }
+}
+
+function startEdit() {
+  if (!selectedClient.value) return
+  editForm.id = selectedClient.value.id
+  editForm.nome_completo = selectedClient.value.nome_completo || ''
+  editForm.nome_social = selectedClient.value.nome_social || ''
+  editForm.cpf = selectedClient.value.cpf || ''
+  editForm.data_nascimento = selectedClient.value.data_nascimento ? selectedClient.value.data_nascimento.substring(0, 10) : ''
+  editForm.email = selectedClient.value.email || ''
+  editForm.telefone = selectedClient.value.telefone || ''
+  editForm.whatsapp = selectedClient.value.whatsapp || ''
+  editForm.pontos_saldo = selectedClient.value.pontos_saldo || 0
+  editForm.ativo = selectedClient.value.ativo !== false
+  isEditing.value = true
+}
+
+function cancelEdit() {
+  isEditing.value = false
+}
+
+function saveClient() {
+  editForm.put(route('admin.clients.update', editForm.id), {
+    preserveScroll: true,
+    onSuccess: () => {
+      isEditing.value = false
+      // Atualiza os dados locais de selectedClient a partir dos dados do formulário
+      if (selectedClient.value) {
+        selectedClient.value.nome_completo = editForm.nome_completo
+        selectedClient.value.nome_social = editForm.nome_social
+        selectedClient.value.cpf = editForm.cpf
+        selectedClient.value.data_nascimento = editForm.data_nascimento
+        selectedClient.value.email = editForm.email
+        selectedClient.value.telefone = editForm.telefone
+        selectedClient.value.whatsapp = editForm.whatsapp
+        selectedClient.value.pontos_saldo = editForm.pontos_saldo
+        selectedClient.value.ativo = editForm.ativo
+      }
+    }
+  })
+}
+
+function closeModal() {
+  showModal.value = false
+  isEditing.value = false
 }
 
 function deleteClient(id) {
