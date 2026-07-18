@@ -58,10 +58,14 @@ class SecurityController extends Controller
             ->get();
 
         // ── Ameaças por hora (últimas 24h para gráfico) ────────────
+        $driver = DB::connection()->getDriverName();
+        $hourExpr = $driver === 'sqlite' ? "strftime('%H', created_at)" : "HOUR(created_at)";
+        $selectExpr = $driver === 'sqlite' ? "CAST(strftime('%H', created_at) AS INTEGER) as hora" : "HOUR(created_at) as hora";
+
         $threatsPerHour = DB::table('logs_seguranca')
-            ->select(DB::raw('HOUR(created_at) as hora'), DB::raw('count(*) as total'))
+            ->select(DB::raw($selectExpr), DB::raw('count(*) as total'))
             ->where('created_at', '>=', $now->copy()->subDay())
-            ->groupBy(DB::raw('HOUR(created_at)'))
+            ->groupBy(DB::raw($hourExpr))
             ->orderBy('hora')
             ->get()
             ->keyBy('hora');
