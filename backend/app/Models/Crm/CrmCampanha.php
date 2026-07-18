@@ -2,41 +2,9 @@
 
 namespace App\Models\Crm;
 
-use App\Models\Cliente;
 use App\Models\Funcionario;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
-class CrmSegmento extends Model
-{
-    use SoftDeletes;
-
-    protected $table = 'crm_segmentos';
-
-    protected $fillable = [
-        'nome', 'descricao', 'cor', 'icone', 'tipo',
-        'regras', 'total_clientes', 'atualizado_em', 'ativo',
-    ];
-
-    protected $casts = [
-        'regras'         => 'array',
-        'ativo'          => 'boolean',
-        'total_clientes' => 'integer',
-        'atualizado_em'  => 'datetime',
-    ];
-
-    public function clientes()
-    {
-        return $this->belongsToMany(Cliente::class, 'crm_segmento_clientes', 'segmento_id', 'cliente_id')
-                    ->withPivot('adicionado_em');
-    }
-
-    public function scopeAtivo($query)
-    {
-        return $query->where('ativo', true);
-    }
-}
-
 
 class CrmCampanha extends Model
 {
@@ -80,22 +48,4 @@ class CrmCampanha extends Model
         if (!$this->total_destinatarios) return 0;
         return round(($this->total_erros / $this->total_destinatarios) * 100, 1);
     }
-}
-
-
-class CrmCampanhaEnvio extends Model
-{
-    protected $table = 'crm_campanha_envios';
-
-    protected $fillable = [
-        'campanha_id', 'cliente_id', 'status', 'enviado_em', 'aberto_em', 'erro_msg',
-    ];
-
-    protected $casts = [
-        'enviado_em' => 'datetime',
-        'aberto_em'  => 'datetime',
-    ];
-
-    public function campanha() { return $this->belongsTo(CrmCampanha::class, 'campanha_id'); }
-    public function cliente()  { return $this->belongsTo(Cliente::class,     'cliente_id'); }
 }
