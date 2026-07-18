@@ -286,6 +286,12 @@ class SecurityController extends Controller
             ]);
             $seederOutput = \Illuminate\Support\Facades\Artisan::output();
 
+            // Recalcula retroativamente todos os clientes existentes para alimentar as colunas do CRM
+            $clientes = \App\Models\Cliente::all();
+            foreach ($clientes as $c) {
+                \App\Services\Crm\CrmKpiService::recalcularCliente($c->id);
+            }
+
             // Limpa todos os caches de rotas, configuracoes e otimizacoes para evitar o erro 500
             \Illuminate\Support\Facades\Artisan::call('optimize:clear');
             \Illuminate\Support\Facades\Artisan::call('route:clear');

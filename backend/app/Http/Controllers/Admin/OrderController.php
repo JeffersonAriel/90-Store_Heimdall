@@ -199,6 +199,12 @@ class OrderController extends Controller
                 $this->financialService->registerSaleEntry($order->id, $total, $validated['gateway_pagamento']);
             }
 
+            // Hook para recalcular os dados de LTV, ticket médio e pedidos do cliente no CRM
+            \App\Services\Crm\CrmKpiService::recalcularCliente($clienteId);
+
+            // Hook para registrar o evento na Timeline CRM
+            \App\Services\Crm\CrmTimelineService::pedidoCriado($clienteId, $order->id, $total);
+
             return $order;
         });
 
@@ -241,6 +247,12 @@ class OrderController extends Controller
                 Auth::guard('admin')->id(),
                 $request->observacao
             );
+
+            // Recalcula KPIs do cliente caso mude status do pedido
+            $pedido = Pedido::find($id);
+            if ($pedido && $pedido->cliente_id) {
+                \App\Services\Crm\CrmKpiService::recalcularCliente($pedido->cliente_id);
+            }
 
             return back()->with('success', 'Status do pedido atualizado com sucesso!');
         } catch (\Exception $e) {
