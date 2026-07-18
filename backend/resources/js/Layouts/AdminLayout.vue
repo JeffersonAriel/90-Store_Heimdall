@@ -246,6 +246,9 @@ onMounted(() => {
 })
 
 function can(module, action = 'view') {
+  if (page.props.auth.employee?.is_admin) {
+    return true
+  }
   const permissions = page.props.auth?.permissions || []
   return permissions.some(p => p.modulo === module && p.acao === action)
 }
