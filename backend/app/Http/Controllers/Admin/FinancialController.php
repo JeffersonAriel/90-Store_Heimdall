@@ -127,6 +127,7 @@ class FinancialController extends Controller
             'recorrente' => 'boolean',
             'recorrencias' => 'nullable|integer|min:2|max:36',
             'frequencia' => 'nullable|in:mensal,semanal',
+            'comprovante_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $isConciliado = $request->boolean('conciliado');
@@ -134,10 +135,15 @@ class FinancialController extends Controller
         $recorrencias = $request->input('recorrencias', 1);
         $frequencia = $request->input('frequencia', 'mensal');
 
+        $comprovantePath = null;
+        if ($request->hasFile('comprovante_file')) {
+            $comprovantePath = '/storage/' . $request->file('comprovante_file')->store('comprovantes', 'public');
+        }
+
         try {
             if ($isRecorrente && $recorrencias > 1) {
                 $baseDate = \Carbon\Carbon::parse($request->data_lancamento);
-                DB::transaction(function () use ($request, $baseDate, $recorrencias, $frequencia, $isConciliado) {
+                DB::transaction(function () use ($request, $baseDate, $recorrencias, $frequencia, $isConciliado, $comprovantePath) {
                     for ($i = 0; $i < $recorrencias; $i++) {
                         $occurrenceDate = $baseDate->copy();
                         if ($frequencia === 'semanal') {
@@ -158,6 +164,7 @@ class FinancialController extends Controller
                             'categoria' => $request->categoria,
                             'descricao' => $descFinal,
                             'valor' => $request->valor,
+                            'comprovante' => $comprovantePath,
                             'data_lancamento' => $occurrenceDate->toDateString(),
                             'data_competencia' => $occurrenceDate->toDateString(),
                             'conta_id' => $conciliadoParcela ? $request->conta_id : null,
@@ -174,6 +181,7 @@ class FinancialController extends Controller
                     'categoria' => $request->categoria,
                     'descricao' => $request->descricao,
                     'valor' => $request->valor,
+                    'comprovante' => $comprovantePath,
                     'data_lancamento' => $request->data_lancamento,
                     'data_competencia' => $request->data_lancamento,
                     'conta_id' => $request->conta_id,
@@ -263,15 +271,26 @@ class FinancialController extends Controller
             'data_lancamento' => 'required|date',
             'conta_id' => 'nullable|exists:contas_bancarias,id',
             'conciliado' => 'boolean',
+            'comprovante_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $isConciliado = $request->boolean('conciliado');
+
+        $comprovantePath = $transaction->comprovante;
+        if ($request->hasFile('comprovante_file')) {
+            if ($transaction->comprovante && str_starts_with($transaction->comprovante, '/storage/')) {
+                $oldPath = str_replace('/storage/', '', $transaction->comprovante);
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($oldPath);
+            }
+            $comprovantePath = '/storage/' . $request->file('comprovante_file')->store('comprovantes', 'public');
+        }
 
         $transaction->update([
             'tipo' => $request->tipo,
             'categoria' => $request->categoria,
             'descricao' => $request->descricao,
             'valor' => $request->valor,
+            'comprovante' => $comprovantePath,
             'data_lancamento' => $request->data_lancamento,
             'data_competencia' => $request->data_lancamento,
             'conta_id' => $request->conta_id,

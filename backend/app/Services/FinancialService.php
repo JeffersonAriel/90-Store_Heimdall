@@ -12,9 +12,9 @@ class FinancialService
     /**
      * Gera lançamento automático de entrada para um pedido pago.
      */
-    public function registerSaleEntry(int $orderId, float $value, string $gateway): int
+    public function registerSaleEntry(int $orderId, float $value, string $gateway, ?string $comprovante = null): int
     {
-        return DB::transaction(function () use ($orderId, $value, $gateway) {
+        return DB::transaction(function () use ($orderId, $value, $gateway, $comprovante) {
             // Associa à conta bancária principal ativa (ou cria uma genérica se não houver)
             $conta = ContaBancaria::where('ativa', true)->first();
             if (!$conta) {
@@ -33,6 +33,7 @@ class FinancialService
                 'categoria' => 'venda',
                 'descricao' => "Recebimento do pedido #{$orderId} via {$gateway}",
                 'valor' => $value,
+                'comprovante' => $comprovante,
                 'data_lancamento' => now()->toDateString(),
                 'data_competencia' => now()->toDateString(),
                 'conciliado' => true, // Entradas automáticas de gateways já vem confirmadas/conciliadas

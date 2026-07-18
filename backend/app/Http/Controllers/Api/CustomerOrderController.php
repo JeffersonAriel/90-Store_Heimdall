@@ -123,7 +123,8 @@ class CustomerOrderController extends Controller
                         'observacoes' => $pedido->observacoes . $infoPagamento
                     ]);
 
-                    app(\App\Services\FinancialService::class)->registerSaleEntry($pedido->id, $pedido->total, 'infinitepay');
+                    $comprovanteUrl = $checkData['receipt_url'] ?? null;
+                    app(\App\Services\FinancialService::class)->registerSaleEntry($pedido->id, $pedido->total, 'infinitepay', $comprovanteUrl);
                     app(\App\Services\OrderStatusService::class)->transitionTo(
                         $pedido->id,
                         'em_separacao',

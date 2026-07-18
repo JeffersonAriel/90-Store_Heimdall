@@ -173,6 +173,11 @@
                     <div v-if="t.fornecedor" class="text-secondary" style="font-size: 0.75rem;">
                       Fornecedor: {{ t.fornecedor.razao_social }}
                     </div>
+                    <div v-if="t.comprovante" class="mt-1">
+                      <a :href="t.comprovante" target="_blank" class="text-success font-bold" style="font-size: 0.75rem; display: inline-flex; align-items: center; gap: 2px;" title="Ver comprovante">
+                        📄 Ver Comprovante
+                      </a>
+                    </div>
                   </div>
                 </td>
                 <td>
@@ -280,11 +285,26 @@
               </select>
             </div>
 
-            <div class="form-options mb-2">
+            <div class="form-options mb-4">
               <label class="checkbox-label" style="display:flex; gap:8px; align-items:center;">
                 <input type="checkbox" v-model="modalForm.conciliado" />
                 <span>Confirmar lançamento como já pago/conciliado</span>
               </label>
+            </div>
+
+            <!-- Upload de arquivo do comprovante -->
+            <div class="form-group mb-4">
+              <label class="form-label" style="display: flex; align-items: center; gap: 4px;">
+                <span>Comprovante de Pagamento</span>
+                <span v-if="modalForm.comprovante" style="color: var(--color-success); font-size: 0.75rem;">(Possui comprovante salvo)</span>
+              </label>
+              <input type="file" @change="handleFileChange" class="form-control" accept=".pdf,.jpg,.jpeg,.png" />
+              <small class="text-secondary block mt-1">Formatos aceitos: PDF, JPG, JPEG, PNG (Máx: 5MB)</small>
+              <div v-if="modalForm.comprovante" class="mt-2">
+                <a :href="modalForm.comprovante" target="_blank" class="text-success font-bold" style="font-size: 0.8rem; display: inline-flex; align-items: center; gap: 4px;">
+                  📄 Ver Comprovante Atual
+                </a>
+              </div>
             </div>
 
             <!-- Recorrência só é visível na criação -->
@@ -357,7 +377,9 @@ const modalForm = ref({
   conciliado: false,
   recorrente: false,
   recorrencias: 12,
-  frequencia: 'mensal'
+  frequencia: 'mensal',
+  comprovante: null,
+  comprovante_file: null
 })
 
 const isEditingModal = ref(false)
@@ -380,6 +402,10 @@ function clearFilters() {
   handleFilter()
 }
 
+function handleFileChange(event) {
+  modalForm.value.comprovante_file = event.target.files[0]
+}
+
 function reconcile(id) {
   if (confirm('Deseja confirmar a conciliação manual deste lançamento Pix/Pendente? O sistema registrará seu usuário como responsável.')) {
     router.post(route('admin.financial.reconcile', id))
@@ -399,7 +425,9 @@ function openCreateModal() {
     conciliado: false,
     recorrente: false,
     recorrencias: 12,
-    frequencia: 'mensal'
+    frequencia: 'mensal',
+    comprovante: null,
+    comprovante_file: null
   }
   showModal.value = true
 }
@@ -417,7 +445,9 @@ function openEditModal(t) {
     conciliado: t.conciliado === 1 || t.conciliado === true,
     recorrente: false,
     recorrencias: 12,
-    frequencia: 'mensal'
+    frequencia: 'mensal',
+    comprovante: t.comprovante,
+    comprovante_file: null
   }
   showModal.value = true
 }
@@ -430,8 +460,15 @@ function deleteTransaction(id) {
 
 function submitModalForm() {
   submitting.value = true
+  
+  // Usamos FormData ou similar via Inertia.
+  // Como enviamos arquivos e queremos simular PUT, passamos _method: 'put' via POST comum
   if (isEditingModal.value) {
-    router.put(route('admin.financial.update', editingTransactionId.value), modalForm.value, {
+    const payload = {
+      ...modalForm.value,
+      _method: 'put'
+    }
+    router.post(route('admin.financial.update', editingTransactionId.value), payload, {
       onSuccess: () => {
         showModal.value = false
         isEditingModal.value = false

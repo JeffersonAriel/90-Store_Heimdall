@@ -105,8 +105,9 @@ class InfinitePayController extends Controller
                     'observacoes' => $pedido->observacoes . $infoPagamento
                 ]);
 
-                // Registrar entrada no caixa financeiro
-                $this->financialService->registerSaleEntry($pedido->id, $pedido->total, 'infinitepay');
+                // Registrar entrada no caixa financeiro com o comprovante
+                $comprovanteUrl = $checkData['receipt_url'] ?? null;
+                $this->financialService->registerSaleEntry($pedido->id, $pedido->total, 'infinitepay', $comprovanteUrl);
 
                 // Transiciona para a próxima etapa (em_separacao)
                 $this->orderStatusService->transitionTo(
