@@ -61,6 +61,32 @@
             </div>
           </div>
         </div>
+
+        <!-- WhatsApp CRM Enterprise Integration -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">💬 Integração com WhatsApp (CRM Enterprise)</h3>
+          </div>
+          <div class="card-body flex flex-col gap-4">
+            <div v-for="api in whatsappApis" :key="api.id" class="api-item p-4" style="background: var(--color-bg-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
+              <div class="flex justify-between items-center">
+                <div>
+                  <h4 class="font-bold flex items-center gap-2">
+                    {{ api.nome }}
+                  </h4>
+                  <p class="text-secondary" style="font-size: 0.8125rem;">Habilite e configure os parâmetros de conexão de sua instância do Evolution API para disparos automáticos.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                  <label class="flex items-center gap-1 cursor-pointer">
+                    <input type="checkbox" v-model="api.ativo" @change="toggleApi(api)" />
+                    <span style="font-size: 0.875rem;">Ativo</span>
+                  </label>
+                  <button @click="editApi(api)" class="btn btn-secondary btn-sm">Configurar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -158,6 +184,7 @@ const activeApi = ref(null)
 
 const paymentApis = computed(() => props.apis.filter(a => a.tipo === 'gateway'))
 const cepApis = computed(() => props.apis.filter(a => a.tipo === 'cep'))
+const whatsappApis = computed(() => props.apis.filter(a => a.slug === 'evolution'))
 
 const apiConfigForm = ref({
   ativo: false,

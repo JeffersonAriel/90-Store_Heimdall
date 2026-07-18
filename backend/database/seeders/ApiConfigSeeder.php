@@ -172,6 +172,23 @@ class ApiConfigSeeder extends Seeder
                 'credenciais_json' => null,
                 'webhook_url'     => null,
             ],
+            // ── Evolution API (WhatsApp CRM) ──────────────────────
+            [
+                'slug'            => 'evolution',
+                'nome'            => 'Evolution API (WhatsApp)',
+                'tipo'            => 'outro',
+                'fallback_ordem'  => 99,
+                'ativo'           => false,
+                'sandbox'         => false,
+                'template_campos_json' => [
+                    ['campo' => 'base_url',           'label' => 'URL Base da API (Evolution)', 'obrigatorio' => true,  'tipo' => 'text'],
+                    ['campo' => 'apikey',            'label' => 'API Key Global (Global Token)', 'obrigatorio' => true,  'tipo' => 'password'],
+                    ['campo' => 'instance_name',      'label' => 'Nome da Instância',           'obrigatorio' => true,  'tipo' => 'text'],
+                    ['campo' => 'instance_token',     'label' => 'Token da Instância (Opcional)','obrigatorio' => false, 'tipo' => 'password'],
+                ],
+                'credenciais_json' => null,
+                'webhook_url'     => null,
+            ],
         ];
 
         foreach ($apis as $api) {
