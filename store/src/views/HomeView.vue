@@ -145,9 +145,7 @@ const brandsList = ref([
   { name: 'Adidas', slug: 'adidas', logo: './images/brands/adidas.svg', error: false },
   { name: 'Nike', slug: 'nike', logo: './images/brands/nike.svg', error: false },
   { name: 'Puma', slug: 'puma', logo: './images/brands/puma.svg', error: false },
-  { name: 'Lacoste', slug: 'lacoste', logo: './images/brands/lacoste.svg', error: false },
-  { name: 'New Balance', slug: 'new balance', logo: './images/brands/newbalance.svg', error: false },
-  { name: 'Under Armour', slug: 'under armour', logo: './images/brands/underarmour.svg', error: false }
+  { name: 'New Balance', slug: 'new balance', logo: './images/brands/newbalance.svg', error: false }
 ])
 
 function handleBrandImageError(brand) {

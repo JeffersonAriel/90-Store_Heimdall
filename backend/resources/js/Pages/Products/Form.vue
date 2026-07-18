@@ -390,7 +390,7 @@ const colorOptions = [
 
 // Marcas Pré-configuradas
 const brandOptions = [
-  'Nike', 'Adidas', 'Puma', 'Umbro', 'Kappa', 'Reebok', 'Fila', 'Under Armour', 
+  'Nike', 'Adidas', 'Puma', 'Umbro', 'Kappa', 'Reebok', 'Fila', 
   'New Balance', 'Mizuno', 'Asics', 'Penalty', 'Topper', 'Castore', 'Macron', 
   'Joma', 'Le Coq Sportif', 'Hummel', 'Athleta'
 ].sort();
