@@ -250,4 +250,44 @@ class FinancialController extends Controller
 
         return response()->json($data);
     }
+
+    public function update(Request $request, int $id)
+    {
+        $transaction = LancamentoFinanceiro::findOrFail($id);
+
+        $request->validate([
+            'tipo' => 'required|in:entrada,saida',
+            'categoria' => 'required|string|max:100',
+            'descricao' => 'required|string|max:255',
+            'valor' => 'required|numeric|min:0.01',
+            'data_lancamento' => 'required|date',
+            'conta_id' => 'nullable|exists:contas_bancarias,id',
+            'conciliado' => 'boolean',
+        ]);
+
+        $isConciliado = $request->boolean('conciliado');
+
+        $transaction->update([
+            'tipo' => $request->tipo,
+            'categoria' => $request->categoria,
+            'descricao' => $request->descricao,
+            'valor' => $request->valor,
+            'data_lancamento' => $request->data_lancamento,
+            'data_competencia' => $request->data_lancamento,
+            'conta_id' => $request->conta_id,
+            'conciliado' => $isConciliado,
+            'conciliado_por' => $isConciliado ? ($transaction->conciliado_por ?: Auth::guard('admin')->id()) : null,
+            'conciliado_em' => $isConciliado ? ($transaction->conciliado_em ?: now()) : null,
+        ]);
+
+        return back()->with('success', 'Lançamento financeiro atualizado com sucesso!');
+    }
+
+    public function destroy(int $id)
+    {
+        $transaction = LancamentoFinanceiro::findOrFail($id);
+        $transaction->delete();
+
+        return back()->with('success', 'Lançamento financeiro excluído com sucesso!');
+    }
 }

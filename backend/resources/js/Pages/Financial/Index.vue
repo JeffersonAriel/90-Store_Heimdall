@@ -137,7 +137,7 @@
                 <th>Categoria</th>
                 <th>Valor</th>
                 <th>Status</th>
-                <th style="width: 130px;">Ações</th>
+                <th style="width: 180px; text-align: right;">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -170,13 +170,18 @@
                     {{ t.conciliado ? 'Conciliado' : 'Aguardando' }}
                   </span>
                 </td>
-                <td>
-                  <button v-if="!t.conciliado" @click="reconcile(t.id)" class="btn btn-primary btn-sm" style="padding: 4px 8px;">
-                    Conciliar Pix / Confirmar
-                  </button>
-                  <span v-else class="text-muted" style="font-size: 0.75rem;">
-                    Conciliado por: <br/><strong>{{ t.funcionario_criador ? t.funcionario_criador.nome : 'Sistema' }}</strong>
-                  </span>
+                <td style="text-align: right;">
+                  <div style="display: inline-flex; gap: 0.25rem; justify-content: flex-end; align-items: center; width: 100%;">
+                    <button v-if="!t.conciliado" @click="reconcile(t.id)" class="btn btn-primary btn-sm" style="padding: 4px 8px;" title="Conciliar Pix / Confirmar">
+                      Conciliar
+                    </button>
+                    <button @click="openEditModal(t)" class="btn btn-secondary btn-sm" style="padding: 4px 8px;" title="Editar Lançamento">
+                      ✏️
+                    </button>
+                    <button @click="deleteTransaction(t.id)" class="btn btn-danger btn-sm" style="padding: 4px 8px; background-color: var(--color-danger); border-color: var(--color-danger);" title="Excluir Lançamento">
+                      🗑️
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -195,11 +200,11 @@
       </div>
     </div>
 
-    <!-- Modal Novo Lançamento Manual -->
+    <!-- Modal Lançamento Manual (Novo/Editar) -->
     <div v-if="showModal" class="modal-backdrop">
       <div class="modal-container" style="max-width: 500px;">
         <div class="modal-header">
-          <h3>💰 Novo Lançamento Manual</h3>
+          <h3>{{ isEditingModal ? '✏️ Editar Lançamento' : '💰 Novo Lançamento Manual' }}</h3>
           <button @click="showModal = false" class="modal-close-btn">✕</button>
         </div>
         <form @submit.prevent="submitModalForm">
@@ -261,14 +266,15 @@
               </label>
             </div>
 
-            <div class="form-options mb-4 mt-2">
+            <!-- Recorrência só é visível na criação -->
+            <div v-if="!isEditingModal" class="form-options mb-4 mt-2">
               <label class="checkbox-label" style="display:flex; gap:8px; align-items:center;">
                 <input type="checkbox" v-model="modalForm.recorrente" />
                 <span>Repetir lançamento (Recorrente)</span>
               </label>
             </div>
 
-            <div v-if="modalForm.recorrente" class="grid-2 gap-4 mb-4">
+            <div v-if="!isEditingModal && modalForm.recorrente" class="grid-2 gap-4 mb-4">
               <div class="form-group">
                 <label class="form-label">Frequência</label>
                 <select v-model="modalForm.frequencia" class="form-control" required>
@@ -333,6 +339,9 @@ const modalForm = ref({
   frequencia: 'mensal'
 })
 
+const isEditingModal = ref(false)
+const editingTransactionId = ref(null)
+
 function handleFilter() {
   router.get(route('admin.financial.index'), form.value, { preserveState: true })
 }
@@ -357,6 +366,8 @@ function reconcile(id) {
 }
 
 function openCreateModal() {
+  isEditingModal.value = false
+  editingTransactionId.value = null
   modalForm.value = {
     tipo: 'saida',
     categoria: 'outros',
@@ -372,17 +383,55 @@ function openCreateModal() {
   showModal.value = true
 }
 
+function openEditModal(t) {
+  isEditingModal.value = true
+  editingTransactionId.value = t.id
+  modalForm.value = {
+    tipo: t.tipo,
+    categoria: t.categoria,
+    descricao: t.descricao,
+    valor: t.valor,
+    data_lancamento: t.data_lancamento,
+    conta_id: t.conta_id,
+    conciliado: t.conciliado === 1 || t.conciliado === true,
+    recorrente: false,
+    recorrencias: 12,
+    frequencia: 'mensal'
+  }
+  showModal.value = true
+}
+
+function deleteTransaction(id) {
+  if (confirm('Tem certeza que deseja excluir permanentemente este lançamento financeiro?')) {
+    router.delete(route('admin.financial.destroy', id))
+  }
+}
+
 function submitModalForm() {
   submitting.value = true
-  router.post(route('admin.financial.store'), modalForm.value, {
-    onSuccess: () => {
-      showModal.value = false
-      submitting.value = false
-    },
-    onError: () => {
-      submitting.value = false
-    }
-  })
+  if (isEditingModal.value) {
+    router.put(route('admin.financial.update', editingTransactionId.value), modalForm.value, {
+      onSuccess: () => {
+        showModal.value = false
+        isEditingModal.value = false
+        editingTransactionId.value = null
+        submitting.value = false
+      },
+      onError: () => {
+        submitting.value = false
+      }
+    })
+  } else {
+    router.post(route('admin.financial.store'), modalForm.value, {
+      onSuccess: () => {
+        showModal.value = false
+        submitting.value = false
+      },
+      onError: () => {
+        submitting.value = false
+      }
+    })
+  }
 }
 
 function formatMoney(value) {

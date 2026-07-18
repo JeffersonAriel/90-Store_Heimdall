@@ -77,6 +77,8 @@ Route::prefix('heimdall')->group(function () {
 
         Route::get('financial', [FinancialController::class, 'index'])->name('admin.financial.index');
         Route::post('financial', [FinancialController::class, 'store'])->name('admin.financial.store');
+        Route::put('financial/{id}', [FinancialController::class, 'update'])->name('admin.financial.update');
+        Route::delete('financial/{id}', [FinancialController::class, 'destroy'])->name('admin.financial.destroy');
         Route::post('financial/{id}/reconcile', [FinancialController::class, 'reconcile'])->name('admin.financial.reconcile');
         Route::get('financial/reports', [FinancialController::class, 'reports'])->name('admin.financial.reports');
         Route::get('financial/export-bi', [FinancialController::class, 'biExport'])->name('admin.financial.export-bi');
