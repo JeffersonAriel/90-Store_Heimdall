@@ -8,6 +8,50 @@
       <button @click="openModal = true" class="crm-btn btn-primary">+ Novo Template</button>
     </div>
 
+    <!-- Modal Novo Template -->
+    <div v-if="openModal" class="crm-modal-overlay" @click.self="openModal = false">
+      <div class="crm-modal-body">
+        <div class="modal-header">
+          <h2>💬 Novo Template de Mensagem</h2>
+          <button @click="openModal = false" class="close-btn">&times;</button>
+        </div>
+        <form @submit.prevent="submitTemplate" class="modal-form">
+          <div class="form-group">
+            <label>Nome do Template *</label>
+            <input v-model="form.nome" type="text" class="crm-input" required placeholder="Ex: Boas-vindas WhatsApp" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Canal / Tipo *</label>
+              <select v-model="form.tipo" class="crm-select" required>
+                <option value="whatsapp">💬 WhatsApp</option>
+                <option value="email">✉️ E-mail</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Categoria *</label>
+              <select v-model="form.categoria" class="crm-select" required>
+                <option value="boas_vendas">Boas-vindas</option>
+                <option value="cobranca">Cobrança</option>
+                <option value="promocional">Promocional</option>
+                <option value="pos_venda">Pós-venda</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Conteúdo da Mensagem *</label>
+            <textarea v-model="form.conteudo" class="crm-textarea" required placeholder="Escreva a mensagem. Use tags como {{cliente}}, {{pedido}}..."></textarea>
+            <small class="help-text">Variáveis disponíveis: {{ Object.keys(variaveis || {}).join(', ') }}</small>
+          </div>
+          <div class="modal-footer">
+            <button type="button" @click="openModal = false" class="crm-btn btn-outline">Cancelar</button>
+            <button type="submit" class="crm-btn btn-primary" :disabled="form.processing">Criar Template</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <!-- Templates Grid -->
     <div class="templates-grid">
       <div v-for="t in templates" :key="t.id" class="template-card">
@@ -31,11 +75,27 @@
 
 <script setup>
 import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, useForm } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 
 const props = defineProps({ templates: Array, variaveis: Object })
 const openModal = ref(false)
+
+const form = useForm({
+  nome: '',
+  tipo: 'whatsapp',
+  categoria: 'boas_vendas',
+  conteudo: '',
+})
+
+function submitTemplate() {
+  form.post(route('admin.crm.templates.store'), {
+    onSuccess: () => {
+      openModal.value = false
+      form.reset()
+    }
+  })
+}
 
 function deletar(id) {
   if (confirm('Deseja realmente remover este template?')) {
@@ -45,6 +105,23 @@ function deletar(id) {
 </script>
 
 <style scoped>
+.crm-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
+.crm-modal-body { background: linear-gradient(135deg, #111827, #1e1b4b); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; width: 90%; max-width: 550px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,.05); }
+.modal-header h2 { font-size: 1.15rem; color: #fff; margin: 0; }
+.close-btn { background: transparent; border: none; color: #64748b; font-size: 1.5rem; cursor: pointer; }
+.modal-form { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: .4rem; }
+.form-group label { font-size: .78rem; color: #94a3b8; font-weight: 600; }
+.crm-input, .crm-select, .crm-textarea { width: 100%; padding: .6rem 1rem; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; color: #cbd5e1; font-size: .88rem; }
+.crm-textarea { height: 100px; resize: none; }
+.crm-input:focus, .crm-select:focus, .crm-textarea:focus { border-color: rgba(99,102,241,0.4); outline: none; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.modal-footer { display: flex; justify-content: flex-end; gap: .75rem; border-top: 1px solid rgba(255,255,255,.05); padding-top: 1rem; margin-top: .5rem; }
+.btn-outline { background: transparent; border: 1px solid rgba(255,255,255,.1); color: #cbd5e1; }
+.btn-outline:hover { background: rgba(255,255,255,.03); }
+.help-text { font-size: .7rem; color: #64748b; margin-top: .25rem; }
+
 .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 .page-title { font-size: 1.8rem; font-weight: 800; color: #f1f5f9; margin: 0; }
 .page-sub { color: #64748b; margin-top: 0.25rem; }
