@@ -210,6 +210,16 @@
             <p v-if="notifySuccess" class="mt-3 text-sm font-bold" style="color: var(--color-red);">✓ {{ notifySuccess }}</p>
           </div>
 
+          <!-- Sticky bottom bar mobile (outside v-if/v-else) -->
+          <teleport to="body">
+            <div v-if="product && !product.esgotado" class="mobile-sticky-cart">
+              <div class="mobile-sticky-price">R$&nbsp;{{ formatMoney(displayedPrice) }}</div>
+              <button class="btn btn-primary mobile-sticky-btn" @click="addToCart">
+                🛒 Adicionar ao Carrinho
+              </button>
+            </div>
+          </teleport>
+
           <!-- Frete -->
           <div class="shipping-section mt-8">
             <label>Calcule o Frete e Prazo</label>
@@ -1275,6 +1285,65 @@ function formatMoney(val) {
   .action-section { flex-direction: column; }
   .qty-selector { width: 100%; justify-content: space-between; }
   .qty-selector input { flex: 1; }
+
+  /* Ocultar o action-section e mostrar a sticky bar mobile */
+  .action-section {
+    display: none;
+  }
+
+  /* Sticky bar mobile */
+  .mobile-sticky-cart {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;
+    background-color: var(--color-black-light);
+    border-top: 1px solid var(--color-black-lighter);
+    padding: var(--spacing-3) var(--spacing-4);
+    gap: var(--spacing-3);
+    align-items: center;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+  }
+
+  .mobile-sticky-price {
+    font-family: var(--font-title);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-red);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .mobile-sticky-btn {
+    flex: 1;
+    height: 48px;
+    font-size: 0.95rem;
+  }
+
+  /* Ajuste do padding inferior para evitar sobreposição com sticky bar */
+  .product-info-col {
+    padding-bottom: 80px;
+  }
+
+  /* Tamanhos menores em mobile */
+  .product-title { font-size: 1.75rem; }
+  .price-new { font-size: 2rem; }
+  .thumbnails { margin-top: 10px; }
+  .thumbnail { width: 60px; height: 60px; }
+
+  /* ProductView padding mobile */
+  .product-view { padding: var(--spacing-4) var(--spacing-3); }
+}
+
+/* Ocultar sticky bar em desktop */
+.mobile-sticky-cart {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  .mobile-sticky-cart { display: none !important; }
 }
 
 .favorite-btn {

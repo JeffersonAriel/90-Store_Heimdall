@@ -9,9 +9,32 @@
       <p class="subtitle">{{ totalProducts }} produtos encontrados</p>
     </div>
 
+    <!-- Filtros mobile: botão -->
+    <div class="mobile-filter-bar">
+      <button class="btn-filter-mobile" @click="mobileFiltersOpen = true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="8" y1="12" x2="16" y2="12"></line><line x1="11" y1="18" x2="13" y2="18"></line></svg>
+        Filtros
+        <span v-if="activeFilterCount > 0" class="filter-count-badge">{{ activeFilterCount }}</span>
+      </button>
+      <select class="input-field select-field mobile-sort" v-model="filters.sort" @change="applyFilters">
+        <option value="relevance">Relevância</option>
+        <option value="lowest_price">Menor Preço</option>
+        <option value="highest_price">Maior Preço</option>
+        <option value="newest">Lançamentos</option>
+      </select>
+    </div>
+
+    <!-- Overlay filtros mobile -->
+    <div v-if="mobileFiltersOpen" class="filter-overlay" @click="mobileFiltersOpen = false"></div>
+
     <div class="catalog-layout">
       <!-- Sidebar de Filtros -->
-      <aside class="catalog-sidebar">
+      <aside class="catalog-sidebar" :class="{ 'mobile-open': mobileFiltersOpen }">
+        <!-- Cabeçalho mobile do drawer -->
+        <div class="sidebar-mobile-header">
+          <h3 style="font-size: 1rem; color: var(--color-white);">Filtros</h3>
+          <button @click="mobileFiltersOpen = false" style="color: var(--color-gray); background: none; border: none; cursor: pointer; font-size: 1.5rem; line-height: 1;">&#x2715;</button>
+        </div>
         <div class="filter-section">
           <h3 class="filter-title">Categorias</h3>
           <ul class="filter-list">
@@ -63,13 +86,13 @@
           </div>
         </div>
 
-        <button class="btn btn-outline w-full" @click="clearFilters">Limpar Filtros</button>
+        <button class="btn btn-outline w-full" @click="clearFilters; mobileFiltersOpen = false">Limpar Filtros</button>
       </aside>
 
       <!-- Main Content (Grid) -->
       <div class="catalog-main">
-        <!-- Toolbar (Sort) -->
-        <div class="catalog-toolbar">
+        <!-- Toolbar (Sort) - desktop -->
+        <div class="catalog-toolbar desktop-toolbar">
           <div class="active-filters">
              <span v-if="filters.search" class="badge badge-dark">Busca: "{{ filters.search }}"</span>
              <span v-if="filters.categories.length" class="badge badge-dark">Categorias: {{ filters.categories.length }}</span>
@@ -125,7 +148,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, watch } from 'vue'
+import { ref, onMounted, reactive, watch, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useHead } from '@vueuse/head'
@@ -141,6 +164,15 @@ const totalProducts = ref(0)
 const loading = ref(true)
 const quickViewProduct = ref(null)
 const visibleCount = ref(12)
+const mobileFiltersOpen = ref(false)
+
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (filters.categories.length) count++
+  if (filters.brands.length) count++
+  if (filters.minPrice || filters.maxPrice) count++
+  return count
+})
 
 const filters = reactive({
   categories: [],
@@ -415,26 +447,107 @@ function closeQuickView() {
 .mt-4 { margin-top: var(--spacing-4); }
 .mt-8 { margin-top: var(--spacing-8); }
 
+/* Mobile filter bar */
+.mobile-filter-bar {
+  display: none;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  align-items: center;
+}
+
+.btn-filter-mobile {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--color-black-light);
+  border: 1px solid var(--color-black-lighter);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.btn-filter-mobile:hover { border-color: var(--color-red); }
+
+.filter-count-badge {
+  background-color: var(--color-red);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 2px;
+}
+
+.mobile-sort { flex: 1; font-size: 0.8rem; padding: var(--spacing-2); }
+
+/* Filter Overlay */
+.filter-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 1090;
+  backdrop-filter: blur(2px);
+}
+
+/* Sidebar mobile header */
+.sidebar-mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--color-black-lighter);
+}
+
+.desktop-toolbar { display: flex; }
+
 @media (max-width: 1024px) {
-  .catalog-layout {
-    flex-direction: column;
-  }
+  .catalog-layout { flex-direction: column; }
+  .catalog-sidebar { width: 100%; }
+  .desktop-toolbar { display: flex; }
+}
+
+@media (max-width: 768px) {
+  /* Mobile filter bar visible */
+  .mobile-filter-bar { display: flex; }
+  .desktop-toolbar { display: none; }
+
+  /* Sidebar becomes a drawer */
   .catalog-sidebar {
-    width: 100%;
+    position: fixed;
+    top: 0;
+    left: -100%;
+    height: 100vh;
+    width: min(300px, 85vw);
+    z-index: 1100;
+    background-color: var(--color-black-light);
+    border-right: 1px solid var(--color-black-lighter);
+    overflow-y: auto;
+    padding: var(--spacing-6);
+    transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .grid-cols-3 {
-    grid-template-columns: repeat(2, 1fr);
-  }
+
+  .catalog-sidebar.mobile-open { left: 0; }
+  .sidebar-mobile-header { display: flex; }
+
+  .catalog-layout { flex-direction: column; }
+
+  .grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+
+  .catalog-view { padding: var(--spacing-4) var(--spacing-3); }
 }
 
 @media (max-width: 480px) {
-  .grid-cols-3 {
-    grid-template-columns: 1fr;
-  }
-  .catalog-toolbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-4);
-  }
+  .grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
 }
 </style>

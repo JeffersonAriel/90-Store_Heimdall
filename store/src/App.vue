@@ -2,14 +2,15 @@
   <div class="app-layout">
     <!-- Header -->
     <header class="header">
-      <div class="container header-top">
+      <div class="header-top container">
         <div class="logo">
           <RouterLink to="/" class="logo-link">
             <img src="/logo.svg?v=4" alt="90+ Store" class="logo-img" />
           </RouterLink>
         </div>
         
-        <div class="search-container">
+        <!-- Busca desktop -->
+        <div class="search-container desktop-search">
           <input 
             type="text" 
             placeholder="O que você procura? (ex: chuteira nike)" 
@@ -21,6 +22,14 @@
         </div>
 
         <div class="header-actions">
+          <!-- Busca mobile: botão que abre/fecha -->
+          <button class="action-btn mobile-search-toggle" @click="mobileSearchOpen = !mobileSearchOpen" title="Buscar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+
           <button class="action-btn" title="Favoritos" @click="isFavoritesOpen = true">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -28,7 +37,7 @@
             <span class="badge-count" v-if="favoriteCount > 0">{{ favoriteCount }}</span>
           </button>
           
-          <RouterLink to="/minha-conta" class="action-btn" title="Minha Conta">
+          <RouterLink to="/minha-conta" class="action-btn desktop-only" title="Minha Conta">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
@@ -43,11 +52,36 @@
             </svg>
             <span class="badge-count" v-if="cartCount > 0">{{ cartCount }}</span>
           </button>
+
+          <!-- Hambúrguer mobile -->
+          <button class="action-btn hamburger-btn" @click="mobileMenuOpen = true" title="Menu" aria-label="Abrir menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
         </div>
       </div>
 
-      <!-- Mega Menu -->
-      <nav class="nav-menu">
+      <!-- Busca mobile expandida -->
+      <div class="mobile-search-bar" :class="{ open: mobileSearchOpen }">
+        <div class="container">
+          <div class="search-container" style="max-width: 100%;">
+            <input 
+              type="text" 
+              placeholder="O que você procura?" 
+              class="search-input" 
+              v-model="searchQuery"
+              @keyup.enter="handleSearch; mobileSearchOpen = false"
+            />
+            <button class="search-btn" @click="handleSearch; mobileSearchOpen = false">🔍</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mega Menu (desktop) -->
+      <nav class="nav-menu desktop-nav">
         <div class="container">
           <ul class="menu-list">
             <li v-for="cat in categories" :key="cat.id" class="menu-item" :class="{ 'has-dropdown': cat.children && cat.children.length > 0 }">
@@ -113,12 +147,78 @@
             <span class="icon">{{ b.icon }}</span>
             <div class="benefit-text">
               <strong>{{ b.title }}</strong>
-              <span>{{ b.description }}</span>
+              <span class="benefit-desc">{{ b.description }}</span>
             </div>
           </div>
         </div>
       </div>
     </header>
+
+    <!-- Mobile Menu Overlay -->
+    <transition name="fade">
+      <div v-if="mobileMenuOpen" class="mobile-overlay" @click="mobileMenuOpen = false"></div>
+    </transition>
+
+    <!-- Mobile Menu Drawer -->
+    <transition name="slide-right">
+      <div v-if="mobileMenuOpen" class="mobile-drawer">
+        <div class="mobile-drawer-header">
+          <img src="/logo.svg?v=4" alt="90+ Store" style="height: 36px; object-fit: contain;" />
+          <button class="mobile-drawer-close" @click="mobileMenuOpen = false" aria-label="Fechar menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="mobile-drawer-body">
+          <!-- Quick links -->
+          <div class="mobile-quick-links">
+            <RouterLink to="/minha-conta" class="mobile-quick-link" @click="mobileMenuOpen = false">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              Minha Conta
+            </RouterLink>
+          </div>
+
+          <!-- Categories accordion -->
+          <div class="mobile-nav-section">
+            <h4 class="mobile-nav-title">Categorias</h4>
+            <div v-for="cat in categories" :key="cat.id" class="mobile-nav-item">
+              <div 
+                class="mobile-nav-link" 
+                @click="openMobileCategory === cat.id ? openMobileCategory = null : openMobileCategory = cat.id"
+              >
+                <RouterLink 
+                  :to="`/catalogo?categoria=${cat.slug}`" 
+                  @click.stop="mobileMenuOpen = false"
+                  class="mobile-nav-link-text"
+                >
+                  {{ cat.nome }}
+                </RouterLink>
+                <span class="mobile-nav-chevron" v-if="cat.children && cat.children.length > 0" :class="{ rotated: openMobileCategory === cat.id }">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </span>
+              </div>
+
+              <transition name="accordion">
+                <div v-if="openMobileCategory === cat.id && cat.children && cat.children.length > 0" class="mobile-sub-list">
+                  <template v-for="child in cat.children" :key="child.id">
+                    <RouterLink 
+                      v-for="grandchild in child.children" 
+                      :key="grandchild.id"
+                      :to="`/catalogo?categoria=${grandchild.slug}`"
+                      class="mobile-sub-link"
+                      @click="mobileMenuOpen = false"
+                    >{{ grandchild.nome }}</RouterLink>
+                  </template>
+                </div>
+              </transition>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -248,6 +348,9 @@ function isColumnExpanded(columnId) {
 
 const isCartOpen = ref(false)
 const isFavoritesOpen = ref(false)
+const mobileMenuOpen = ref(false)
+const mobileSearchOpen = ref(false)
+const openMobileCategory = ref(null)
 const categories = ref([])
 const megaMenuBanners = ref([])
 const benefits = ref([])
@@ -833,32 +936,224 @@ function handleSearch() {
   fill: currentColor;
 }
 
+/* Mobile Search Bar */
+.mobile-search-bar {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  background-color: var(--color-black-light);
+  border-bottom: 1px solid var(--color-black-lighter);
+}
+
+.mobile-search-bar.open {
+  max-height: 80px;
+  padding: var(--spacing-3) 0;
+}
+
+/* Mobile-specific toggles */
+.hamburger-btn { display: none; }
+.mobile-search-toggle { display: none; }
+.desktop-only { display: flex; }
+.desktop-search { display: flex; }
+.desktop-nav { display: block; }
+
+/* Mobile Overlay */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: calc(var(--z-drawer) - 1);
+  backdrop-filter: blur(2px);
+}
+
+/* Mobile Drawer */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: min(320px, 85vw);
+  background-color: var(--color-black-light);
+  border-right: 1px solid var(--color-black-lighter);
+  z-index: var(--z-drawer);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--color-black-lighter);
+  flex-shrink: 0;
+}
+
+.mobile-drawer-close {
+  color: var(--color-gray);
+  padding: var(--spacing-2);
+  border-radius: var(--border-radius-sm);
+}
+
+.mobile-drawer-close:hover { color: var(--color-white); }
+
+.mobile-drawer-body {
+  overflow-y: auto;
+  flex: 1;
+  padding: var(--spacing-4) 0;
+}
+
+.mobile-quick-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 var(--spacing-3) var(--spacing-4);
+  border-bottom: 1px solid var(--color-black-lighter);
+  margin-bottom: var(--spacing-4);
+}
+
+.mobile-quick-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-2);
+  color: var(--color-gray);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.mobile-quick-link:hover {
+  color: var(--color-white);
+  background-color: var(--color-black-lighter);
+}
+
+.mobile-nav-section { padding: 0 var(--spacing-3); }
+
+.mobile-nav-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--color-gray-dark);
+  font-family: var(--font-body);
+  font-weight: 600;
+  padding: 0 var(--spacing-2) var(--spacing-2);
+}
+
+.mobile-nav-item { border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-3) var(--spacing-2);
+  cursor: pointer;
+  gap: var(--spacing-2);
+}
+
+.mobile-nav-link-text {
+  color: var(--color-white);
+  font-size: 0.95rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.mobile-nav-link-text:hover { color: var(--color-red); }
+
+.mobile-nav-chevron {
+  color: var(--color-gray);
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.mobile-nav-chevron.rotated { transform: rotate(180deg); }
+
+.mobile-sub-list {
+  padding: 0 var(--spacing-2) var(--spacing-3) var(--spacing-4);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobile-sub-link {
+  display: block;
+  padding: var(--spacing-2) var(--spacing-3);
+  color: var(--color-gray);
+  font-size: 0.875rem;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition);
+}
+
+.mobile-sub-link:hover {
+  color: var(--color-white);
+  background: rgba(255,255,255,0.05);
+}
+
+/* Transitions */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.slide-right-enter-active, .slide-right-leave-active {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-right-enter-from, .slide-right-leave-to { transform: translateX(-100%); }
+
+.accordion-enter-active, .accordion-leave-active {
+  transition: all 0.25s ease;
+  overflow: hidden;
+}
+.accordion-enter-from, .accordion-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+.accordion-enter-to, .accordion-leave-from {
+  opacity: 1;
+  max-height: 400px;
+}
+
+/* Benefits bar description - hide on mobile */
+.benefit-desc { display: inline; }
+
 @media (max-width: 768px) {
-  .whatsapp-float {
-    width: 50px;
-    height: 50px;
-    bottom: 20px;
-    right: 20px;
+  /* Hamburger + search toggle visible */
+  .hamburger-btn { display: flex; }
+  .mobile-search-toggle { display: flex; }
+  .desktop-only { display: none !important; }
+  .desktop-search { display: none !important; }
+  .desktop-nav { display: none !important; }
+
+  /* Header compacto */
+  .header-top {
+    padding: var(--spacing-3) var(--spacing-4);
+    gap: var(--spacing-2);
   }
-  .whatsapp-icon {
-    width: 26px;
-    height: 26px;
+
+  .header-actions { gap: var(--spacing-1); }
+
+  /* Benefits: apenas texto curto em 2 colunas */
+  .benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-1);
+    font-size: 0.7rem;
   }
+
+  .benefit-item { justify-content: center; flex-direction: column; align-items: center; gap: 2px; text-align: center; }
+  .benefit-desc { display: none; }
+
+  /* Footer mobile */
+  .footer-grid { grid-template-columns: 1fr; gap: var(--spacing-6); }
+  .footer-bottom-flex { flex-direction: column; text-align: center; }
+  .social-links { flex-wrap: wrap; justify-content: center; }
+
+  .whatsapp-float { width: 50px; height: 50px; bottom: 20px; right: 20px; }
+  .whatsapp-icon { width: 26px; height: 26px; }
 }
 
 @media (max-width: 1024px) {
-  .header-top { flex-wrap: wrap; }
-  .search-container { order: 3; max-width: 100%; margin-top: var(--spacing-4); }
-  .menu-list { overflow-x: auto; padding-bottom: 5px; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
-}
-
-@media (max-width: 768px) {
-  .benefits-grid { flex-wrap: wrap; justify-content: center; gap: var(--spacing-2); }
-  .footer-grid { grid-template-columns: 1fr; }
-  .footer-bottom-flex {
-    flex-direction: column;
-    text-align: center;
-  }
 }
 </style>
