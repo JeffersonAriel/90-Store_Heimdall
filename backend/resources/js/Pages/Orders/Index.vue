@@ -64,27 +64,27 @@
             </thead>
             <tbody>
               <tr v-for="ord in orders.data" :key="ord.id">
-                <td class="font-mono font-bold">#{{ ord.id }}</td>
-                <td style="font-size: 0.8125rem;">{{ formatDate(ord.created_at) }}</td>
-                <td>
+                <td data-label="ID" class="font-mono font-bold">#{{ ord.id }}</td>
+                <td data-label="Data" style="font-size: 0.8125rem;">{{ formatDate(ord.created_at) }}</td>
+                <td data-label="Cliente">
                   <div v-if="ord.cliente">
                     <strong>{{ ord.cliente.nome_completo }}</strong>
                     <div class="text-secondary" style="font-size: 0.75rem;">CPF: {{ ord.cliente.cpf }}</div>
                   </div>
                   <span v-else class="text-danger">Cliente excluído</span>
                 </td>
-                <td class="font-bold">
+                <td data-label="Total" class="font-bold">
                   R$ {{ formatMoney(ord.total) }}
                 </td>
-                <td>
+                <td data-label="Gateway">
                   <span class="badge badge-secondary">{{ ord.gateway_pagamento || 'Pix Manual' }}</span>
                 </td>
-                <td>
+                <td data-label="Status">
                   <span class="badge" :class="getStatusBadgeClass(ord.status)">
                     {{ getStatusLabel(ord.status) }}
                   </span>
                 </td>
-                <td>
+                <td data-label="Ações">
                   <Link :href="route('admin.orders.show', ord.id)" class="btn btn-secondary btn-sm" style="padding: 4px 8px;">
                     Detalhes
                   </Link>

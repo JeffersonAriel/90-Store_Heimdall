@@ -73,46 +73,46 @@
             </thead>
             <tbody>
               <tr v-for="prod in products.data" :key="prod.id">
-                <td>
+                <td data-label="Capa">
                   <img :src="prod.foto_capa ? prod.foto_capa.url : '/storage/products/placeholder.png'" 
                        style="width: 48px; height: 48px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--color-border);" 
                        alt="Capa" />
                 </td>
-                <td>
+                <td data-label="Nome / SKU Base">
                   <div>
                     <strong>{{ prod.nome }}</strong>
                     <div class="text-secondary font-mono" style="font-size: 0.75rem;">{{ prod.sku_base }}</div>
                   </div>
                 </td>
-                <td>
+                <td data-label="Categoria">
                   <span class="badge badge-secondary">{{ prod.categoria ? prod.categoria.nome : '—' }}</span>
                 </td>
-                <td>
+                <td data-label="Fornecedor">
                   <span class="text-secondary">{{ prod.fornecedor ? prod.fornecedor.razao_social : '—' }}</span>
                 </td>
-                <td>
+                <td data-label="Preço Venda">
                   <div v-if="prod.tem_desconto">
                     <span class="text-danger font-bold">R$ {{ formatMoney(prod.preco_desconto) }}</span>
                     <div class="text-muted" style="font-size: 0.75rem; text-decoration: line-through;">R$ {{ formatMoney(prod.preco_venda) }}</div>
                   </div>
                   <span v-else class="font-bold">R$ {{ formatMoney(prod.preco_venda) }}</span>
                 </td>
-                <td class="text-secondary">
+                <td data-label="Preço Custo" class="text-secondary">
                   R$ {{ formatMoney(prod.preco_custo) }}
                 </td>
-                <td>
+                <td data-label="Variações">
                   <div class="flex flex-wrap gap-1">
                     <span v-for="v in prod.variacoes" :key="v.id" class="badge" :class="v.tipo_estoque === 'proprio' ? 'badge-primary' : 'badge-secondary'" :title="`SKU: ${v.sku} - Estoque: ${v.estoque_quantidade}`">
                       {{ v.tamanho || '' }}{{ v.cor ? '/' + v.cor : '' }} ({{ v.tipo_estoque === 'proprio' ? v.estoque_quantidade : '∞' }})
                     </span>
                   </div>
                 </td>
-                <td>
+                <td data-label="Status">
                   <span :class="prod.ativo ? 'badge badge-success' : 'badge badge-danger'">
                     {{ prod.ativo ? 'Ativo' : 'Inativo' }}
                   </span>
                 </td>
-                <td>
+                <td data-label="Ações">
                   <div class="flex gap-2">
                     <Link :href="route('admin.products.edit', prod.id)" class="btn btn-secondary btn-sm" style="padding: 4px 8px;">Editar</Link>
                     <button @click="deleteProduct(prod.id)" class="btn btn-danger btn-sm" style="padding: 4px 8px;">Excluir</button>
