@@ -176,7 +176,7 @@
                 
                 <div class="flex items-center">
                   <input v-model="form.esgotado" type="checkbox" id="esgotado" class="w-5 h-5 rounded" style="accent-color: var(--color-brand)" />
-                  <label for="esgotado" class="ml-2 form-label mb-0 font-bold cursor-pointer" style="color: var(--color-danger)">Marcar como ESGOTADO (Ativa "Me Avise")</label>
+                  <label for="esgotado" class="ml-2 form-label mb-0 font-bold cursor-pointer" style="color: var(--color-danger)">Marcar como EM BREVE (Ativa "Me Avise")</label>
                 </div>
 
                 <div class="flex items-center">

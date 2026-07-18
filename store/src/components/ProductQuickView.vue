@@ -72,7 +72,7 @@
 
           <!-- Form Me Avise se Esgotado -->
           <div class="notify-me-section mt-6 p-4 rounded-lg" style="background: var(--color-black-light); border: 1px solid var(--color-black-lighter);" v-else>
-            <h4 class="font-bold text-md mb-1 text-white" style="font-family: var(--font-title); letter-spacing: 1px;">PRODUTO ESGOTADO</h4>
+            <h4 class="font-bold text-md mb-1 text-white" style="font-family: var(--font-title); letter-spacing: 1px; color: var(--color-red, #ef4444) !important;">PRODUTO EM BREVE</h4>
             <p class="text-gray text-xs mb-3">Deixe seu nome e e-mail. Avisaremos você assim que o estoque for reposto!</p>
             
             <form @submit.prevent="submitNotifyMe" class="flex flex-col gap-2">

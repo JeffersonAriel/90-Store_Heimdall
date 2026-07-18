@@ -2,7 +2,7 @@
   <div class="product-card">
     <div class="card-header">
       <div class="badges">
-        <span v-if="product.esgotado" class="badge badge-gray" style="background-color: #1a1a1a; border: 1px solid #333; color: #999;">Esgotado</span>
+        <span v-if="product.esgotado" class="badge badge-red" style="background-color: var(--color-red, #ef4444); border: 1px solid var(--color-red, #ef4444); color: #fff;">Em breve</span>
         <span v-else-if="product.is_destaque" class="badge badge-red">Lançamento</span>
         <span v-if="product.tem_desconto && !product.esgotado" class="badge badge-dark">Oferta</span>
       </div>

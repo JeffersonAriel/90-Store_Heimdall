@@ -128,7 +128,7 @@
           </div>
 
           <!-- Personalização de Camisa -->
-          <div v-if="product.permite_personalizacao || isClothingProduct" class="personalization-container mt-6">
+          <div v-if="!product.esgotado && (product.permite_personalizacao || isClothingProduct)" class="personalization-container mt-6">
             <h3 class="personalization-title">Deseja personalizar seu manto?</h3>
             <p class="personalization-subtitle">Adicione nome e número oficial nas costas por apenas R$ 70,00</p>
             
@@ -194,7 +194,7 @@
 
           <!-- Form Me Avise se Esgotado -->
           <div class="notify-me-section mt-6 p-6 rounded-lg" style="background: var(--color-black-light); border: 1px solid var(--color-black-lighter);" v-else>
-            <h4 class="font-bold text-lg mb-2 text-white" style="font-family: var(--font-title); letter-spacing: 1px;">PRODUTO ESGOTADO</h4>
+            <h4 class="font-bold text-lg mb-2 text-white" style="font-family: var(--font-title); letter-spacing: 1px; color: var(--color-red, #ef4444) !important;">PRODUTO EM BREVE</h4>
             <p class="text-gray text-sm mb-4">Deixe seu nome e e-mail abaixo. Avisaremos você assim que este item estiver disponível em estoque!</p>
             
             <form @submit.prevent="submitNotifyMe" class="flex flex-col gap-3">
