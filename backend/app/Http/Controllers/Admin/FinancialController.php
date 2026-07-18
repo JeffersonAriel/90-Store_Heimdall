@@ -85,7 +85,6 @@ class FinancialController extends Controller
         $estoqueMetrics = DB::table('variacoes_produto as vp')
             ->join('produtos as p', 'vp.produto_id', '=', 'p.id')
             ->whereNull('p.deleted_at')
-            ->whereNull('vp.deleted_at')
             ->where('p.ativo', true)
             ->where('vp.ativo', true)
             ->where('vp.tipo_estoque', 'proprio')
