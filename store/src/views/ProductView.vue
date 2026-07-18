@@ -20,7 +20,7 @@
       </div>
 
       <!-- Hero Produto -->
-      <div class="product-hero grid grid-cols-2 gap-8">
+      <div class="product-hero">
         
         <!-- Galeria -->
         <div class="product-gallery">
@@ -43,7 +43,7 @@
               </svg>
             </button>
           </div>
-          <div class="thumbnails mt-4">
+          <div class="thumbnails">
              <img 
                v-for="(foto, idx) in product.fotos || [product.foto_capa]" 
                :key="idx" 
@@ -129,55 +129,58 @@
 
           <!-- Personalização de Camisa -->
           <div v-if="!product.esgotado && (product.permite_personalizacao || isClothingProduct)" class="personalization-container mt-6">
-            <h3 class="personalization-title">Deseja personalizar seu manto?</h3>
-            <p class="personalization-subtitle">Adicione nome e número oficial nas costas por apenas R$ 70,00</p>
-            
-            <div class="personalization-options-pills mt-3">
-              <button 
-                type="button" 
-                class="pill-btn" 
-                :class="{ active: !customizationEnabled }" 
-                @click="customizationEnabled = false"
-              >
-                ❌ Não, sem personalização
-              </button>
-              <button 
-                type="button" 
-                class="pill-btn" 
-                :class="{ active: customizationEnabled }" 
-                @click="customizationEnabled = true"
-              >
-                👕 Sim, personalizar (+ R$ 70,00)
-              </button>
-            </div>
-            
-            <div v-if="customizationEnabled" class="personalization-fields mt-4 animate-fade-in">
-              <div class="field-row">
-                <div class="field-item">
-                  <label>Nome na Camisa (Max. 10 letras)</label>
-                  <input 
-                    type="text" 
-                    :value="customizationName" 
-                    @input="handleNameInput" 
-                    placeholder="Ex: SILVA" 
-                    class="input-field" 
-                  />
-                </div>
-                <div class="field-item">
-                  <label>Número (Max. 2 dígitos)</label>
-                  <input 
-                    type="text" 
-                    :value="customizationNumber" 
-                    @input="handleNumberInput" 
-                    placeholder="10" 
-                    class="input-field" 
-                  />
-                </div>
+            <div class="personalization-header">
+              <div class="personalization-header-text">
+                <h3 class="personalization-title">Personalizar manto</h3>
+                <p class="personalization-subtitle">Nome e número nas costas por + R$&nbsp;70,00</p>
               </div>
-              <span class="personalization-disclaimer">
-                * Camisas personalizadas não podem ser devolvidas ou trocadas.
-              </span>
+              <!-- Toggle Switch -->
+              <button
+                type="button"
+                class="custom-toggle"
+                :class="{ 'is-on': customizationEnabled }"
+                @click="customizationEnabled = !customizationEnabled"
+                :aria-label="customizationEnabled ? 'Desativar personalização' : 'Ativar personalização'"
+              >
+                <span class="toggle-knob"></span>
+              </button>
             </div>
+
+            <transition name="fade-slide">
+              <div v-if="customizationEnabled" class="personalization-fields">
+                <!-- Preview visual -->
+                <div class="jersey-preview">
+                  <span class="jersey-preview-name">{{ customizationName || 'SEU NOME' }}</span>
+                  <span class="jersey-preview-number">{{ customizationNumber || '10' }}</span>
+                </div>
+
+                <div class="field-row">
+                  <div class="field-item">
+                    <label>Nome <small>(máx. 10 letras)</small></label>
+                    <input 
+                      type="text" 
+                      :value="customizationName" 
+                      @input="handleNameInput" 
+                      placeholder="Ex: SILVA" 
+                      class="input-field" 
+                      maxlength="10"
+                    />
+                  </div>
+                  <div class="field-item">
+                    <label>Número <small>(máx. 2 dígitos)</small></label>
+                    <input 
+                      type="text" 
+                      :value="customizationNumber" 
+                      @input="handleNumberInput" 
+                      placeholder="10" 
+                      class="input-field" 
+                      maxlength="2"
+                    />
+                  </div>
+                </div>
+                <span class="personalization-disclaimer">⚠️ Camisas personalizadas não podem ser devolvidas ou trocadas.</span>
+              </div>
+            </transition>
           </div>
 
           <!-- Ações padrão -->
@@ -886,37 +889,50 @@ function formatMoney(val) {
   color: var(--color-white);
 }
 
+/* Hero Layout */
+.product-hero {
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  gap: 3rem;
+  align-items: start;
+}
+
 /* Galeria */
 .product-gallery {
   align-self: start;
-  max-width: 500px;
   width: 100%;
+  position: sticky;
+  top: 100px;
 }
 
 .main-image-wrapper {
   background-color: var(--color-black-lighter);
-  border-radius: var(--border-radius);
+  border-radius: 16px;
   overflow: hidden;
   aspect-ratio: 4/5;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
 }
 
 .main-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: block;
 }
 
 .main-image:hover {
-  transform: scale(1.1); /* Simple zoom */
+  transform: scale(1.04);
 }
 
 .thumbnails {
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
-  gap: var(--spacing-3);
+  gap: 10px;
   scrollbar-width: none;
+  margin-top: 14px;
+  padding-bottom: 4px;
 }
 
 .thumbnails::-webkit-scrollbar {
@@ -924,24 +940,32 @@ function formatMoney(val) {
 }
 
 .thumbnail {
-  width: 80px;
-  height: 80px;
+  width: 76px;
+  height: 76px;
   object-fit: cover;
-  border-radius: var(--border-radius-sm);
+  border-radius: 10px;
   cursor: pointer;
   border: 2px solid transparent;
   transition: var(--transition);
   flex-shrink: 0;
+  opacity: 0.65;
 }
 
-.thumbnail:hover, .thumbnail.active {
+.thumbnail:hover {
+  opacity: 1;
+  border-color: rgba(255,255,255,0.4);
+}
+
+.thumbnail.active {
   border-color: var(--color-red);
+  opacity: 1;
 }
 
 /* Buy Box */
 .product-info-col {
   display: flex;
   flex-direction: column;
+  padding-top: 0.5rem;
 }
 
 .brand {
@@ -1245,8 +1269,9 @@ function formatMoney(val) {
   padding: var(--spacing-16) 0;
 }
 
-@media (max-width: 768px) {
-  .product-hero { grid-template-columns: 1fr; }
+@media (max-width: 900px) {
+  .product-hero { grid-template-columns: 1fr; gap: 2rem; }
+  .product-gallery { position: static; }
   .action-section { flex-direction: column; }
   .qty-selector { width: 100%; justify-content: space-between; }
   .qty-selector input { flex: 1; }
@@ -1541,62 +1566,85 @@ function formatMoney(val) {
   color: var(--color-white);
 }
 
-/* Personalization Section */
+/* Personalization Section — redesigned */
 .personalization-container {
-  background-color: var(--color-black-light);
-  border: 1px solid var(--color-black-lighter);
-  padding: 1.5rem;
-  border-radius: var(--border-radius);
+  background: linear-gradient(135deg, rgba(227,6,19,0.06) 0%, rgba(30,30,35,0.8) 100%);
+  border: 1px solid rgba(227,6,19,0.2);
+  padding: 1.25rem 1.5rem;
+  border-radius: 14px;
+  backdrop-filter: blur(4px);
+}
+
+.personalization-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.personalization-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .personalization-title {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-white);
-  margin-bottom: 0.25rem;
-  font-family: var(--font-title);
-  letter-spacing: 0.5px;
-}
-
-.personalization-subtitle {
-  font-size: 0.85rem;
-  color: var(--color-gray);
-  margin-bottom: 1.25rem;
-}
-
-.personalization-options-pills {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.pill-btn {
-  flex: 1;
-  padding: 0.75rem var(--spacing-4);
-  background-color: var(--color-black-lighter);
-  border: 2px solid var(--color-black-lighter);
-  border-radius: var(--border-radius);
-  color: var(--color-gray);
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-align: center;
-  cursor: pointer;
   font-family: var(--font-title);
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  transition: var(--transition);
+  margin: 0;
 }
 
-.pill-btn:hover {
-  color: var(--color-white);
-  border-color: var(--color-gray-dark);
+.personalization-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-gray);
+  margin: 0;
 }
 
-.pill-btn.active {
-  background-color: rgba(227, 6, 19, 0.1);
-  border-color: var(--color-red);
-  color: var(--color-white);
-  box-shadow: 0 0 10px rgba(227, 6, 19, 0.2);
+/* Toggle Switch */
+.custom-toggle {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  background-color: rgba(255,255,255,0.12);
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.custom-toggle.is-on {
+  background-color: var(--color-red);
+  box-shadow: 0 0 12px rgba(227,6,19,0.4);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: block;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.custom-toggle.is-on .toggle-knob {
+  transform: translateX(24px);
+}
+
+/* Personalization Fields */
+.personalization-fields {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
 
 .personalization-fields .field-row {
@@ -1608,34 +1656,91 @@ function formatMoney(val) {
 .personalization-fields .field-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .personalization-fields .field-item label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.personalization-fields .field-item label small {
+  text-transform: none;
+  font-weight: 400;
+  opacity: 0.7;
 }
 
 .personalization-fields .field-item .input-field {
-  padding: 0.75rem;
-  background-color: var(--color-black-lighter);
-  border: 1px solid var(--color-black-lighter);
-  border-radius: var(--border-radius-sm);
+  padding: 0.7rem 0.875rem;
+  background-color: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
   color: var(--color-white);
-  font-family: inherit;
+  font-family: var(--font-title);
+  font-size: 1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: border-color 0.2s;
 }
 
 .personalization-fields .field-item .input-field:focus {
   border-color: var(--color-red);
   outline: none;
+  box-shadow: 0 0 0 3px rgba(227,6,19,0.15);
 }
 
 .personalization-disclaimer {
   display: block;
   font-size: 0.75rem;
-  color: var(--color-red);
+  color: #f59e0b;
   margin-top: 1rem;
+  opacity: 0.85;
+}
+
+/* Jersey Preview */
+.jersey-preview {
+  background: rgba(0,0,0,0.3);
+  border: 1px dashed rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 1rem;
+}
+
+.jersey-preview-name {
+  font-family: var(--font-title);
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--color-white);
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.jersey-preview-number {
+  font-family: var(--font-title);
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: var(--color-red);
+  line-height: 1;
+}
+
+/* Transition */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 @media (max-width: 768px) {
