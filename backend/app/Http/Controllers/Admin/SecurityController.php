@@ -280,6 +280,10 @@ class SecurityController extends Controller
                 '--class' => 'SportsCategorySeeder',
                 '--force' => true
             ]);
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'CrmSeeder',
+                '--force' => true
+            ]);
             $seederOutput = \Illuminate\Support\Facades\Artisan::output();
 
             return back()->with('success', 'Banco de dados, APIs e permissões sincronizados com sucesso! Detalhes: ' . trim($migrateOutput) . ' | ' . trim($seederOutput));

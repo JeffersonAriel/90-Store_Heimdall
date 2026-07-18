@@ -22,6 +22,17 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\InsumoController;
 use App\Http\Controllers\Admin\AgendaController;
 
+// ─── CRM Enterprise Controllers ───
+use App\Http\Controllers\Admin\Crm\CrmDashboardController;
+use App\Http\Controllers\Admin\Crm\CrmLeadController;
+use App\Http\Controllers\Admin\Crm\CrmPipelineController;
+use App\Http\Controllers\Admin\Crm\CrmClienteController;
+use App\Http\Controllers\Admin\Crm\CrmTarefaController;
+use App\Http\Controllers\Admin\Crm\CrmTemplateController;
+use App\Http\Controllers\Admin\Crm\CrmCampanhaController;
+use App\Http\Controllers\Admin\Crm\CrmAutomacaoController;
+use App\Http\Controllers\Admin\Crm\CrmSegmentoController;
+
 // ─── ROTA DO INSTALADOR (Auto-desabilita após uso via middleware CheckInstalled) ───
 Route::middleware(['installed'])->group(function () {
     Route::get('/install', [InstallController::class, 'index'])->name('install.index');
@@ -135,5 +146,67 @@ Route::prefix('heimdall')->group(function () {
         Route::post('/vitrine/beneficios', [StoreSettingsAdminController::class, 'benefitsStore'])->name('admin.benefits.store');
         Route::put('/vitrine/beneficios/{id}', [StoreSettingsAdminController::class, 'benefitsUpdate'])->name('admin.benefits.update');
         Route::delete('/vitrine/beneficios/{id}', [StoreSettingsAdminController::class, 'benefitsDestroy'])->name('admin.benefits.destroy');
+
+        // ─── CRM Enterprise ───────────────────────────────────────────────
+        Route::prefix('crm')->name('admin.crm.')->group(function () {
+
+            // Dashboard Executivo e Comercial
+            Route::get('/', [CrmDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/comercial', [CrmDashboardController::class, 'comercial'])->name('comercial');
+            Route::get('/alertas', [CrmDashboardController::class, 'alertas'])->name('alertas');
+
+            // Pipeline Kanban
+            Route::get('/pipeline', [CrmPipelineController::class, 'index'])->name('pipeline');
+
+            // Leads
+            Route::get('/leads', [CrmLeadController::class, 'index'])->name('leads.index');
+            Route::post('/leads', [CrmLeadController::class, 'store'])->name('leads.store');
+            Route::get('/leads/{lead}', [CrmLeadController::class, 'show'])->name('leads.show');
+            Route::put('/leads/{lead}', [CrmLeadController::class, 'update'])->name('leads.update');
+            Route::delete('/leads/{lead}', [CrmLeadController::class, 'destroy'])->name('leads.destroy');
+            Route::post('/leads/{lead}/mover-etapa', [CrmLeadController::class, 'moverEtapa'])->name('leads.mover-etapa');
+
+            // Clientes CRM 360°
+            Route::get('/clientes', [CrmClienteController::class, 'index'])->name('clientes.index');
+            Route::get('/clientes/{cliente}', [CrmClienteController::class, 'show'])->name('clientes.show');
+            Route::put('/clientes/{cliente}', [CrmClienteController::class, 'update'])->name('clientes.update');
+            Route::post('/clientes/{cliente}/nota', [CrmClienteController::class, 'addNota'])->name('clientes.nota');
+            Route::post('/clientes/{cliente}/contato', [CrmClienteController::class, 'addContato'])->name('clientes.contato');
+            Route::post('/clientes/{cliente}/documento', [CrmClienteController::class, 'addDocumento'])->name('clientes.documento');
+
+            // Tarefas
+            Route::get('/tarefas', [CrmTarefaController::class, 'index'])->name('tarefas.index');
+            Route::post('/tarefas', [CrmTarefaController::class, 'store'])->name('tarefas.store');
+            Route::put('/tarefas/{tarefa}', [CrmTarefaController::class, 'update'])->name('tarefas.update');
+            Route::patch('/tarefas/{tarefa}/concluir', [CrmTarefaController::class, 'concluir'])->name('tarefas.concluir');
+            Route::delete('/tarefas/{tarefa}', [CrmTarefaController::class, 'destroy'])->name('tarefas.destroy');
+
+            // Templates de Mensagem
+            Route::get('/templates', [CrmTemplateController::class, 'index'])->name('templates.index');
+            Route::post('/templates', [CrmTemplateController::class, 'store'])->name('templates.store');
+            Route::put('/templates/{template}', [CrmTemplateController::class, 'update'])->name('templates.update');
+            Route::delete('/templates/{template}', [CrmTemplateController::class, 'destroy'])->name('templates.destroy');
+            Route::post('/templates/{template}/preview', [CrmTemplateController::class, 'preview'])->name('templates.preview');
+
+            // Campanhas
+            Route::get('/campanhas', [CrmCampanhaController::class, 'index'])->name('campanhas.index');
+            Route::post('/campanhas', [CrmCampanhaController::class, 'store'])->name('campanhas.store');
+            Route::put('/campanhas/{campanha}', [CrmCampanhaController::class, 'update'])->name('campanhas.update');
+            Route::delete('/campanhas/{campanha}', [CrmCampanhaController::class, 'destroy'])->name('campanhas.destroy');
+            Route::post('/campanhas/{campanha}/disparar', [CrmCampanhaController::class, 'disparar'])->name('campanhas.disparar');
+
+            // Automações
+            Route::get('/automacoes', [CrmAutomacaoController::class, 'index'])->name('automacoes.index');
+            Route::post('/automacoes', [CrmAutomacaoController::class, 'store'])->name('automacoes.store');
+            Route::put('/automacoes/{automacao}', [CrmAutomacaoController::class, 'update'])->name('automacoes.update');
+            Route::delete('/automacoes/{automacao}', [CrmAutomacaoController::class, 'destroy'])->name('automacoes.destroy');
+
+            // Segmentos
+            Route::get('/segmentos', [CrmSegmentoController::class, 'index'])->name('segmentos.index');
+            Route::post('/segmentos', [CrmSegmentoController::class, 'store'])->name('segmentos.store');
+            Route::put('/segmentos/{segmento}', [CrmSegmentoController::class, 'update'])->name('segmentos.update');
+            Route::delete('/segmentos/{segmento}', [CrmSegmentoController::class, 'destroy'])->name('segmentos.destroy');
+            Route::post('/segmentos/{segmento}/recalcular', [CrmSegmentoController::class, 'recalcular'])->name('segmentos.recalcular');
+        });
     });
 });
