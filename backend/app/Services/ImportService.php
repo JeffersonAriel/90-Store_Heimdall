@@ -326,16 +326,15 @@ class ImportService
         $erros = [];
 
         if (empty($razaoSocial)) $erros[] = "Razão Social é obrigatória.";
-        if (empty($documento)) $erros[] = "CNPJ ou CPF é obrigatório.";
         if (!in_array($tipoPessoa, ['juridica', 'fisica'])) $erros[] = "Tipo de pessoa inválido (deve ser juridica ou fisica).";
 
-        // Verifica existência do fornecedor
+        // Verifica existência do fornecedor pelo ID ou pela Razão Social
         $fornecedor = null;
         if ($id) {
             $fornecedor = Fornecedor::find($id);
         }
-        if (!$fornecedor && !empty($documento)) {
-            $fornecedor = Fornecedor::where('cnpj', $documento)->orWhere('cpf', $documento)->first();
+        if (!$fornecedor && !empty($razaoSocial)) {
+            $fornecedor = Fornecedor::where('razao_social', $razaoSocial)->first();
         }
         $acao = $fornecedor ? 'atualizar' : 'criar';
 
@@ -527,12 +526,10 @@ class ImportService
             }
         }
 
-        // Se já existe um com o mesmo CNPJ ou CPF (caso não tenha vindo ID no excel)
+        // Se já existe um com a mesma Razão Social (caso não tenha vindo ID no excel)
         $existing = null;
-        if (!empty($d['cnpj'])) {
-            $existing = Fornecedor::where('cnpj', $d['cnpj'])->first();
-        } elseif (!empty($d['cpf'])) {
-            $existing = Fornecedor::where('cpf', $d['cpf'])->first();
+        if (!empty($d['razao_social'])) {
+            $existing = Fornecedor::where('razao_social', $d['razao_social'])->first();
         }
 
         if ($existing) {
