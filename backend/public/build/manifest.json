@@ -121,6 +121,20 @@
       "assets/Index-MNiWGkFm.css"
     ]
   },
+  "resources/js/Pages/Crm/Automacoes/Index.vue": {
+    "file": "assets/Index-C1a2sqNM.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Crm/Automacoes/Index.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-CN8eJ3EG.js",
+      "_AdminLayout-BjqwMHoY.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ],
+    "css": [
+      "assets/Index-DPgKmER8.css"
+    ]
+  },
   "resources/js/Pages/Crm/Campanhas/Index.vue": {
     "file": "assets/Index-D-jkF64_.js",
     "name": "Index",
@@ -133,6 +147,20 @@
     ],
     "css": [
       "assets/Index-BMcRfSQb.css"
+    ]
+  },
+  "resources/js/Pages/Crm/Clientes/Index.vue": {
+    "file": "assets/Index-Ce0q-wQQ.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Crm/Clientes/Index.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-CN8eJ3EG.js",
+      "_AdminLayout-BjqwMHoY.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ],
+    "css": [
+      "assets/Index-UWut_c9r.css"
     ]
   },
   "resources/js/Pages/Crm/Clientes/Show.vue": {
@@ -149,6 +177,20 @@
       "assets/Show-BJs1kaf2.css"
     ]
   },
+  "resources/js/Pages/Crm/Comercial.vue": {
+    "file": "assets/Comercial-CfUY6fpA.js",
+    "name": "Comercial",
+    "src": "resources/js/Pages/Crm/Comercial.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-CN8eJ3EG.js",
+      "_AdminLayout-BjqwMHoY.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ],
+    "css": [
+      "assets/Comercial-BDWJsuxs.css"
+    ]
+  },
   "resources/js/Pages/Crm/Dashboard.vue": {
     "file": "assets/Dashboard-Ie6RDlzm.js",
     "name": "Dashboard",
@@ -161,6 +203,34 @@
     ],
     "css": [
       "assets/Dashboard-BQumLEoO.css"
+    ]
+  },
+  "resources/js/Pages/Crm/Leads/Index.vue": {
+    "file": "assets/Index-SbsqaG-P.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Crm/Leads/Index.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-CN8eJ3EG.js",
+      "_AdminLayout-BjqwMHoY.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ],
+    "css": [
+      "assets/Index-D1TcCJg3.css"
+    ]
+  },
+  "resources/js/Pages/Crm/Leads/Show.vue": {
+    "file": "assets/Show-r_NOC17U.js",
+    "name": "Show",
+    "src": "resources/js/Pages/Crm/Leads/Show.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-CN8eJ3EG.js",
+      "_AdminLayout-BjqwMHoY.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ],
+    "css": [
+      "assets/Show-CR_blofH.css"
     ]
   },
   "resources/js/Pages/Crm/Pipeline/Index.vue": {
@@ -189,6 +259,34 @@
     ],
     "css": [
       "assets/Index-DrkcCq7Q.css"
+    ]
+  },
+  "resources/js/Pages/Crm/Tarefas/Index.vue": {
+    "file": "assets/Index-rUmuwfPq.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Crm/Tarefas/Index.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-CN8eJ3EG.js",
+      "_AdminLayout-BjqwMHoY.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ],
+    "css": [
+      "assets/Index-CK1zS_3a.css"
+    ]
+  },
+  "resources/js/Pages/Crm/Templates/Index.vue": {
+    "file": "assets/Index-bmgr6tuy.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Crm/Templates/Index.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_vendor-CN8eJ3EG.js",
+      "_AdminLayout-BjqwMHoY.js",
+      "__plugin-vue_export-helper-DlAUqK2U.js"
+    ],
+    "css": [
+      "assets/Index-sT8lkhdC.css"
     ]
   },
   "resources/js/Pages/Dashboard.vue": {
@@ -493,7 +591,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DnkobHvq.js",
+    "file": "assets/app-CipeJZ5M.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -508,11 +606,18 @@
       "resources/js/Pages/Auth/Verify2FA.vue",
       "resources/js/Pages/Categories/Index.vue",
       "resources/js/Pages/Clients/Index.vue",
+      "resources/js/Pages/Crm/Automacoes/Index.vue",
       "resources/js/Pages/Crm/Campanhas/Index.vue",
+      "resources/js/Pages/Crm/Clientes/Index.vue",
       "resources/js/Pages/Crm/Clientes/Show.vue",
+      "resources/js/Pages/Crm/Comercial.vue",
       "resources/js/Pages/Crm/Dashboard.vue",
+      "resources/js/Pages/Crm/Leads/Index.vue",
+      "resources/js/Pages/Crm/Leads/Show.vue",
       "resources/js/Pages/Crm/Pipeline/Index.vue",
       "resources/js/Pages/Crm/Segmentos/Index.vue",
+      "resources/js/Pages/Crm/Tarefas/Index.vue",
+      "resources/js/Pages/Crm/Templates/Index.vue",
       "resources/js/Pages/Dashboard.vue",
       "resources/js/Pages/Employees/Index.vue",
       "resources/js/Pages/Error404.vue",
