@@ -19,6 +19,9 @@
             <option value="60">Últimos 60 dias</option>
             <option value="90">Últimos 90 dias</option>
           </select>
+          <button @click="openAjuda = true" class="crm-btn crm-btn--outline-help">
+            ❓ Ajuda & WhatsApp
+          </button>
           <Link :href="route('admin.crm.leads.index')" class="crm-btn crm-btn--primary">
             + Novo Lead
           </Link>
@@ -159,6 +162,59 @@
       </Link>
     </div>
 
+    <!-- ── Modal de Ajuda CRM ─────────────────────────────────────────── -->
+    <div v-if="openAjuda" class="crm-modal-overlay" @click.self="openAjuda = false">
+      <div class="crm-modal-body">
+        <div class="modal-header">
+          <h2>❓ Guia de Uso — CRM Enterprise & WhatsApp</h2>
+          <button @click="openAjuda = false" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-content">
+          <h3>🤖 Automações (ex: Regra pós-venda 5 dias)</h3>
+          <p>O sistema gera uma tarefa de acompanhamento e um alerta inteligente 5 dias após a entrega do pedido do cliente (gatilho <code>apos_entrega</code>). Você pode alterar delays, regras e gatilhos na aba <strong>Automações</strong>.</p>
+          
+          <h3>💬 WhatsApp no CRM</h3>
+          <ul>
+            <li><strong>Templates (💬):</strong> Cadastre mensagens padrão com tags como <code>cliente</code>, <code>pedido</code>, <code>valor</code> ou <code>codigo_rastreio</code> envolvidos em chaves duplas (ex: &#123;&#123;cliente&#125;&#125;) que o sistema preencherá automaticamente.</li>
+            <li><strong>Campanhas (📣):</strong> Envie disparos em lote para segmentos específicos de forma automática se tiver API ativa ou manualmente por links rápidos.</li>
+            <li><strong>Linha do Tempo (⏱️):</strong> Registros de WhatsApp ficam salvos e documentados na timeline 360° do cliente.</li>
+          </ul>
+
+          <h3>🏷️ Legenda dos Módulos</h3>
+          <table class="legend-table">
+            <thead>
+              <tr>
+                <th>Módulo</th>
+                <th>O que faz</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>🗂️ Pipeline</td>
+                <td>Kanban comercial para mover leads e prever faturamento de vendas.</td>
+              </tr>
+              <tr>
+                <td>🎯 Leads</td>
+                <td>Listagem de contatos frios/mornos/quentes em negociação inicial.</td>
+              </tr>
+              <tr>
+                <td>👥 Clientes CRM</td>
+                <td>Histórico comercial detalhado (LTV, Churn, NPS, notas e timeline).</td>
+              </tr>
+              <tr>
+                <td>✅ Tarefas</td>
+                <td>Lista de atividades diárias da equipe (ligações, retornos e reuniões).</td>
+              </tr>
+              <tr>
+                <td>🏷️ Segmentos</td>
+                <td>Grupos automáticos de clientes de acordo com seu comportamento (ex: VIP, VIP expirando).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </AdminLayout>
 </template>
 
@@ -179,6 +235,7 @@ const props = defineProps({
 })
 
 const periodo = ref(String(props.periodo ?? '30'))
+const openAjuda = ref(false)
 
 function recarregar() {
   router.get(route('admin.crm.dashboard'), { periodo: periodo.value }, { preserveScroll: true })
@@ -398,4 +455,99 @@ const quickLinks = [
 }
 .crm-quick-link__icon { font-size: 2rem; }
 .crm-quick-link__label { font-size: .8rem; font-weight: 600; color: #cbd5e1; text-align: center; }
+
+/* ── Help Button and Modal Styles ── */
+.crm-btn--outline-help {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.2);
+  color: #cbd5e1;
+}
+.crm-btn--outline-help:hover {
+  background: rgba(255,255,255,.05);
+  border-color: rgba(255,255,255,.4);
+}
+
+.crm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.crm-modal-body {
+  background: linear-gradient(135deg, #111827, #1e1b4b);
+  border: 1px solid rgba(99,102,241,.3);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 650px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin: 0;
+}
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.75rem;
+  cursor: pointer;
+}
+.close-btn:hover {
+  color: #f1f5f9;
+}
+.modal-content {
+  padding: 1.5rem;
+  color: #cbd5e1;
+  font-size: .9rem;
+}
+.modal-content h3 {
+  font-size: 1rem;
+  color: #a78bfa;
+  margin-top: 1.5rem;
+  margin-bottom: .5rem;
+  font-weight: 700;
+}
+.modal-content ul {
+  padding-left: 1.25rem;
+}
+.modal-content li {
+  margin-bottom: .5rem;
+}
+.modal-content code {
+  background: rgba(255,255,255,.08);
+  padding: .15rem .3rem;
+  border-radius: 4px;
+  font-family: monospace;
+}
+.legend-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+.legend-table th, .legend-table td {
+  padding: .6rem;
+  font-size: .8rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.legend-table th {
+  color: #94a3b8;
+  text-align: left;
+}
 </style>
