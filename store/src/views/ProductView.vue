@@ -703,9 +703,9 @@ const availableSizes = computed(() => {
 const sizesToShow = computed(() => {
   if (!product.value || !product.value.variacoes) return [];
   const actualSizes = product.value.variacoes.map(v => v.tamanho).filter(Boolean);
-  const isClothing = actualSizes.some(s => ['PP', 'P', 'M', 'G', 'GG', 'XGG', 'XG', 'XXG', 'GGG', 'G1', 'G2', 'G3'].includes(s.toUpperCase()));
+  const isClothing = actualSizes.some(s => ['P', 'M', 'G', 'GG', 'XGG', 'XG', 'XXG', 'GGG', 'G1', 'G2', 'G3'].includes(s.toUpperCase()));
   if (isClothing) {
-    return ['PP', 'P', 'M', 'G', 'GG', 'XGG', 'G1', 'G2', 'G3'];
+    return ['P', 'M', 'G', 'GG', 'XGG', 'G1', 'G2', 'G3'];
   }
   const isShoes = actualSizes.some(s => ['34','35','36','37','38','39','40','41','42','43','44','45'].includes(s));
   if (isShoes) {
