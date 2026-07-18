@@ -41,11 +41,13 @@ class ProductController extends Controller
 
         $categories = CategoriaTipoProduto::where('ativo', true)->get();
         $suppliers = Fornecedor::where('ativo', true)->get();
+        $insumos = \App\Models\Insumo::with('categoria')->orderBy('nome')->get();
 
         return Inertia::render('Products/Index', [
             'products' => $products,
             'categories' => $categories,
             'suppliers' => $suppliers,
+            'insumos' => $insumos,
             'filters' => $request->only('search', 'categoria_id', 'fornecedor_id')
         ]);
     }

@@ -9,9 +9,14 @@
         <h1 class="page-title">📦 Produtos</h1>
         <p class="text-secondary mt-1">Gerencie o catálogo de produtos e suas variações da loja.</p>
       </div>
-      <Link :href="route('admin.products.create')" class="btn btn-primary">
-        + Cadastrar Produto
-      </Link>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary" @click="showInsumosModal = true">
+          📦 Gerenciar Insumos
+        </button>
+        <Link :href="route('admin.products.create')" class="btn btn-primary">
+          + Cadastrar Produto
+        </Link>
+      </div>
     </div>
 
     <!-- Filtros -->
@@ -129,6 +134,92 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Gerenciamento de Insumos -->
+    <div v-if="showInsumosModal" class="modal-backdrop" @click.self="showInsumosModal = false">
+      <div class="modal-container" style="max-width: 850px; width: 90%;">
+        <div class="modal-header">
+          <h3>📦 Gerenciamento de Insumos por Categoria</h3>
+          <button @click="showInsumosModal = false" class="modal-close-btn">✕</button>
+        </div>
+        
+        <div class="modal-body grid-2 gap-6" style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; padding: 1.5rem;">
+          <!-- Formulário (Esquerda) -->
+          <div class="card" style="padding: 1rem; background-color: var(--color-bg-alt); border-radius: var(--radius-md); box-shadow: none; border: 1px solid var(--color-border);">
+            <h4 class="font-bold mb-4">{{ isEditingInsumo ? '✏️ Editar Insumo' : '➕ Novo Insumo' }}</h4>
+            <form @submit.prevent="submitInsumoForm" style="display: flex; flex-direction: column; gap: 1rem;">
+              <div class="form-group">
+                <label class="form-label">Nome do Insumo</label>
+                <input v-model="insumoForm.nome" type="text" class="form-input" placeholder="Ex: Saco Zip" required />
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Custo Unitário (R$)</label>
+                <input v-model="insumoForm.custo" type="number" step="0.01" min="0" class="form-input" placeholder="0,00" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Estoque Atual</label>
+                <input v-model="insumoForm.estoque" type="number" min="0" class="form-input" placeholder="0" required />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Categoria do Produto Vinculada</label>
+                <select v-model="insumoForm.categoria_id" class="form-select" required>
+                  <option value="" disabled>Selecione...</option>
+                  <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.nome }}</option>
+                </select>
+                <small class="text-secondary mt-1 block" style="font-size:0.7rem; line-height:1.2;">O estoque deste insumo será debitado e lançado como despesa de caixa quando um produto desta categoria for comprado.</small>
+              </div>
+
+              <div class="flex gap-2 mt-2">
+                <button type="submit" class="btn btn-primary btn-sm" :disabled="submittingInsumo" style="flex: 1;">
+                  {{ submittingInsumo ? 'Salvando...' : 'Salvar Insumo' }}
+                </button>
+                <button v-if="isEditingInsumo" type="button" @click="openCreateInsumo" class="btn btn-secondary btn-sm">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabela/Lista (Direita) -->
+          <div>
+            <h4 class="font-bold mb-4">Insumos Ativos</h4>
+            <div v-if="insumos.length === 0" class="alert alert-secondary">
+              Nenhum insumo cadastrado ainda.
+            </div>
+            <div v-else class="table-wrapper" style="max-height: 400px; overflow-y: auto;">
+              <table style="font-size: 0.85rem;">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Custo</th>
+                    <th>Estoque</th>
+                    <th style="width: 80px; text-align: right;">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="i in insumos" :key="i.id">
+                    <td><strong>{{ i.nome }}</strong></td>
+                    <td><span class="badge badge-secondary">{{ i.categoria ? i.categoria.nome : '—' }}</span></td>
+                    <td>R$ {{ formatMoney(i.custo) }}</td>
+                    <td :class="i.estoque <= 10 ? 'text-danger font-bold' : ''">{{ i.estoque }} un</td>
+                    <td style="text-align: right;">
+                      <div style="display: inline-flex; gap: 0.25rem;">
+                        <button @click="openEditInsumo(i)" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;">✏️</button>
+                        <button @click="deleteInsumo(i.id)" class="btn btn-danger btn-sm" style="padding: 2px 6px; font-size: 0.75rem; background-color: var(--color-danger); border-color: var(--color-danger);">🗑️</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </AdminLayout>
 </template>
 
@@ -141,6 +232,7 @@ const props = defineProps({
   products: { type: Object, required: true },
   categories: { type: Array, required: true },
   suppliers: { type: Array, required: true },
+  insumos: { type: Array, required: true },
   filters: { type: Object, default: () => ({}) }
 })
 
@@ -149,6 +241,72 @@ const form = ref({
   categoria_id: props.filters.categoria_id || '',
   fornecedor_id: props.filters.fornecedor_id || '',
 })
+
+// Insumos State & Methods
+const showInsumosModal = ref(false)
+const isEditingInsumo = ref(false)
+const editingInsumoId = ref(null)
+const submittingInsumo = ref(false)
+
+const insumoForm = ref({
+  nome: '',
+  custo: '',
+  estoque: '',
+  categoria_id: props.categories[0]?.id || ''
+})
+
+function openCreateInsumo() {
+  isEditingInsumo.value = false
+  editingInsumoId.value = null
+  insumoForm.value = {
+    nome: '',
+    custo: '',
+    estoque: '',
+    categoria_id: props.categories[0]?.id || ''
+  }
+}
+
+function openEditInsumo(i) {
+  isEditingInsumo.value = true
+  editingInsumoId.value = i.id
+  insumoForm.value = {
+    nome: i.nome,
+    custo: i.custo,
+    estoque: i.estoque,
+    categoria_id: i.categoria_id
+  }
+}
+
+function submitInsumoForm() {
+  submittingInsumo.value = true
+  if (isEditingInsumo.value) {
+    router.put(route('admin.insumos.update', editingInsumoId.value), insumoForm.value, {
+      onSuccess: () => {
+        submittingInsumo.value = false
+        openCreateInsumo()
+      },
+      onError: () => {
+        submittingInsumo.value = false
+      }
+    })
+  } else {
+    router.post(route('admin.insumos.store'), insumoForm.value, {
+      onSuccess: () => {
+        submittingInsumo.value = false
+        openCreateInsumo()
+      },
+      onError: () => {
+        submittingInsumo.value = false
+      }
+    })
+  }
+}
+
+function deleteInsumo(id) {
+  if (confirm('Tem certeza que deseja remover este insumo?')) {
+    router.delete(route('admin.insumos.destroy', id))
+  }
+}
 
 function handleSearch() {
   router.get(route('admin.products.index'), form.value, { preserveState: true })

@@ -18,8 +18,9 @@ use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\MarketingController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\ProfileController;
-use App\Http\Controllers\Admin\AgendaController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\InsumoController;
+use App\Http\Controllers\Admin\AgendaController;
 
 // ─── ROTA DO INSTALADOR (Auto-desabilita após uso via middleware CheckInstalled) ───
 Route::middleware(['installed'])->group(function () {
@@ -56,6 +57,10 @@ Route::prefix('heimdall')->group(function () {
         // CRUDs de Módulos (Mapeados para os controladores estruturados)
         Route::resource('products', ProductController::class)->names('admin.products');
         Route::post('products/{product}/variations', [ProductController::class, 'addVariation'])->name('admin.products.variations.store');
+
+        Route::post('insumos', [InsumoController::class, 'store'])->name('admin.insumos.store');
+        Route::put('insumos/{id}', [InsumoController::class, 'update'])->name('admin.insumos.update');
+        Route::delete('insumos/{id}', [InsumoController::class, 'destroy'])->name('admin.insumos.destroy');
 
         Route::resource('suppliers', SupplierController::class)->names('admin.suppliers');
         Route::post('suppliers/{supplier}/evaluate', [SupplierController::class, 'evaluate'])->name('admin.suppliers.evaluate');

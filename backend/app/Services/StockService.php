@@ -55,7 +55,7 @@ class StockService
     public function confirmDebit(int $variationId, int $quantity, int $orderId, ?int $employeeId = null): bool
     {
         return DB::transaction(function () use ($variationId, $quantity, $orderId, $employeeId) {
-            $variation = VariacaoProduto::lockForUpdate()->find($variationId);
+            $variation = VariacaoProduto::with('produto')->lockForUpdate()->find($variationId);
 
             if (!$variation || $variation->tipo_estoque !== 'proprio') {
                 return true; // Dropshipping pula controle
@@ -81,6 +81,35 @@ class StockService
                 'tipo' => 'baixa_confirmada',
                 'motivo' => "Baixa de estoque confirmada após aprovação do pagamento do pedido #{$orderId}",
             ]);
+
+            // Baixa automática de insumos associados à categoria do produto
+            if ($variation->produto && $variation->produto->categoria_id) {
+                $categoriaId = $variation->produto->categoria_id;
+                $insumos = \App\Models\Insumo::where('categoria_id', $categoriaId)->get();
+
+                foreach ($insumos as $insumo) {
+                    $qtdInsumoConsumido = $quantity;
+                    $novoEstoqueInsumo = max(0, $insumo->estoque - $qtdInsumoConsumido);
+                    $insumo->update(['estoque' => $novoEstoqueInsumo]);
+
+                    $valorTotalInsumo = $insumo->custo * $qtdInsumoConsumido;
+                    if ($valorTotalInsumo > 0) {
+                        $conta = \App\Models\ContaBancaria::where('ativa', true)->first();
+                        \App\Models\LancamentoFinanceiro::create([
+                            'conta_id' => $conta ? $conta->id : null,
+                            'pedido_id' => $orderId,
+                            'tipo' => 'saida',
+                            'categoria' => 'insumos',
+                            'descricao' => "Consumo de Insumo: {$insumo->nome} ({$qtdInsumoConsumido} un) para o Pedido #{$orderId}",
+                            'valor' => $valorTotalInsumo,
+                            'data_lancamento' => now()->toDateString(),
+                            'data_competencia' => now()->toDateString(),
+                            'conciliado' => true,
+                            'conciliado_em' => now(),
+                        ]);
+                    }
+                }
+            }
 
             return true;
         });
