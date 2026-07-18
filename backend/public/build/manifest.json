@@ -303,7 +303,7 @@
     ]
   },
   "resources/js/Pages/Products/Form.vue": {
-    "file": "assets/Form-CZxr8as_.js",
+    "file": "assets/Form-p0JaAy9a.js",
     "name": "Form",
     "src": "resources/js/Pages/Products/Form.vue",
     "isDynamicEntry": true,
@@ -313,7 +313,7 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/Form-Dbzd51Ps.css"
+      "assets/Form-qCEQbkuq.css"
     ]
   },
   "resources/js/Pages/Products/Index.vue": {
@@ -423,7 +423,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-8VVUxnRH.js",
+    "file": "assets/app-D9ofHy8y.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
