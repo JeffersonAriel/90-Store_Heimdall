@@ -177,7 +177,7 @@ async function fetchHomeData() {
     const resLanc = await axios.get('/api/catalog?sort=highlights')
     latestProducts.value = resLanc.data.produtos || []
 
-    const resBest = await axios.get('/api/catalog?limit=32')
+    const resBest = await axios.get('/api/catalog')
     bestSellers.value = resBest.data.produtos || []
   } catch (err) {
     console.error('Erro ao carregar vitrines', err)
