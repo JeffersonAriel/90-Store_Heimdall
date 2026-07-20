@@ -75,8 +75,10 @@ class HandleInertiaRequests extends Middleware
             if ($employee) {
                 $counts['pendingOrders'] = DB::table('pedidos')->where('status', 'aguardando_pagamento')->count();
                 $counts['criticalStock'] = DB::table('variacoes_produto')
+                    ->join('produtos', 'variacoes_produto.produto_id', '=', 'produtos.id')
+                    ->whereNull('produtos.deleted_at')
                     ->where('tipo_estoque', 'proprio')
-                    ->whereRaw('estoque_quantidade <= estoque_critico')
+                    ->whereRaw('variacoes_produto.estoque_quantidade <= produtos.estoque_critico')
                     ->count();
             }
         } catch (\Exception $e) {

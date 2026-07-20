@@ -31,17 +31,19 @@ class StockController extends Controller
             ->where('tipo_estoque', 'proprio')
             ->join('produtos', 'variacoes_produto.produto_id', '=', 'produtos.id')
             ->whereNull('produtos.deleted_at')
-            ->select('variacoes_produto.*', 'produtos.nome as produto_nome')
+            ->select('variacoes_produto.*', 'produtos.nome as produto_nome', 'produtos.estoque_critico as estoque_critico')
             ->when($search, function ($query, $search) {
-                $query->where('produtos.nome', 'like', "%{$search}%")
+                $query->where(function ($q) use ($search) {
+                    $q->where('produtos.nome', 'like', "%{$search}%")
                       ->orWhere('variacoes_produto.sku', 'like', "%{$search}%");
+                });
             })
             ->when($alerta === 'critico', function ($query) {
-                $query->whereRaw('variacoes_produto.estoque_quantidade <= variacoes_produto.estoque_critico');
+                $query->whereRaw('variacoes_produto.estoque_quantidade <= produtos.estoque_critico');
             })
             ->when($alerta === 'min', function ($query) {
                 $query->whereRaw('variacoes_produto.estoque_quantidade <= variacoes_produto.estoque_minimo')
-                      ->whereRaw('variacoes_produto.estoque_quantidade > variacoes_produto.estoque_critico');
+                      ->whereRaw('variacoes_produto.estoque_quantidade > produtos.estoque_critico');
             })
             ->orderBy('variacoes_produto.id', 'desc')
             ->paginate(15)
