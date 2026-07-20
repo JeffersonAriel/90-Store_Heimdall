@@ -53,7 +53,7 @@ class OrderController extends Controller
 
     public function create()
     {
-        $clients = Cliente::where('ativo', true)->orderBy('nome_completo')->get();
+        $clients = Cliente::with('enderecos')->where('ativo', true)->orderBy('nome_completo')->get();
         // Carrega produtos ativos com variações ativas
         $products = Produto::where('ativo', true)
             ->with(['variacoes' => function ($q) {

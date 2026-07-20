@@ -383,4 +383,28 @@ watch(isNewClient, (newVal) => {
     form.novo_cliente = { nome_completo: '', cpf: '', email: '', telefone: '', whatsapp: '' }
   }
 })
+
+// Quando selecionar um cliente, carrega o endereço dele caso exista
+watch(() => form.cliente_id, (newVal) => {
+  if (newVal) {
+    const selectedClient = props.clients.find(c => c.id === newVal)
+    if (selectedClient && selectedClient.enderecos && selectedClient.enderecos.length > 0) {
+      const addr = selectedClient.enderecos.find(e => e.is_principal) || selectedClient.enderecos[0]
+      form.endereco.cep = addr.cep || ''
+      form.endereco.logradouro = addr.logradouro || ''
+      form.endereco.numero = addr.numero || ''
+      form.endereco.complemento = addr.complemento || ''
+      form.endereco.bairro = addr.bairro || ''
+      form.endereco.cidade = addr.cidade || ''
+      form.endereco.estado = addr.estado || ''
+      form.endereco.apelido = addr.apelido || 'Principal'
+    } else {
+      // Reseta se não houver endereço cadastrado
+      form.endereco = { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', apelido: 'Principal' }
+    }
+  } else {
+    // Reseta se limpar o cliente
+    form.endereco = { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '', apelido: 'Principal' }
+  }
+})
 </script>
