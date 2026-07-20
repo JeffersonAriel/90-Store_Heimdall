@@ -29,6 +29,7 @@ class StoreApiController extends Controller
             ->with(['categoria', 'fotoCapa', 'fotos', 'fornecedor', 'variacoes' => function ($q) {
                 $q->where('ativo', true);
             }])
+            ->orderBy('esgotado', 'asc')
             ->when($request->input('categoria'), function ($query, $slug) {
                 $category = CategoriaTipoProduto::where('slug', $slug)->first();
                 if ($category) {

@@ -1,5 +1,5 @@
 <template>
-  <div class="product-card">
+  <div class="product-card" :class="{ 'is-esgotado': product.esgotado }">
     <div class="card-header">
       <div class="badges">
         <span v-if="product.esgotado" class="badge badge-red" style="background-color: var(--color-red, #ef4444); border: 1px solid var(--color-red, #ef4444); color: #fff;">Em breve</span>
@@ -239,5 +239,15 @@ function formatMoney(val) {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.product-card.is-esgotado {
+  opacity: 0.6;
+  filter: grayscale(1);
+}
+.product-card.is-esgotado:hover {
+  border-color: var(--color-black-lighter) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 </style>
