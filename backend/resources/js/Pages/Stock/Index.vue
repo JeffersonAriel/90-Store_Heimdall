@@ -12,23 +12,32 @@
     </div>
 
     <!-- Filtros de Alerta e Busca -->
-    <div class="grid-4 gap-6 mb-6">
+    <div class="grid-3 gap-6 mb-6">
       <div class="card cursor-pointer" @click="setAlertaFilter('')" :style="!form.alerta ? 'border-color: var(--color-brand);' : ''">
-        <div class="card-body">
-          <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📦</div>
-          <div class="text-secondary font-bold">Todos Próprios</div>
+        <div class="card-body flex items-center justify-between" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div class="text-secondary font-bold">Todos Próprios</div>
+            <div class="text-3xl font-bold text-white mt-1" style="font-size: 1.875rem; font-weight: 700; color: #fff;">{{ counts.total }}</div>
+          </div>
+          <div style="font-size: 2rem;">📦</div>
         </div>
       </div>
       <div class="card cursor-pointer" @click="setAlertaFilter('min')" :style="form.alerta === 'min' ? 'border-color: var(--color-warning);' : ''">
-        <div class="card-body">
-          <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">⚠️</div>
-          <div class="text-warning font-bold">Estoque Mínimo</div>
+        <div class="card-body flex items-center justify-between" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div class="text-warning font-bold">Estoque Mínimo</div>
+            <div class="text-3xl font-bold text-white mt-1" style="font-size: 1.875rem; font-weight: 700; color: #fff;">{{ counts.min }}</div>
+          </div>
+          <div style="font-size: 2rem;">⚠️</div>
         </div>
       </div>
       <div class="card cursor-pointer" @click="setAlertaFilter('critico')" :style="form.alerta === 'critico' ? 'border-color: var(--color-danger);' : ''">
-        <div class="card-body">
-          <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🔴</div>
-          <div class="text-danger font-bold">Estoque Crítico</div>
+        <div class="card-body flex items-center justify-between" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div class="text-danger font-bold">Estoque Crítico</div>
+            <div class="text-3xl font-bold text-white mt-1" style="font-size: 1.875rem; font-weight: 700; color: #fff;">{{ counts.critico }}</div>
+          </div>
+          <div style="font-size: 2rem;">🔴</div>
         </div>
       </div>
     </div>
@@ -190,7 +199,8 @@ import AdminLayout from '@/Layouts/AdminLayout.vue'
 
 const props = defineProps({
   stock: { type: Object, required: true },
-  filters: { type: Object, default: () => ({}) }
+  filters: { type: Object, default: () => ({}) },
+  counts: { type: Object, default: () => ({ total: 0, min: 0, critico: 0 }) }
 })
 
 const form = ref({

@@ -35,7 +35,7 @@ class StockController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('produtos.nome', 'like', "%{$search}%")
-                      ->orWhere('variacoes_produto.sku', 'like', "%{$search}%");
+                       ->orWhere('variacoes_produto.sku', 'like', "%{$search}%");
                 });
             })
             ->when($alerta === 'critico', function ($query) {
@@ -49,9 +49,29 @@ class StockController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $countTotal = VariacaoProduto::where('tipo_estoque', 'proprio')->count();
+
+        $countCritico = VariacaoProduto::where('tipo_estoque', 'proprio')
+            ->join('produtos', 'variacoes_produto.produto_id', '=', 'produtos.id')
+            ->whereNull('produtos.deleted_at')
+            ->whereRaw('variacoes_produto.estoque_quantidade <= produtos.estoque_critico')
+            ->count();
+
+        $countMinimo = VariacaoProduto::where('tipo_estoque', 'proprio')
+            ->join('produtos', 'variacoes_produto.produto_id', '=', 'produtos.id')
+            ->whereNull('produtos.deleted_at')
+            ->whereRaw('variacoes_produto.estoque_quantidade <= variacoes_produto.estoque_minimo')
+            ->whereRaw('variacoes_produto.estoque_quantidade > produtos.estoque_critico')
+            ->count();
+
         return Inertia::render('Stock/Index', [
             'stock' => $stock,
-            'filters' => $request->only('search', 'alerta')
+            'filters' => $request->only('search', 'alerta'),
+            'counts' => [
+                'total' => $countTotal,
+                'min' => $countMinimo,
+                'critico' => $countCritico
+            ]
         ]);
     }
 

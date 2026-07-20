@@ -552,7 +552,7 @@
     ]
   },
   "resources/js/Pages/Stock/Index.vue": {
-    "file": "assets/Index-DC65CAI3.js",
+    "file": "assets/Index-C0ehIjJ2.js",
     "name": "Index",
     "src": "resources/js/Pages/Stock/Index.vue",
     "isDynamicEntry": true,
@@ -562,7 +562,7 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/Index-DZrNx-eQ.css"
+      "assets/Index-CHZ34nnF.css"
     ]
   },
   "resources/js/Pages/Suppliers/Form.vue": {
@@ -605,7 +605,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DjSAr0ls.js",
+    "file": "assets/app-Co7no24P.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
