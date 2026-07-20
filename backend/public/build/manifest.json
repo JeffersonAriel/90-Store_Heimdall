@@ -432,7 +432,7 @@
     ]
   },
   "resources/js/Pages/Orders/Create.vue": {
-    "file": "assets/Create-Bp8Ulx8E.js",
+    "file": "assets/Create-BzhJSWta.js",
     "name": "Create",
     "src": "resources/js/Pages/Orders/Create.vue",
     "isDynamicEntry": true,
@@ -591,7 +591,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CBJb4tO6.js",
+    "file": "assets/app-B8CWjC4j.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

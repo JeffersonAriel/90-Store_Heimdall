@@ -301,7 +301,7 @@ const form = useForm({
   itens: [],
   valor_frete: 0,
   gateway_pagamento: 'pix_manual',
-  status: 'em_separacao'
+  status: 'aguardando_pagamento'
 })
 
 const cartSubtotal = computed(() => {
