@@ -44,8 +44,8 @@
                   <input v-model="form.novo_cliente.nome_completo" type="text" class="form-input" placeholder="Ex: João da Silva" :required="isNewClient" />
                 </div>
                 <div class="form-group">
-                  <label class="form-label">CPF *</label>
-                  <input v-model="form.novo_cliente.cpf" type="text" class="form-input" placeholder="000.000.000-00" :required="isNewClient" />
+                  <label class="form-label">CPF</label>
+                  <input v-model="form.novo_cliente.cpf" type="text" class="form-input" placeholder="000.000.000-00" />
                 </div>
                 <div class="form-group">
                   <label class="form-label">E-mail *</label>

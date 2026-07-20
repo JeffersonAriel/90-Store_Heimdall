@@ -69,15 +69,10 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             // Cliente existente ou novo
             'cliente_id' => 'nullable|exists:clientes,id',
             'novo_cliente' => 'nullable|array',
-            'novo_cliente.nome_completo' => 'required_if:cliente_id,null|nullable|string|max:255',
-            'novo_cliente.cpf' => 'required_if:cliente_id,null|nullable|string|max:14',
-            'novo_cliente.email' => 'required_if:cliente_id,null|nullable|email|max:255|unique:clientes,email',
-            'novo_cliente.telefone' => 'nullable|string|max:20',
-            'novo_cliente.whatsapp' => 'nullable|string|max:20',
 
             // Endereço
             'endereco' => 'required|array',
@@ -100,7 +95,23 @@ class OrderController extends Controller
             'valor_frete' => 'required|numeric|min:0',
             'gateway_pagamento' => 'required|string',
             'status' => 'required|in:aguardando_pagamento,em_separacao,em_envio,enviado,entregue,cancelado',
-        ]);
+        ];
+
+        if (!$request->input('cliente_id')) {
+            $rules['novo_cliente.nome_completo'] = 'required|string|max:255';
+            $rules['novo_cliente.cpf'] = 'nullable|string|max:14';
+            $rules['novo_cliente.email'] = 'required|email|max:255|unique:clientes,email';
+            $rules['novo_cliente.telefone'] = 'nullable|string|max:20';
+            $rules['novo_cliente.whatsapp'] = 'nullable|string|max:20';
+        } else {
+            $rules['novo_cliente.nome_completo'] = 'nullable|string|max:255';
+            $rules['novo_cliente.cpf'] = 'nullable|string|max:14';
+            $rules['novo_cliente.email'] = 'nullable|email|max:255';
+            $rules['novo_cliente.telefone'] = 'nullable|string|max:20';
+            $rules['novo_cliente.whatsapp'] = 'nullable|string|max:20';
+        }
+
+        $validated = $request->validate($rules);
 
         $order = DB::transaction(function () use ($validated) {
             // 1. Resolve Cliente
