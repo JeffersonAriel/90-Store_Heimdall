@@ -94,4 +94,58 @@ class MarketingController extends Controller
             'referrals' => $referrals
         ]);
     }
+
+    /**
+     * Módulo de Destaques (Ordenação e seleção de camisas na vitrine)
+     */
+    public function highlightsIndex()
+    {
+        $highlighted = \App\Models\Produto::where('ativo', true)
+            ->where('is_destaque', true)
+            ->orderBy('ordem_destaque', 'asc')
+            ->with('fotoCapa')
+            ->get();
+
+        $available = \App\Models\Produto::where('ativo', true)
+            ->where('is_destaque', false)
+            ->orderBy('nome', 'asc')
+            ->with('fotoCapa')
+            ->get();
+
+        return Inertia::render('Marketing/Highlights', [
+            'highlighted' => $highlighted,
+            'available' => $available
+        ]);
+    }
+
+    /**
+     * Atualiza a lista e a ordem dos Destaques
+     */
+    public function highlightsUpdate(Request $request)
+    {
+        $request->validate([
+            'ids' => 'present|array',
+            'ids.*' => 'integer|exists:produtos,id'
+        ]);
+
+        $ids = $request->input('ids', []);
+
+        DB::transaction(function () use ($ids) {
+            // Remove todos os destaques atuais
+            \App\Models\Produto::where('is_destaque', true)->update([
+                'is_destaque' => false,
+                'ordem_destaque' => 0
+            ]);
+
+            // Atualiza os novos destaques com a respectiva ordem
+            foreach ($ids as $index => $id) {
+                \App\Models\Produto::where('id', $id)->update([
+                    'is_destaque' => true,
+                    'ordem_destaque' => $index + 1
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Destaques atualizados com sucesso!');
+    }
 }

@@ -24,10 +24,10 @@
       </div>
     </section>
 
-    <!-- Lançamentos -->
+    <!-- Destaque da rodada -->
     <section class="section-container container">
       <div class="section-header">
-        <h2 class="title-md">VEJA POR LANÇAMENTOS</h2>
+        <h2 class="title-md">DESTAQUE DA RODADA</h2>
         <div class="carousel-nav">
           <button class="nav-btn" @click="scrollSlider('left')">←</button>
           <button class="nav-btn" @click="scrollSlider('right')">→</button>
@@ -36,7 +36,7 @@
 
       <div v-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>Carregando lançamentos...</p>
+        <p>Carregando destaques da rodada...</p>
       </div>
 
       <div v-else class="slider-wrapper">
@@ -174,7 +174,7 @@ async function fetchHomeData() {
       }, 5000)
     }
 
-    const resLanc = await axios.get('/api/catalog?sort=newest&limit=12')
+    const resLanc = await axios.get('/api/catalog?sort=highlights')
     latestProducts.value = resLanc.data.produtos || []
 
     const resBest = await axios.get('/api/catalog?limit=32')

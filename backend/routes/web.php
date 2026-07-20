@@ -135,6 +135,8 @@ Route::prefix('heimdall')->group(function () {
 
         Route::get('marketing/points', [MarketingController::class, 'pointsIndex'])->name('admin.marketing.points');
         Route::get('marketing/referrals', [MarketingController::class, 'referralsIndex'])->name('admin.marketing.referrals');
+        Route::get('marketing/highlights', [MarketingController::class, 'highlightsIndex'])->name('admin.marketing.highlights');
+        Route::post('marketing/highlights', [MarketingController::class, 'highlightsUpdate'])->name('admin.marketing.highlights.update');
 
         // Configurações da Vitrine (Marketing)
         Route::get('/vitrine/banners', [StoreSettingsAdminController::class, 'bannersIndex'])->name('admin.banners.index');

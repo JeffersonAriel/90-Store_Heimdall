@@ -46,6 +46,7 @@
         <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.coupons')" icon="coupons" label="Cupons"  :active="$page.url.startsWith('/heimdall/marketing/coupons')" />
         <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.points')"  icon="points"  label="Pontos"  :active="$page.url.startsWith('/heimdall/marketing/points')" />
         <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.referrals')" icon="referrals" label="Indicações" :active="$page.url.startsWith('/heimdall/marketing/referrals')" />
+        <NavItem v-if="can('marketing', 'view')" :href="route('admin.marketing.highlights')" icon="star" label="Destaques" :active="$page.url.startsWith('/heimdall/marketing/highlights')" />
         <NavItem v-if="can('marketing', 'view')" :href="route('admin.banners.index')" icon="image" label="Banners Vitrine" :active="$page.url.startsWith('/heimdall/vitrine/banners')" />
         <NavItem v-if="can('marketing', 'view')" :href="route('admin.benefits.index')" icon="star" label="Barra de Benefícios" :active="$page.url.startsWith('/heimdall/vitrine/beneficios')" />
 

@@ -68,11 +68,16 @@ class StoreApiController extends Controller
                     $query->orderByRaw('CASE WHEN tem_desconto = 1 THEN preco_desconto ELSE preco_venda END DESC');
                 } elseif ($sort === 'newest') {
                     $query->orderBy('id', 'desc');
+                } elseif ($sort === 'highlights' || $sort === 'destaques') {
+                    $query->where('is_destaque', true)->orderBy('ordem_destaque', 'asc');
                 } else {
                     $query->orderBy('is_destaque', 'desc')->orderBy('id', 'desc');
                 }
             }, function ($query) {
                 $query->orderBy('is_destaque', 'desc')->orderBy('id', 'desc');
+            })
+            ->when($request->input('limit'), function ($query, $limit) {
+                $query->limit((int)$limit);
             })
             ->get();
 
