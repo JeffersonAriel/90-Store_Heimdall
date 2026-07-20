@@ -3,10 +3,71 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f0f1a" />
     <title>90-Store — Artigos Esportivos</title>
     <meta name="description" content="A melhor loja de artigos esportivos. Camisetas, chuteiras, uniformes e muito mais." />
+    
+    <!-- Open Graph / Facebook / Google Search -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.90store.com.br/" />
+    <meta property="og:title" content="90+ Store | Performance e Estilo" />
+    <meta property="og:description" content="A sua loja de artigos esportivos. Alta performance, estilo e as melhores marcas do mundo." />
+    <meta property="og:image" content="https://www.90store.com.br/og-image.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:site_name" content="90+ Store" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://www.90store.com.br/" />
+    <meta property="twitter:title" content="90+ Store | Performance e Estilo" />
+    <meta property="twitter:description" content="A sua loja de artigos esportivos. Alta performance, estilo e as melhores marcas do mundo." />
+    <meta property="twitter:image" content="https://www.90store.com.br/og-image.png" />
+
+    <!-- Google Structured Data for Organization Logo & Sitelinks Searchbox -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.90store.com.br/#organization",
+          "name": "90+ Store",
+          "url": "https://www.90store.com.br",
+          "logo": {
+            "@type": "ImageObject",
+            "@id": "https://www.90store.com.br/#logo",
+            "url": "https://www.90store.com.br/og-image.png",
+            "caption": "90+ Store"
+          },
+          "image": {
+            "@id": "https://www.90store.com.br/#logo"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.90store.com.br/#website",
+          "url": "https://www.90store.com.br",
+          "name": "90+ Store",
+          "description": "A melhor loja de artigos esportivos. Camisetas, chuteiras, uniformes e muito mais.",
+          "publisher": {
+            "@id": "https://www.90store.com.br/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.90store.com.br/catalogo?search={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        }
+      ]
+    }
+    </script>
+
     <!-- Preconnect to Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
