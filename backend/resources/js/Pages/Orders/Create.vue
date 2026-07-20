@@ -367,7 +367,15 @@ async function searchCep() {
 }
 
 function submitForm() {
-  form.post(route('admin.orders.store'))
+  form.post(route('admin.orders.store'), {
+    onSuccess: () => {
+      alert('Pedido manual criado com sucesso!')
+    },
+    onError: (errors) => {
+      const errorMsg = Object.values(errors).join('\n')
+      alert('Erro ao criar pedido:\n' + (errorMsg || 'Verifique os dados preenchidos.'))
+    }
+  })
 }
 
 function formatMoney(value) {
