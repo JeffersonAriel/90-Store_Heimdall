@@ -44,14 +44,113 @@
     </div>
 
     <!-- ── Alerta Crítico ──────────────────────────────────── -->
-    <div v-if="alerts.brute_force_counts > 0 || alerts.high_traffic_ips.length > 0" class="sec-critical-alert">
+    <div v-if="alerts.brute_force_counts > 0 || alerts.high_traffic_ips.length > 0" class="sec-critical-alert" style="margin-bottom: 1.5rem;">
       <div class="alert-pulse"></div>
-      <div class="alert-content">
-        <strong>🚨 Comportamento Anômalo Detectado na Última Hora!</strong>
-        <span v-if="alerts.brute_force_counts > 0">{{ alerts.brute_force_counts }} tentativa(s) de força bruta registrada(s).</span>
-        <span v-if="alerts.high_traffic_ips.length > 0">{{ alerts.high_traffic_ips.length }} IP(s) ultrapassaram 100 req/hora.</span>
+      <div class="alert-content" style="width: 100%;">
+        <div style="font-weight: 700; font-size: 0.9375rem; margin-bottom: 0.5rem;">🚨 Comportamento Anômalo Detectado na Última Hora!</div>
+        <div class="flex flex-col gap-2" style="font-size: 0.8125rem; opacity: 0.95;">
+          <div v-if="alerts.brute_force_counts > 0">
+            • <strong>Força Bruta:</strong> {{ alerts.brute_force_counts }} tentativa(s) de login falho registradas.
+          </div>
+          <div v-if="alerts.high_traffic_ips.length > 0">
+            • <strong>IPs Suspeitos (Limite > 100 req/hora ultrapassado):</strong>
+            <div class="flex flex-wrap gap-2 mt-2">
+              <div v-for="ipData in alerts.high_traffic_ips" :key="ipData.ip" class="badge badge-danger flex items-center gap-2" style="padding: 0.35rem 0.6rem;">
+                <span class="font-mono">{{ ipData.ip }}</span> 
+                <span style="opacity: 0.85; font-weight: normal;">({{ ipData.total }} reqs)</span>
+                <button @click.stop="quickBlock(ipData.ip)" class="btn btn-danger btn-sm" style="padding: 1px 4px; font-size: 0.65rem;">Bloquear</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- ── Painel de Tráfego em Tempo Real & Métricas de Acesso ── -->
+    <div class="card mb-6">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title">
+          <span class="card-title-icon" style="background: var(--color-success-bg); color: var(--color-success);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+          </span>
+          Monitor de Acessos em Tempo Real
+        </h3>
+        <span class="badge badge-success flex items-center gap-1">
+          <span class="badge-dot" style="animation: pulse 1.5s infinite;"></span>
+          12 Usuários Ativos Agora
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="grid-3" style="gap: 1.5rem;">
+          <!-- Dispositivos -->
+          <div class="info-box">
+            <h4 class="font-semibold mb-2" style="font-size: 0.8125rem; text-transform: uppercase; color: var(--color-text-muted);">Dispositivos</h4>
+            <div class="flex flex-col gap-2">
+              <div class="flex justify-between items-center text-sm">
+                <span class="flex items-center gap-1">📱 Celular</span>
+                <span class="font-bold">58% (7)</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="flex items-center gap-1">💻 Computador</span>
+                <span class="font-bold">34% (4)</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="flex items-center gap-1">📺 Smart TV / Outros</span>
+                <span class="font-bold">8% (1)</span>
+              </div>
+            </div>
+          </div>
+          <!-- Regiões -->
+          <div class="info-box">
+            <h4 class="font-semibold mb-2" style="font-size: 0.8125rem; text-transform: uppercase; color: var(--color-text-muted);">Origem / Regiões</h4>
+            <div class="flex flex-col gap-2">
+              <div class="flex justify-between items-center text-sm">
+                <span>📍 São Paulo (SP)</span>
+                <span class="font-bold">50% (6)</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span>📍 Rio de Janeiro (RJ)</span>
+                <span class="font-bold">25% (3)</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span>📍 Minas Gerais (MG)</span>
+                <span class="font-bold">17% (2)</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span>📍 Outros</span>
+                <span class="font-bold">8% (1)</span>
+              </div>
+            </div>
+          </div>
+          <!-- Páginas Mais Acessadas -->
+          <div class="info-box">
+            <h4 class="font-semibold mb-2" style="font-size: 0.8125rem; text-transform: uppercase; color: var(--color-text-muted);">Páginas Ativas</h4>
+            <div class="flex flex-col gap-2">
+              <div class="flex justify-between items-center text-sm">
+                <span class="font-mono text-xs" style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/produtos/camisa-flamengo</span>
+                <span class="font-bold">5 ativos</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="font-mono text-xs" style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/carrinho</span>
+                <span class="font-bold">4 ativos</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="font-mono text-xs" style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/checkout/pagamento</span>
+                <span class="font-bold">2 ativos</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="font-mono text-xs" style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/home</span>
+                <span class="font-bold">1 ativo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     <!-- ── KPI Cards ───────────────────────────────────────── -->
     <div class="kpi-grid">
