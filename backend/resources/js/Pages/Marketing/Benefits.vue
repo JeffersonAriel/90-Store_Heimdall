@@ -1,158 +1,163 @@
 <template>
-  <AdminLayout>
-    <div class="mb-6 flex justify-between items-center">
-      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Gerenciar Barra de Benefícios</h1>
-      <button @click="openModal()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-        + Adicionar Benefício
-      </button>
+  <AdminLayout title="Barra de Benefícios">
+    <template #breadcrumb>
+      <span class="text-muted">Marketing & Vitrine</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">Barra de Benefícios</span>
+    </template>
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1 class="page-title">
+          <span class="page-title-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+          </span>
+          Barra de Benefícios
+        </h1>
+        <p class="page-subtitle">Gerencie os benefícios exibidos na barra topo da loja virtual.</p>
+      </div>
+      <div class="page-actions">
+        <button @click="openModal()" class="btn btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Adicionar Benefício
+        </button>
+      </div>
     </div>
 
     <!-- Tabela de Benefícios -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-700">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ícone</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Título / Descrição</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ordem</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Ações</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr v-for="benefit in benefits" :key="benefit.id">
-            <td class="px-6 py-4 text-2xl">
-              {{ benefit.icon }}
-            </td>
-            <td class="px-6 py-4">
-              <div class="font-medium text-gray-900 dark:text-white">{{ benefit.title }}</div>
-              <div class="text-sm text-gray-500">{{ benefit.description }}</div>
-            </td>
-            <td class="px-6 py-4">{{ benefit.order }}</td>
-            <td class="px-6 py-4">
-              <span class="px-2 py-1 text-xs rounded" :class="benefit.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
-                {{ benefit.is_active ? 'Ativo' : 'Inativo' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <button @click="openModal(benefit)" class="text-indigo-600 hover:text-indigo-900 mr-3">Editar</button>
-              <button @click="deleteBenefit(benefit.id)" class="text-red-600 hover:text-red-900">Excluir</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div v-if="!benefits.length" class="p-6 text-center text-gray-500">Nenhum benefício cadastrado.</div>
+    <div class="card">
+      <div v-if="!benefits.length" class="empty-state">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+        </div>
+        <p class="empty-state-title">Nenhum benefício cadastrado</p>
+        <p class="empty-state-desc">Adicione benefícios para exibir na barra de vantagens da loja.</p>
+      </div>
+      <div v-else class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 60px;">Ícone</th>
+              <th>Título / Descrição</th>
+              <th style="width: 80px; text-align: center;">Ordem</th>
+              <th>Status</th>
+              <th style="width: 120px; text-align: right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="benefit in benefits" :key="benefit.id">
+              <td data-label="Ícone" style="font-size: 1.5rem; line-height: 1;">{{ benefit.icon }}</td>
+              <td data-label="Título">
+                <div class="font-semibold" style="font-size: 0.875rem;">{{ benefit.title }}</div>
+                <div class="text-secondary" style="font-size: 0.8125rem;">{{ benefit.description }}</div>
+              </td>
+              <td data-label="Ordem" style="text-align: center;" class="font-mono text-muted">{{ benefit.order }}</td>
+              <td data-label="Status">
+                <span class="badge" :class="benefit.is_active ? 'badge-success' : 'badge-danger'">
+                  <span class="badge-dot"></span>{{ benefit.is_active ? 'Ativo' : 'Inativo' }}
+                </span>
+              </td>
+              <td data-label="Ações" style="text-align: right;">
+                <div class="flex gap-2 justify-end">
+                  <button @click="openModal(benefit)" class="btn btn-secondary btn-sm">Editar</button>
+                  <button @click="deleteBenefit(benefit.id)" class="btn btn-danger btn-sm">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Modal Form -->
-    <div v-if="isModalOpen" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="closeModal"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <form @submit.prevent="submitForm">
-            <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" id="modal-title">
-                {{ form.id ? 'Editar Benefício' : 'Novo Benefício' }}
-              </h3>
-              
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ícone (Emoji)</label>
-                  <input type="text" v-model="form.icon" required placeholder="Ex: 🚚" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+    <teleport to="body">
+      <transition name="fade">
+        <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
+          <div class="modal modal-sm">
+            <div class="modal-header">
+              <h3 class="modal-title">{{ form.id ? 'Editar Benefício' : 'Novo Benefício' }}</h3>
+              <button @click="closeModal" class="btn-icon" aria-label="Fechar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <form @submit.prevent="submitForm">
+              <div class="modal-body flex flex-col gap-4">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Ícone (Emoji)</label>
+                  <input type="text" v-model="form.icon" required placeholder="Ex: 🚚" class="form-input" />
+                  <span class="form-hint">Use um emoji para representar o benefício.</span>
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Título</label>
-                  <input type="text" v-model="form.title" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                <div class="form-group">
+                  <label class="form-label form-label-required">Título</label>
+                  <input type="text" v-model="form.title" required class="form-input" placeholder="Ex: Frete Grátis" />
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Descrição</label>
-                  <input type="text" v-model="form.description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                <div class="form-group">
+                  <label class="form-label">Descrição</label>
+                  <input type="text" v-model="form.description" class="form-input" placeholder="Ex: Acima de R$ 199,90" />
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Ordem</label>
-                    <input type="number" v-model="form.order" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                <div class="grid-2">
+                  <div class="form-group">
+                    <label class="form-label">Ordem</label>
+                    <input type="number" v-model="form.order" class="form-input" />
                   </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                    <select v-model="form.is_active" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white sm:text-sm">
+                  <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select v-model="form.is_active" class="form-select">
                       <option :value="true">Ativo</option>
                       <option :value="false">Inativo</option>
                     </select>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
-                Salvar
-              </button>
-              <button type="button" @click="closeModal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
-                Cancelar
-              </button>
-            </div>
-          </form>
+              <div class="modal-footer">
+                <button type="button" @click="closeModal" class="btn btn-secondary">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-    </div>
+      </transition>
+    </teleport>
   </AdminLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { router, useForm } from '@inertiajs/vue3';
-import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { ref } from 'vue'
+import { router, useForm } from '@inertiajs/vue3'
+import AdminLayout from '@/Layouts/AdminLayout.vue'
 
-const props = defineProps({
-  benefits: Array,
-});
+const props = defineProps({ benefits: Array })
 
-const isModalOpen = ref(false);
+const isModalOpen = ref(false)
 
-const form = useForm({
-  id: null,
-  icon: '',
-  title: '',
-  description: '',
-  order: 0,
-  is_active: true
-});
+const form = useForm({ id: null, icon: '', title: '', description: '', order: 0, is_active: true })
 
 const openModal = (benefit = null) => {
-  if (benefit) {
-    form.id = benefit.id;
-    form.icon = benefit.icon;
-    form.title = benefit.title;
-    form.description = benefit.description;
-    form.order = benefit.order;
-    form.is_active = benefit.is_active;
-  } else {
-    form.reset();
-  }
-  isModalOpen.value = true;
-};
-
-const closeModal = () => {
-  isModalOpen.value = false;
-  form.reset();
-};
-
+  if (benefit) { form.id = benefit.id; form.icon = benefit.icon; form.title = benefit.title; form.description = benefit.description; form.order = benefit.order; form.is_active = benefit.is_active }
+  else { form.reset() }
+  isModalOpen.value = true
+}
+const closeModal = () => { isModalOpen.value = false; form.reset() }
 const submitForm = () => {
-  if (form.id) {
-    form.put(route('admin.benefits.update', form.id), {
-      onSuccess: () => closeModal(),
-    });
-  } else {
-    form.post(route('admin.benefits.store'), {
-      onSuccess: () => closeModal(),
-    });
-  }
-};
-
+  if (form.id) { form.put(route('admin.benefits.update', form.id), { onSuccess: () => closeModal() }) }
+  else { form.post(route('admin.benefits.store'), { onSuccess: () => closeModal() }) }
+}
 const deleteBenefit = (id) => {
-  if (confirm('Tem certeza que deseja excluir este benefício?')) {
-    router.delete(route('admin.benefits.destroy', id));
-  }
-};
+  if (confirm('Tem certeza que deseja excluir este benefício?')) router.delete(route('admin.benefits.destroy', id))
+}
 </script>

@@ -1,31 +1,52 @@
 <template>
   <AdminLayout title="Vitrine — Destaques">
     <template #breadcrumb>
-      <span>Marketing & Vitrine / Destaques</span>
+      <span class="text-muted">Marketing & Vitrine</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-current">Destaques</span>
     </template>
 
-    <div class="max-w-6xl mx-auto mb-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1 class="page-title">
+          <span class="page-title-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </span>
+          Destaques da Vitrine
+        </h1>
+        <p class="page-subtitle">Arraste os itens para reordenar os destaques exibidos no e-commerce.</p>
+      </div>
+    </div>
+
+    <div class="grid-3" style="gap: 1.5rem; align-items: start;">
       
       <!-- Painel de Ordenação (Destaques Atuais) -->
-      <div class="card lg:col-span-2">
+      <div class="card" style="grid-column: span 2;">
         <div class="card-body">
           <div class="flex justify-between items-center mb-6">
             <div>
-              <h2 class="title-md m-0">⭐ Destaques da Rodada</h2>
-              <p class="text-secondary text-sm m-0 mt-1">Arraste os itens para mudar a ordem na vitrine do e-commerce.</p>
+              <h2 class="card-title" style="font-size: 1rem; margin: 0;">Produtos em Destaque</h2>
+              <p class="text-secondary" style="font-size: 0.8125rem; margin: 0;">Arraste os itens para reordenar.</p>
             </div>
-            <button 
-              @click="saveOrder" 
-              class="btn btn-primary shadow-md flex items-center gap-2"
+            <button
+              @click="saveOrder"
+              class="btn btn-primary"
               :disabled="saving"
             >
-              {{ saving ? 'Salvando...' : '💾 Salvar Alterações' }}
+              {{ saving ? 'Salvando...' : 'Salvar Ordem' }}
             </button>
           </div>
 
-          <div v-if="highlightedList.length === 0" class="empty-state">
-            <span class="empty-icon">⭐</span>
-            <p>Nenhum produto destacado. Adicione camisas da lista ao lado para começar.</p>
+          <div v-if="highlightedList.length === 0" class="empty-state" style="border: 2px dashed var(--color-border); border-radius: var(--radius-lg);">
+            <div class="empty-state-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <p class="empty-state-title" style="font-size: 0.9375rem;">Nenhum produto em destaque</p>
+            <p class="empty-state-desc">Adicione produtos da lista ao lado para começar.</p>
           </div>
 
           <div v-else class="drag-list">
@@ -40,7 +61,12 @@
               @dragend="onDragEnd"
             >
               <!-- Handle -->
-              <div class="drag-handle">☰</div>
+              <div class="drag-handle">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+              </div>
               
               <!-- Capa -->
               <img 
@@ -56,13 +82,10 @@
               </div>
 
               <!-- Ações -->
-              <button 
-                type="button" 
-                @click="removeHighlight(index)" 
-                class="remove-btn" 
-                title="Remover dos destaques"
-              >
-                ✕
+              <button type="button" @click="removeHighlight(index)" class="remove-btn" title="Remover dos destaques">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
               </button>
             </div>
           </div>
@@ -72,8 +95,8 @@
       <!-- Seletor (Adicionar Produtos) -->
       <div class="card">
         <div class="card-body">
-          <h2 class="title-md mb-2">🛍️ Disponíveis</h2>
-          <p class="text-secondary text-sm mb-4">Selecione camisas para destacar.</p>
+          <h3 class="card-title" style="font-size: 0.9375rem; margin-bottom: 0.5rem;">Disponíveis</h3>
+          <p class="text-secondary mb-4" style="font-size: 0.8125rem;">Selecione produtos para destacar.</p>
 
           <!-- Busca -->
           <div class="mb-4">
@@ -85,7 +108,7 @@
             />
           </div>
 
-          <div v-if="filteredAvailable.length === 0" class="text-center py-6 text-gray-500">
+          <div v-if="filteredAvailable.length === 0" class="text-center py-4 text-muted" style="font-size: 0.875rem;">
             Nenhum produto disponível encontrado.
           </div>
 
@@ -104,13 +127,10 @@
                 <strong class="available-title">{{ item.nome }}</strong>
                 <span class="available-meta">{{ item.marca }}</span>
               </div>
-              <button 
-                type="button" 
-                @click="addHighlight(item)" 
-                class="add-btn"
-                title="Adicionar aos destaques"
-              >
-                +
+              <button type="button" @click="addHighlight(item)" class="add-btn" title="Adicionar aos destaques">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
               </button>
             </div>
           </div>

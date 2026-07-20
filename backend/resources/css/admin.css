@@ -449,6 +449,14 @@ strong { font-weight: 600; color: var(--color-text-primary); }
   letter-spacing: 0.01em;
 }
 
+.kpi-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  opacity: 0.75;
+  margin-top: 0.25rem;
+}
+
+
 .kpi-accent-bar {
   position: absolute;
   top: 0;
