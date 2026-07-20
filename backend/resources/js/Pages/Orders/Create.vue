@@ -211,7 +211,7 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label">Status Inicial do Pedido *</label>
-                  <select v-model="form.status" class="form-select" required>
+                  <select v-model="form.status" class="form-select" disabled required>
                     <option value="aguardando_pagamento">Aguardando Pagamento</option>
                     <option value="em_separacao">Pago — Em Separação</option>
                     <option value="em_envio">Pago — Em Envio</option>
