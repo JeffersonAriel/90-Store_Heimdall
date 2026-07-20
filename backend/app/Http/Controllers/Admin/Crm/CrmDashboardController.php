@@ -112,4 +112,24 @@ class CrmDashboardController extends Controller
 
         return response()->json(['success' => true, 'alertas' => $alertas]);
     }
+
+    /**
+     * Retorna a lista de carrinhos/pedidos abandonados (aguardando pagamento)
+     */
+    public function abandonedCarts()
+    {
+        $carts = \App\Models\Pedido::where('status', 'aguardando_pagamento')
+            ->with([
+                'cliente',
+                'endereco',
+                'itens.produto'
+            ])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'carts' => $carts
+        ]);
+    }
 }

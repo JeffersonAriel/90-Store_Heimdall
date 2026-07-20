@@ -156,6 +156,7 @@ Route::prefix('heimdall')->group(function () {
             Route::get('/', [CrmDashboardController::class, 'index'])->name('dashboard');
             Route::get('/comercial', [CrmDashboardController::class, 'comercial'])->name('comercial');
             Route::get('/alertas', [CrmDashboardController::class, 'alertas'])->name('alertas');
+            Route::get('/abandoned-carts', [CrmDashboardController::class, 'abandonedCarts'])->name('abandoned-carts');
 
             // Pipeline Kanban
             Route::get('/pipeline', [CrmPipelineController::class, 'index'])->name('pipeline');

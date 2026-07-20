@@ -31,7 +31,9 @@ class CrmClienteController extends Controller
 
         $clientes = Cliente::query()
             ->with(['vendedor:id,nome'])
-            ->withCount('pedidos')
+            ->withCount(['pedidos' => function ($q) {
+                $q->whereNotIn('status', ['aguardando_pagamento', 'cancelado']);
+            }])
             ->when($search, fn($q) =>
                 $q->where('nome_completo', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
@@ -75,6 +77,7 @@ class CrmClienteController extends Controller
 
         // Pedidos recentes (últimos 10)
         $pedidos = $cliente->pedidos()
+            ->whereNotIn('status', ['aguardando_pagamento', 'cancelado'])
             ->with(['itens.produto:id,nome', 'pagamentos:id,pedido_id,metodo,status,valor'])
             ->orderByDesc('id')
             ->limit(10)

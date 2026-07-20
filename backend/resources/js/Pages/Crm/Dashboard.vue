@@ -19,6 +19,9 @@
             <option value="60">Últimos 60 dias</option>
             <option value="90">Últimos 90 dias</option>
           </select>
+          <button @click="loadAbandonedCarts" class="crm-btn crm-btn--outline-warning" style="background: rgba(245, 158, 11, 0.15); border-color: #f59e0b; color: #fbbf24;">
+            🛒 Carrinhos Abandonados
+          </button>
           <button @click="openAjuda = true" class="crm-btn crm-btn--outline-help">
             ❓ Ajuda & WhatsApp
           </button>
@@ -215,6 +218,75 @@
       </div>
     </div>
 
+    <!-- Modal de Carrinhos Abandonados -->
+    <div v-if="openAbandonedCarts" class="modal-backdrop" @click.self="openAbandonedCarts = false" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+      <div class="modal-box max-w-4xl w-full" style="max-height: 85vh; display: flex; flex-direction: column; background: var(--color-bg-elevated, #1e1b4b); border: 1px solid var(--color-border); border-radius: 8px; padding: 1.5rem;">
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-dashed" style="border-color: var(--color-border);">
+          <h2 class="modal-title m-0 text-white font-bold text-lg">🛒 Carrinhos Abandonados (Não pagos)</h2>
+          <button @click="openAbandonedCarts = false" class="text-gray-400 hover:text-white text-xl" style="background: none; border: none; cursor: pointer;">✕</button>
+        </div>
+
+        <div v-if="loadingCarts" class="text-center py-10">
+          <div class="spinner" style="border: 4px solid rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--color-brand); animation: spin 1s linear infinite; margin: 0 auto;"></div>
+          <p class="mt-4 text-gray-400">Buscando carrinhos abandonados...</p>
+        </div>
+
+        <div v-else-if="abandonedCartsList.length === 0" class="text-center py-10 text-gray-400">
+          Nenhum carrinho abandonado encontrado.
+        </div>
+
+        <div v-else class="overflow-y-auto flex-1 pr-2" style="max-height: 60vh;">
+          <div v-for="cart in abandonedCartsList" :key="cart.id" class="p-4 mb-4 rounded-lg border border-gray-700 bg-black/40 flex flex-col md:flex-row justify-between gap-6" style="background: rgba(0, 0, 0, 0.25); border: 1px solid var(--color-border);">
+            <div class="flex-1">
+              <!-- Cliente -->
+              <div class="mb-3">
+                <span class="text-xs font-bold uppercase tracking-wider block" style="color: var(--color-brand, #6366f1);">Cliente</span>
+                <strong class="text-white text-lg block">{{ cart.cliente?.nome_completo || 'Cliente Não Identificado' }}</strong>
+                <span class="text-gray-400 text-sm block">
+                  📧 {{ cart.cliente?.email || 'Sem e-mail' }} · 📞 {{ cart.cliente?.whatsapp || cart.cliente?.telefone || 'Sem telefone' }} · CPF: {{ cart.cliente?.cpf || 'Não cadastrado' }}
+                </span>
+              </div>
+              
+              <!-- Endereço -->
+              <div v-if="cart.endereco" class="mb-3 text-sm text-gray-400">
+                <span class="text-xs font-bold uppercase tracking-wider block">Endereço de Entrega</span>
+                {{ cart.endereco.logradouro }}, {{ cart.endereco.numero }} {{ cart.endereco.complemento || '' }} - {{ cart.endereco.bairro }}, {{ cart.endereco.cidade }}/{{ cart.endereco.estado }} ({{ cart.endereco.cep }})
+              </div>
+
+              <!-- Itens -->
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider block">Itens no Carrinho</span>
+                <div v-for="item in cart.itens" :key="item.id" class="text-sm text-gray-300 ml-2 mt-1">
+                  · {{ item.produto?.nome || item.nome_produto_snapshot }} (Tam: {{ item.tamanho_snapshot || item.size || '—' }} | Cor: {{ item.cor_snapshot || item.color || '—' }}) - {{ item.quantidade }}x R$ {{ fmt(item.preco_venda_snapshot) }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Total & Ações -->
+            <div class="flex flex-col justify-between items-end text-right min-w-[200px]">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider block">Total Abandonado</span>
+                <strong class="text-white text-xl">R$ {{ fmt(cart.total) }}</strong>
+                <span class="text-gray-400 text-xs block">em {{ new Date(cart.created_at).toLocaleString('pt-BR') }}</span>
+              </div>
+
+              <div class="mt-4">
+                <a 
+                  v-if="cart.cliente?.whatsapp || cart.cliente?.telefone" 
+                  :href="getWhatsAppLink(cart)" 
+                  target="_blank" 
+                  class="btn btn-success btn-sm flex items-center gap-1"
+                  style="background: #25d366; color: white; border: none; padding: 6px 12px; border-radius: 4px; display: inline-flex; text-decoration: none;"
+                >
+                  💬 Recuperar no Zap
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </AdminLayout>
 </template>
 
@@ -224,6 +296,7 @@ import { Link, router } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 import KpiCard from '@/Components/Crm/KpiCard.vue'
 import AlertaCard from '@/Components/Crm/AlertaCard.vue'
+import axios from 'axios'
 
 const props = defineProps({
   kpis:           Object,
@@ -236,6 +309,33 @@ const props = defineProps({
 
 const periodo = ref(String(props.periodo ?? '30'))
 const openAjuda = ref(false)
+
+const openAbandonedCarts = ref(false)
+const abandonedCartsList = ref([])
+const loadingCarts = ref(false)
+
+async function loadAbandonedCarts() {
+  loadingCarts.value = true
+  openAbandonedCarts.value = true
+  try {
+    const res = await axios.get(route('admin.crm.abandoned-carts'))
+    abandonedCartsList.value = res.data.carts || []
+  } catch (err) {
+    console.error('Erro ao buscar carrinhos abandonados', err)
+    alert('Erro ao carregar os dados dos carrinhos abandonados.')
+  } finally {
+    loadingCarts.value = false
+  }
+}
+
+function getWhatsAppLink(cart) {
+  const phone = (cart.cliente?.whatsapp || cart.cliente?.telefone || '').replace(/\D/g, '')
+  if (!phone) return '#'
+  const name = cart.cliente?.nome_completo ? cart.cliente.nome_completo.split(' ')[0] : 'cliente'
+  const totalStr = parseFloat(cart.total).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const text = encodeURIComponent(`Olá ${name}! Vimos que você deixou alguns itens no seu carrinho em nossa loja 90+ Store. Gostaria de ajuda para finalizar a sua compra no valor de R$ ${totalStr}?`)
+  return `https://wa.me/55${phone}?text=${text}`
+}
 
 function recarregar() {
   router.get(route('admin.crm.dashboard'), { periodo: periodo.value }, { preserveScroll: true })

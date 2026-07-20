@@ -25,7 +25,7 @@ class CrmKpiService
         // Pedidos
         $pedidosQuery = DB::table('pedidos')
             ->where('created_at', '>=', $inicio)
-            ->whereNotIn('status', ['cancelado']);
+            ->whereNotIn('status', ['aguardando_pagamento', 'cancelado']);
 
         $receitaRealizada = (clone $pedidosQuery)->sum('total');
         $ticketMedio      = (clone $pedidosQuery)->avg('total') ?? 0;
@@ -126,7 +126,7 @@ class CrmKpiService
     {
         $pedidos = DB::table('pedidos')
             ->where('cliente_id', $clienteId)
-            ->whereNotIn('status', ['cancelado'])
+            ->whereNotIn('status', ['aguardando_pagamento', 'cancelado'])
             ->whereNull('deleted_at')
             ->orderBy('created_at')
             ->get(['id', 'total', 'created_at']);
