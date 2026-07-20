@@ -131,7 +131,19 @@ class CrmKpiService
             ->orderBy('created_at')
             ->get(['id', 'total', 'created_at']);
 
-        if ($pedidos->isEmpty()) return;
+        if ($pedidos->isEmpty()) {
+            DB::table('clientes')->where('id', $clienteId)->update([
+                'total_pedidos_count'      => 0,
+                'total_gasto'              => 0,
+                'ltv'                      => 0,
+                'ticket_medio_crm'         => 0,
+                'primeiro_pedido_em'       => null,
+                'ultimo_pedido_em'         => null,
+                'media_dias_entre_compras' => null,
+                'risco_churn'              => 'baixo',
+            ]);
+            return;
+        }
 
         $total      = $pedidos->sum('total');
         $count      = $pedidos->count();
