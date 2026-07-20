@@ -73,9 +73,9 @@ class OrderController extends Controller
             // Cliente existente ou novo
             'cliente_id' => 'nullable|exists:clientes,id',
             'novo_cliente' => 'nullable|array',
-            'novo_cliente.nome_completo' => 'required_if:cliente_id,null|string|max:255',
-            'novo_cliente.cpf' => 'required_if:cliente_id,null|string|max:14',
-            'novo_cliente.email' => 'required_if:cliente_id,null|email|max:255|unique:clientes,email',
+            'novo_cliente.nome_completo' => 'required_if:cliente_id,null|nullable|string|max:255',
+            'novo_cliente.cpf' => 'required_if:cliente_id,null|nullable|string|max:14',
+            'novo_cliente.email' => 'required_if:cliente_id,null|nullable|email|max:255|unique:clientes,email',
             'novo_cliente.telefone' => 'nullable|string|max:20',
             'novo_cliente.whatsapp' => 'nullable|string|max:20',
 
