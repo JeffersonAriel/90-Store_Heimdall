@@ -375,7 +375,10 @@ class OrderController extends Controller
         try {
             $order = Pedido::with(['cliente', 'endereco', 'itens.produto'])->findOrFail($id);
 
-            // 1. Busca Token da API SuperFrete
+            // Verifica se a etiqueta já foi emitida para evitar cobrança duplicada na SuperFrete
+            if (!empty($order->codigo_rastreio) && $order->url_rastreio !== 'https://web.superfrete.com') {
+                return back()->with('info', "Esta etiqueta já foi gerada e emitida para este pedido! Código de Rastreio: {$order->codigo_rastreio}.");
+            }
             $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
             if (!$api) {
                 return back()->with('error', 'API da SuperFrete não está ativa nas configurações.');
