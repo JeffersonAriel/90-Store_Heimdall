@@ -392,11 +392,7 @@ class SecurityController extends Controller
                 '--force' => true
             ]);
             \Illuminate\Support\Facades\Artisan::call('db:seed', [
-                '--class' => 'CategorySeeder',
-                '--force' => true
-            ]);
-            \Illuminate\Support\Facades\Artisan::call('db:seed', [
-                '--class' => 'SportsCategorySeeder',
+                '--class' => 'FullCategoryStructureSeeder',
                 '--force' => true
             ]);
             \Illuminate\Support\Facades\Artisan::call('db:seed', [
