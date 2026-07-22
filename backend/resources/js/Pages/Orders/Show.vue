@@ -18,6 +18,19 @@
       </div>
     </div>
 
+    <!-- Alerta: Custo dos Produtos Pendente (Dropshipping) -->
+    <div v-if="hasUnsetCosts" class="alert alert-warning" style="background-color: rgba(245, 158, 11, 0.12); border: 1px solid #f59e0b; color: #f59e0b; padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+      <div>
+        <strong>⚠️ Custo dos Produtos (Dropshipping) Pendente</strong>
+        <div style="font-size: 0.875rem; margin-top: 0.25rem;">
+          Este pedido possui itens de estoque dropshipping sem valor de custo cadastrado. Defina o custo para gerar os repasses financeiros ao fornecedor e calcular o lucro líquido real.
+        </div>
+      </div>
+      <button @click="openCostsModal" class="btn btn-warning" style="background-color: #f59e0b; border-color: #f59e0b; color: white; white-space: nowrap;">
+        ✏️ Informar Custo dos Produtos
+      </button>
+    </div>
+
     <!-- Layout Dividido em Colunas -->
     <div class="grid-3 gap-6">
       <!-- Coluna Principal (Itens, Valores e Historico) -->
@@ -154,6 +167,55 @@
           </div>
         </div>
 
+        <!-- Detalhes do Frete Escolhido -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">🚚 Detalhes do Frete Escolhido</h3>
+          </div>
+          <div class="card-body" style="font-size: 0.875rem; line-height: 1.6;">
+            <div class="flex flex-col gap-2 text-secondary">
+              <div>
+                <strong>Serviço Selecionado:</strong>
+                <span class="badge badge-primary ml-2" style="background-color: var(--color-brand); color: white;">{{ order.servico_frete_nome || 'Envio Padrão (SuperFrete)' }}</span>
+              </div>
+              <div>
+                <strong>Prazo Estimado:</strong> {{ order.prazo_frete_dias ? order.prazo_frete_dias + ' dias úteis' : 'Conforme transportadora' }}
+              </div>
+              <div>
+                <strong>Valor do Frete Pago:</strong> R$ {{ formatMoney(order.valor_frete) }}
+              </div>
+              <div style="border-top: 1px solid var(--color-border); padding-top: 0.5rem; margin-top: 0.25rem;">
+                <strong>Origem (Remetente):</strong> 08230-600 — Rua Nicolau Campanella, 25 (São Paulo / SP)
+              </div>
+              <div>
+                <strong>Destino (Cliente):</strong> {{ order.endereco?.cep }} — {{ order.endereco?.logradouro }}, {{ order.endereco?.numero }} ({{ order.endereco?.cidade }} / {{ order.endereco?.estado }})
+              </div>
+              <div v-if="order.codigo_rastreio" style="border-top: 1px solid var(--color-border); padding-top: 0.5rem; margin-top: 0.25rem;">
+                <strong>Código de Rastreio Oficial:</strong> <code class="font-mono text-brand">{{ order.codigo_rastreio }}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Comprovante de Pagamento (InfinitePay / Gateway) -->
+        <div v-if="order.url_comprovante_pagamento || (order.observacoes && order.observacoes.includes('InfinitePay'))" class="card" style="border-color: #10b981; background: rgba(16, 185, 129, 0.05);">
+          <div class="card-header flex justify-between items-center">
+            <h3 class="card-title" style="color: #10b981;">💳 Comprovante de Pagamento</h3>
+            <a v-if="order.url_comprovante_pagamento" :href="order.url_comprovante_pagamento" target="_blank" class="btn btn-sm btn-success" style="background-color: #10b981; border-color: #10b981; color: white;">
+              📄 Abrir Comprovante InfinitePay ↗
+            </a>
+          </div>
+          <div class="card-body" style="font-size: 0.875rem; line-height: 1.6;">
+            <div v-if="order.url_comprovante_pagamento" class="text-secondary mb-2">
+              <strong>URL do Comprovante:</strong> <br/>
+              <a :href="order.url_comprovante_pagamento" target="_blank" class="text-brand underline font-mono" style="word-break: break-all;">{{ order.url_comprovante_pagamento }}</a>
+            </div>
+            <div v-if="order.observacoes" class="text-muted" style="font-size: 0.75rem; border-top: 1px dashed rgba(16, 185, 129, 0.3); padding-top: 0.5rem;">
+              {{ order.observacoes }}
+            </div>
+          </div>
+        </div>
+
         <!-- Alerta: Frete a Combinar -->
         <div v-if="freteACombinar" class="card" style="border-color: #f59e0b; background: rgba(245,158,11,0.08);">
           <div class="card-header">
@@ -252,6 +314,36 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal Atualizar Custos Dropshipping -->
+    <div v-if="showCostsModal" class="modal-backdrop" @click.self="showCostsModal = false">
+      <div class="modal-box" style="max-width: 520px; width: 90%;">
+        <h2 class="modal-title">✏️ Informar Custo dos Produtos (Dropshipping)</h2>
+        <p class="text-secondary mb-4" style="font-size: 0.875rem;">
+          Preencha o valor de custo unitário pago ao fornecedor para cada item. O sistema atualizará os snapshots e lançará os repasses no caixa financeiro.
+        </p>
+        <form @submit.prevent="submitCosts">
+          <div v-for="item in order.itens" :key="item.id" class="form-group mb-4 p-3" style="background: var(--color-bg-elevated); border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+            <label class="form-label font-bold" style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem;">
+              {{ item.nome_snapshot || (item.produto ? item.produto.nome : 'Produto') }}
+            </label>
+            <div class="text-secondary mb-2" style="font-size: 0.75rem;">
+              SKU: {{ item.sku_snapshot }} | Qtd: {{ item.quantidade }} | Venda Unit.: R$ {{ formatMoney(item.preco_venda_snapshot) }}
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-secondary">Custo Unit.: R$</span>
+              <input v-model.number="costsFormMap[item.id]" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" required />
+            </div>
+          </div>
+          <div class="flex gap-3 mt-6 justify-end">
+            <button type="button" @click="showCostsModal = false" class="btn btn-secondary">Cancelar</button>
+            <button type="submit" class="btn btn-primary" style="background-color: var(--color-brand); border-color: var(--color-brand);">
+              💾 Salvar Custos e Lançar Financeiro
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </AdminLayout>
 </template>
 
@@ -268,6 +360,36 @@ const props = defineProps({
 const showTrackingModal = ref(false)
 const showPaymentModal = ref(false)
 const showFreteModal = ref(false)
+const showCostsModal = ref(false)
+const costsFormMap = ref({})
+
+// Detecta se existem itens dropshipping com custo não cadastrado (ou custo == 0)
+const hasUnsetCosts = computed(() => {
+  return (props.order.itens || []).some(item => {
+    return item.tipo_estoque_snapshot === 'dropshipping' && (!item.preco_custo_snapshot || parseFloat(item.preco_custo_snapshot) === 0)
+  })
+})
+
+function openCostsModal() {
+  costsFormMap.value = {}
+  ;(props.order.itens || []).forEach(item => {
+    costsFormMap.value[item.id] = item.preco_custo_snapshot ? parseFloat(item.preco_custo_snapshot) : ''
+  })
+  showCostsModal.value = true
+}
+
+function submitCosts() {
+  const custosArray = Object.keys(costsFormMap.value).map(itemId => ({
+    item_id: parseInt(itemId),
+    preco_custo: parseFloat(costsFormMap.value[itemId]) || 0
+  }))
+
+  router.post(route('admin.orders.update-item-costs', props.order.id), { custos: custosArray }, {
+    onSuccess: () => {
+      showCostsModal.value = false
+    }
+  })
+}
 
 // Filtra itens de dropshipping do pedido
 const dropshippingItens = computed(() => {

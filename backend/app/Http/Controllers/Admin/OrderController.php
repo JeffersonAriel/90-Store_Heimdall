@@ -614,4 +614,43 @@ class OrderController extends Controller
         // 2. Fallback Nativo Heimdall (Etiqueta de Envio + Declaração de Conteúdo com Código de Barras)
         return view('admin.orders.print_label', compact('order', 'freteRegra'));
     }
+
+    /**
+     * Atualiza os custos dos produtos do pedido (dropshipping) e gera/recalcula os repasses financeiros para fornecedores
+     */
+    public function updateItemCosts(Request $request, int $id)
+    {
+        $order = Pedido::with('itens.produto')->findOrFail($id);
+
+        $validated = $request->validate([
+            'custos' => 'required|array',
+            'custos.*.item_id' => 'required|integer',
+            'custos.*.preco_custo' => 'required|numeric|min:0',
+        ]);
+
+        DB::transaction(function () use ($order, $validated) {
+            foreach ($validated['custos'] as $itemCusto) {
+                $item = $order->itens->firstWhere('id', $itemCusto['item_id']);
+                if ($item) {
+                    $novoCusto = (float) $itemCusto['preco_custo'];
+                    $item->update(['preco_custo_snapshot' => $novoCusto]);
+
+                    // Opcionalmente atualiza o preço de custo no cadastro do produto
+                    if ($item->produto) {
+                        $item->produto->update(['preco_custo' => $novoCusto]);
+                    }
+                }
+            }
+
+            // Recalcula/gerencia lançamentos no financeiro
+            app(\App\Services\FinancialService::class)->registerSaleEntry(
+                $order->id, 
+                $order->total, 
+                'infinitepay', 
+                $order->url_comprovante_pagamento
+            );
+        });
+
+        return back()->with('success', 'Valores de custo atualizados e repasses aos fornecedores salvos com sucesso!');
+    }
 }

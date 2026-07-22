@@ -97,16 +97,16 @@ class InfinitePayController extends Controller
                 }
 
                 // Salvar dados adicionais em observações ou metadados
-                $infoPagamento = "\nInfinitePay NSU: {$transactionNsu} | Slug: {$slug}";
-                if (isset($checkData['receipt_url'])) {
-                    $infoPagamento .= " | Comprovante: " . $checkData['receipt_url'];
-                }
+                $comprovanteUrl = $checkData['receipt_url'] ?? "https://pay.infinitepay.io/receipt/{$transactionNsu}";
+
+                // Salvar dados adicionais em observações e campo exclusivo de comprovante
+                $infoPagamento = "\nInfinitePay NSU: {$transactionNsu} | Slug: {$slug} | Comprovante: {$comprovanteUrl}";
                 $pedido->update([
-                    'observacoes' => $pedido->observacoes . $infoPagamento
+                    'observacoes' => trim(($pedido->observacoes ?? '') . $infoPagamento),
+                    'url_comprovante_pagamento' => $comprovanteUrl,
                 ]);
 
                 // Registrar entrada no caixa financeiro com o comprovante
-                $comprovanteUrl = $checkData['receipt_url'] ?? null;
                 $this->financialService->registerSaleEntry($pedido->id, $pedido->total, 'infinitepay', $comprovanteUrl);
 
                 // Transiciona para a próxima etapa (em_separacao)

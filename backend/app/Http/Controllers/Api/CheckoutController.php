@@ -138,15 +138,17 @@ class CheckoutController extends Controller
 
             // 3. Cria o pedido
             $order = Pedido::create([
-                'cliente_id'    => $cliente->id,
-                'endereco_id'   => $enderecoId,
-                'cupom_id'      => $cupom?->id,
-                'status'        => 'aguardando_pagamento',
-                'subtotal'      => $subtotal,
-                'desconto_cupom'=> $descontoCupom,
-                'valor_frete'   => $freteValorSalvo,
-                'total'         => $total,
-                'observacoes'   => $obsBase,
+                'cliente_id'        => $cliente->id,
+                'endereco_id'       => $enderecoId,
+                'cupom_id'          => $cupom?->id,
+                'status'            => 'aguardando_pagamento',
+                'subtotal'          => $subtotal,
+                'desconto_cupom'    => $descontoCupom,
+                'valor_frete'       => $freteValorSalvo,
+                'servico_frete_nome'=> $request->frete_servico ?? 'Envio Padrão (SuperFrete)',
+                'prazo_frete_dias'  => (int) ($request->frete_prazo ?? 5),
+                'total'             => $total,
+                'observacoes'       => $obsBase,
             ]);
 
             // 4. Salva itens com snapshot imutável e reserva estoque próprio

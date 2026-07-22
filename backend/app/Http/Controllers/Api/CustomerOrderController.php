@@ -115,15 +115,14 @@ class CustomerOrderController extends Controller
                         ]);
                     }
 
-                    $infoPagamento = "\nInfinitePay NSU: {$transactionNsu} | Slug: {$slug}";
-                    if (isset($checkData['receipt_url'])) {
-                        $infoPagamento .= " | Comprovante: " . $checkData['receipt_url'];
-                    }
+                    $comprovanteUrl = $checkData['receipt_url'] ?? "https://pay.infinitepay.io/receipt/{$transactionNsu}";
+
+                    $infoPagamento = "\nInfinitePay NSU: {$transactionNsu} | Slug: {$slug} | Comprovante: {$comprovanteUrl}";
                     $pedido->update([
-                        'observacoes' => $pedido->observacoes . $infoPagamento
+                        'observacoes' => trim(($pedido->observacoes ?? '') . $infoPagamento),
+                        'url_comprovante_pagamento' => $comprovanteUrl,
                     ]);
 
-                    $comprovanteUrl = $checkData['receipt_url'] ?? null;
                     app(\App\Services\FinancialService::class)->registerSaleEntry($pedido->id, $pedido->total, 'infinitepay', $comprovanteUrl);
                     app(\App\Services\OrderStatusService::class)->transitionTo(
                         $pedido->id,
