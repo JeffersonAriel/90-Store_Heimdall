@@ -604,8 +604,8 @@ class OrderController extends Controller
     {
         $order = Pedido::with(['cliente', 'endereco', 'itens.produto'])->findOrFail($id);
 
-        // 1. Se o pedido já possui URL com token Base64 ou format=A6 válido da SuperFrete, redireciona direto
-        if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, 'etiqueta.superfrete.com') && (str_contains($order->url_rastreio, 'format=') || str_contains($order->url_rastreio, 'eyJ'))) {
+        // 1. Apenas redireciona direto se a URL já possuir o token Base64 oficial da SuperFrete (começando com eyJ)
+        if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, 'etiqueta.superfrete.com') && str_contains($order->url_rastreio, 'eyJ')) {
             return redirect()->away($order->url_rastreio);
         }
 
