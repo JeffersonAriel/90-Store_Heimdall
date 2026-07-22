@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('fretes_regras', function (Blueprint $table) {
-            $table->string('logradouro_origem')->nullable()->default('Rua Marechal Tito');
-            $table->string('numero_origem', 20)->nullable()->default('1000');
+            $table->string('logradouro_origem')->nullable()->default('Rua Nicolau Campanella');
+            $table->string('numero_origem', 20)->nullable()->default('25');
             $table->string('complemento_origem')->nullable();
-            $table->string('bairro_origem')->nullable()->default('São Miguel Paulista');
+            $table->string('bairro_origem')->nullable()->default('Vila Verde');
             $table->string('cidade_origem')->nullable()->default('São Paulo');
             $table->string('estado_origem', 2)->nullable()->default('SP');
             $table->string('documento_origem', 20)->nullable()->default('00000000000');

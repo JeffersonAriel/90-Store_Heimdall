@@ -239,7 +239,7 @@
             <!-- REMETENTE -->
             <div class="remetente-section">
                 <strong>REMETENTE:</strong> 90 STORE<br>
-                <strong>CEP de Origem:</strong> {{ $freteRegra->cep_origem ?? '08010-000' }} — São Paulo / SP<br>
+                <strong>CEP de Origem:</strong> {{ $freteRegra->cep_origem ?? '08230-600' }} — São Paulo / SP<br>
                 <strong>Contato:</strong> sac@90store.com.br
             </div>
         </div>
@@ -253,7 +253,7 @@
                     <td style="width: 50%;">
                         <strong>REMETENTE:</strong> 90 STORE<br>
                         <strong>Endereço:</strong> São Paulo - SP<br>
-                        <strong>CEP:</strong> {{ $freteRegra->cep_origem ?? '08010-000' }}
+                        <strong>CEP:</strong> {{ $freteRegra->cep_origem ?? '08230-600' }}
                     </td>
                     <td style="width: 50%;">
                         <strong>DESTINATÁRIO:</strong> {{ $order->cliente->nome_completo ?? '—' }}<br>
