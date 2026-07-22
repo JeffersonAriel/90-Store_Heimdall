@@ -345,12 +345,8 @@ function submitTracking() {
 }
 
 function generateSuperFreteLabel() {
-  if (confirm('Deseja gerar a etiqueta de envio e declaração de conteúdo deste pedido?')) {
-    router.post(route('admin.orders.generate-label', props.order.id), {}, {
-      onSuccess: () => {
-        window.open(route('admin.orders.print-label', props.order.id), '_blank')
-      }
-    })
+  if (confirm('Deseja emitir a etiqueta deste pedido na SuperFrete?')) {
+    router.post(route('admin.orders.generate-label', props.order.id))
   }
 }
 
