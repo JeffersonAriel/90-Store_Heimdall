@@ -595,67 +595,73 @@ class OrderController extends Controller
     {
         $order = Pedido::with(['cliente', 'endereco', 'itens.produto'])->findOrFail($id);
 
-        $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
-        if ($api) {
-            $rawCred = $api->credenciais_json;
-            $cred = is_array($rawCred) ? $rawCred : json_decode($rawCred, true);
-            $token = is_array($cred) ? ($cred['token'] ?? '') : ($rawCred ?? '');
+        // 1. Se a URL no banco já possui o token em Base64, é só redirecionar (URL oficial SuperFrete)
+        if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, 'etiqueta.superfrete.com') && str_contains($order->url_rastreio, 'eyJ')) {
+            return redirect()->away($order->url_rastreio);
+        }
 
-            if (!empty($token)) {
-                // Extrai qualquer identificador possível (URL, Rastreio ou ID)
-                $tagId = null;
-                if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, '_etiqueta/pdf/')) {
-                    $parts = explode('_etiqueta/pdf/', $order->url_rastreio);
-                    $rawSegment = strtok($parts[1] ?? '', '?');
-                    if (str_starts_with($rawSegment, 'eyJ')) {
-                        $decoded = json_decode(base64_decode($rawSegment), true);
-                        $tagId = $decoded['order_id'] ?? null;
-                    }
-                }
+        // 2. Função auxiliar para converter URLs cruas da SuperFrete em Base64 Público
+        $convertToBase64Url = function ($url) {
+            if (empty($url) || !str_contains($url, '_etiqueta/pdf/')) return null;
+            $parts = explode('_etiqueta/pdf/', $url);
+            $rawSegment = strtok($parts[1] ?? '', '?');
+            if (empty($rawSegment) || str_starts_with($rawSegment, 'eyJ')) return $url;
+            
+            $base64Token = base64_encode(json_encode(['order_id' => $rawSegment]));
+            return "https://etiqueta.superfrete.com/_etiqueta/pdf/{$base64Token}?format=A6";
+        };
 
-                if (empty($tagId) && !empty($order->codigo_rastreio)) {
-                    $tagId = $order->codigo_rastreio;
-                }
+        // 3. Verifica se a URL atual no banco é legada (ID cru) e converte
+        if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, '_etiqueta/pdf/')) {
+            $newUrl = $convertToBase64Url($order->url_rastreio);
+            if ($newUrl && str_contains($newUrl, 'eyJ')) {
+                $order->url_rastreio = $newUrl;
+                $order->save();
+                return redirect()->away($newUrl);
+            }
+        }
 
-                // Para o Pedido #21 especificamente ou fallback com ID real da SuperFrete se ainda estiver com SF provisório
-                if ($order->id == 21 || empty($tagId) || str_starts_with($tagId, 'SF')) {
-                    $tagId = '01KY5PHXBB8VYCRHBX9RXB9WNR';
-                }
+        // 4. Se não tem URL, tenta buscar via API da SuperFrete pelo código de rastreio
+        if (!empty($order->codigo_rastreio) && !str_starts_with($order->codigo_rastreio, 'SF')) {
+            $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
+            if ($api) {
+                $rawCred = $api->credenciais_json;
+                $cred = is_array($rawCred) ? $rawCred : json_decode($rawCred, true);
+                $token = is_array($cred) ? ($cred['token'] ?? '') : ($rawCred ?? '');
 
-                // Pede o link de impressão oficial dinâmico para a API da SuperFrete (/tag/print)
-                try {
-                    $res = Http::withoutVerifying()
-                        ->timeout(10)
-                        ->withHeaders([
-                            'Authorization' => "Bearer {$token}",
-                            'Accept'        => 'application/json',
-                            'Content-Type'  => 'application/json',
-                            'User-Agent'    => 'Heimdall 90-Store'
-                        ])
-                        ->post('https://api.superfrete.com/api/v0/tag/print', [
-                            'orders' => [$tagId]
-                        ]);
+                if (!empty($token)) {
+                    try {
+                        $res = Http::withoutVerifying()
+                            ->timeout(10)
+                            ->withHeaders([
+                                'Authorization' => "Bearer {$token}",
+                                'Accept'        => 'application/json',
+                                'Content-Type'  => 'application/json',
+                                'User-Agent'    => 'Heimdall 90-Store'
+                            ])
+                            ->post('https://api.superfrete.com/api/v0/tag/print', [
+                                'orders' => [$order->codigo_rastreio]
+                            ]);
 
-                    if ($res->successful() && $res->json('url')) {
-                        $officialUrl = $res->json('url');
+                        if ($res->successful() && $res->json('url')) {
+                            $officialUrl = $res->json('url');
+                            
+                            // Converte a URL retornada pela API (que vem crua) para o formato Base64 Público
+                            $publicUrl = $convertToBase64Url($officialUrl) ?? $officialUrl;
 
-                        // Atualiza o pedido no banco com o rastreio e URL oficiais
-                        if ($order->id == 21) {
-                            $order->codigo_rastreio = '13191900522997';
-                            $order->servico_frete_nome = 'Jadlog Econômico';
+                            $order->url_rastreio = $publicUrl;
+                            $order->save();
+
+                            return redirect()->away($publicUrl);
                         }
-                        $order->url_rastreio = $officialUrl;
-                        $order->save();
-
-                        return redirect()->away($officialUrl);
+                    } catch (\Exception $e) {
+                        // Ignora e vai para o fallback nativo
                     }
-                } catch (\Exception $e) {
-                    // Fallback
                 }
             }
         }
 
-        // Fallback nativo apenas caso o pedido realmente não esteja cadastrado na SuperFrete
+        // 5. Fallback nativo apenas caso o pedido realmente não esteja cadastrado na SuperFrete
         $freteRegra = \App\Models\FreteRegra::first();
         return view('admin.orders.print_label', compact('order', 'freteRegra'));
     }
