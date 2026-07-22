@@ -130,6 +130,7 @@
                 class="cf-turnstile"
                 :data-sitekey="siteKey"
                 data-theme="dark"
+                data-action="turnstile-spin-v2"
               ></div>
             </div>
 

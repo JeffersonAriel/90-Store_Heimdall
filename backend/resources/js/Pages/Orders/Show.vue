@@ -92,8 +92,8 @@
               <button v-if="order.status === 'em_separacao' || order.status === 'em_envio'" @click="generateSuperFreteLabel" class="btn btn-primary" style="background-color: #10b981; border-color: #10b981;">
                 🏷️ Gerar Etiqueta SuperFrete
               </button>
-              <a v-if="order.codigo_rastreio" :href="order.url_rastreio" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;">
-                🖨️ Imprimir Etiqueta
+              <a v-if="order.codigo_rastreio" :href="order.url_rastreio || 'https://web.superfrete.com'" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;" title="Abrir Painel SuperFrete para emitir e baixar PDF da etiqueta">
+                🖨️ Abrir Painel / Imprimir Etiqueta
               </a>
 
               <!-- Exceções aplicáveis a qualquer momento -->

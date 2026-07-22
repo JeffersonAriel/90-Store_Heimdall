@@ -378,12 +378,11 @@ class OrderController extends Controller
             
             DB::transaction(function() use ($order, $rastreioSimulado) {
                 $order->codigo_rastreio = $rastreioSimulado;
-                $order->url_rastreio    = 'https://superfrete.com/rastreio/' . $rastreioSimulado;
+                $order->url_rastreio    = 'https://web.superfrete.com';
                 $order->save();
             });
 
-            // Retorna URL de impressão fictícia da etiqueta (ou link para o painel deles)
-            return back()->with('success', "Etiqueta gerada com sucesso na SuperFrete! Rastreio: {$rastreioSimulado}");
+            return back()->with('success', "Etiqueta/Rastreio gerado com sucesso! Rastreio: {$rastreioSimulado}. Para baixar o PDF da etiqueta oficial, acesse o Painel SuperFrete.");
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao emitir etiqueta na SuperFrete: ' . $e->getMessage());
         }

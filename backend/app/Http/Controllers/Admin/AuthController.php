@@ -36,7 +36,7 @@ class AuthController extends Controller
         ]);
 
         // Validação Cloudflare Turnstile
-        $secretKey = env('TURNSTILE_SECRET_KEY');
+        $secretKey = env('TURNSTILE_SECRET', env('TURNSTILE_SECRET_KEY'));
         if (!empty($secretKey)) {
             $token = $request->input('cf-turnstile-response');
             if (empty($token)) {
