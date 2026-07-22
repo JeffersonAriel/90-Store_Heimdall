@@ -88,49 +88,65 @@
               <RouterLink :to="`/catalogo?categoria=${cat.slug}`" class="nav-link">{{ cat.nome }}</RouterLink>
               
               <div class="mega-dropdown" v-if="cat.children && cat.children.length > 0">
-                <div class="container mega-container-flex">
-                  <div class="dropdown-grid">
-                    <template v-for="child in cat.children" :key="child.id">
-                      <div v-for="(grandchild, idx) in child.children" :key="grandchild.id" class="dropdown-column" :class="{ 'has-divider': idx > 0 }">
-                        <h4>{{ grandchild.nome }}</h4>
-                        <ul class="grandchild-list">
-                          <li v-for="sub in (isColumnExpanded(grandchild.id) ? (grandchild.children || []) : (grandchild.children || []).slice(0, 7))" :key="sub.id" class="grandchild-item">
-                            <RouterLink :to="`/catalogo?categoria=${sub.slug}`" class="grandchild-link-plain">
-                              {{ sub.nome }}
-                            </RouterLink>
-                          </li>
-                          <li v-if="(grandchild.children || []).length > 7" class="ver-mais-li">
-                            <button type="button" @click.prevent="toggleColumn(grandchild.id)" class="sub-grandchild-ver-mais">
-                              {{ isColumnExpanded(grandchild.id) ? 'Ver Menos -' : 'Ver Mais +' }}
-                            </button>
-                          </li>
-                        </ul>
-                      </div>
-                    </template>
+                <div class="container mega-content-wrapper">
+                  <!-- Header de busca rápida dentro do mega menu -->
+                  <div class="mega-search-header">
+                    <div class="mega-search-box">
+                      <svg class="mega-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                      <input type="text" v-model="menuSearchQuery" placeholder="Filtrar time ou seleção no menu..." class="mega-search-input" />
+                      <button v-if="menuSearchQuery" @click="menuSearchQuery = ''" class="mega-search-clear">&times;</button>
+                    </div>
+                    <span class="mega-badge-hint">✨ +400 Clubes & Seleções Cadastrados</span>
                   </div>
 
-                  <!-- Right Side Promo Banner -->
-                  <div class="mega-promo-banner" 
-                       v-if="getMegaMenuBannerForCategory(cat.id)"
-                       :style="{ aspectRatio: (getMegaMenuBannerForCategory(cat.id).aspect_ratio || '4:3').replace(':', '/') }">
-                    <img :src="getMegaMenuBannerForCategory(cat.id).image_path" :alt="cat.nome" class="promo-img" />
-                    <div class="promo-content">
-                      <h5 v-if="getMegaMenuBannerForCategory(cat.id).title">{{ getMegaMenuBannerForCategory(cat.id).title }}</h5>
-                      <p v-if="getMegaMenuBannerForCategory(cat.id).subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-bottom: var(--spacing-2)">
-                        {{ getMegaMenuBannerForCategory(cat.id).subtitle }}
-                      </p>
-                      <a v-if="getMegaMenuBannerForCategory(cat.id).link_url" :href="getMegaMenuBannerForCategory(cat.id).link_url" class="btn btn-primary btn-sm promo-btn">
-                        Confira
-                      </a>
+                  <div class="mega-container-flex">
+                    <div class="dropdown-grid">
+                      <template v-for="child in cat.children" :key="child.id">
+                        <div v-for="(grandchild, idx) in child.children" :key="grandchild.id" class="dropdown-column" :class="{ 'has-divider': idx > 0 }">
+                          <h4 class="dropdown-column-title">
+                            <span class="column-icon">{{ getSubItemIcon(grandchild.nome) }}</span>
+                            {{ grandchild.nome }}
+                            <span class="column-count-badge" v-if="(grandchild.children || []).length > 0">({{ (grandchild.children || []).length }})</span>
+                          </h4>
+                          <ul class="grandchild-list">
+                            <li v-for="sub in getFilteredSubItems(grandchild)" :key="sub.id" class="grandchild-item">
+                              <RouterLink :to="`/catalogo?categoria=${sub.slug}`" class="grandchild-link-chip">
+                                <span>{{ sub.nome }}</span>
+                              </RouterLink>
+                            </li>
+                            <li v-if="!menuSearchQuery && (grandchild.children || []).length > 7" class="ver-mais-li">
+                              <button type="button" @click.prevent="toggleColumn(grandchild.id)" class="sub-grandchild-ver-mais-btn">
+                                <span>{{ isColumnExpanded(grandchild.id) ? 'Recolher -' : `Ver todos (${(grandchild.children || []).length}) +` }}</span>
+                              </button>
+                            </li>
+                          </ul>
+                        </div>
+                      </template>
                     </div>
-                  </div>
-                  <div class="mega-promo-banner" v-else-if="getPromoBanner(cat.slug)" style="aspect-ratio: 4/3">
-                    <img :src="getPromoBanner(cat.slug).image" :alt="cat.nome" class="promo-img" />
-                    <div class="promo-content">
-                      <h5>{{ cat.nome }}</h5>
-                      <RouterLink :to="`/catalogo?categoria=${cat.slug}`" class="btn btn-primary btn-sm promo-btn">
-                        Confira
-                      </RouterLink>
+
+                    <!-- Right Side Promo Banner -->
+                    <div class="mega-promo-banner" 
+                         v-if="getMegaMenuBannerForCategory(cat.id)"
+                         :style="{ aspectRatio: (getMegaMenuBannerForCategory(cat.id).aspect_ratio || '4:3').replace(':', '/') }">
+                      <img :src="getMegaMenuBannerForCategory(cat.id).image_path" :alt="cat.nome" class="promo-img" />
+                      <div class="promo-content">
+                        <h5 v-if="getMegaMenuBannerForCategory(cat.id).title">{{ getMegaMenuBannerForCategory(cat.id).title }}</h5>
+                        <p v-if="getMegaMenuBannerForCategory(cat.id).subtitle" style="font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-bottom: var(--spacing-2)">
+                          {{ getMegaMenuBannerForCategory(cat.id).subtitle }}
+                        </p>
+                        <a v-if="getMegaMenuBannerForCategory(cat.id).link_url" :href="getMegaMenuBannerForCategory(cat.id).link_url" class="btn btn-primary btn-sm promo-btn">
+                          Confira
+                        </a>
+                      </div>
+                    </div>
+                    <div class="mega-promo-banner" v-else-if="getPromoBanner(cat.slug)" style="aspect-ratio: 4/3">
+                      <img :src="getPromoBanner(cat.slug).image" :alt="cat.nome" class="promo-img" />
+                      <div class="promo-content">
+                        <h5>{{ cat.nome }}</h5>
+                        <RouterLink :to="`/catalogo?categoria=${cat.slug}`" class="btn btn-primary btn-sm promo-btn">
+                          Confira
+                        </RouterLink>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -332,6 +348,7 @@ const cartCount = computed(() => store.cart.reduce((total, item) => total + item
 const favoriteCount = computed(() => store.favorites?.length || 0)
 
 const searchQuery = ref('')
+const menuSearchQuery = ref('')
 const expandedColumns = ref(new Set())
 
 function toggleColumn(columnId) {
@@ -344,6 +361,26 @@ function toggleColumn(columnId) {
 
 function isColumnExpanded(columnId) {
   return expandedColumns.value.has(columnId)
+}
+
+function getFilteredSubItems(grandchild) {
+  const items = grandchild.children || []
+  if (!menuSearchQuery.value.trim()) {
+    return isColumnExpanded(grandchild.id) ? items : items.slice(0, 7)
+  }
+  const term = menuSearchQuery.value.toLowerCase().trim()
+  return items.filter(item => item.nome.toLowerCase().includes(term))
+}
+
+function getSubItemIcon(nome) {
+  const n = (nome || '').toLowerCase()
+  if (n.includes('brasileirão') || n.includes('corinthians') || n.includes('flamengo') || n.includes('palmeiras')) return '⚽'
+  if (n.includes('europeus') || n.includes('madrid') || n.includes('barcelona') || n.includes('city')) return '🏆'
+  if (n.includes('seleções') || n.includes('brasil') || n.includes('argentina') || n.includes('frança')) return '🌎'
+  if (n.includes('nba') || n.includes('lakers') || n.includes('celtics') || n.includes('basquete')) return '🏀'
+  if (n.includes('nfl') || n.includes('chiefs') || n.includes('cowboys')) return '🏈'
+  if (n.includes('retrô') || n.includes('retro') || n.includes('anos')) return '⏳'
+  return '🔥'
 }
 
 const isCartOpen = ref(false)
@@ -1151,6 +1188,145 @@ function handleSearch() {
 
   .whatsapp-float { width: 50px; height: 50px; bottom: 20px; right: 20px; }
   .whatsapp-icon { width: 26px; height: 26px; }
+}
+
+/* ─── Mega Menu Redesign Professional Styling ─── */
+.mega-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.mega-search-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mega-search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  max-width: 360px;
+  width: 100%;
+}
+
+.mega-search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--color-gray);
+  pointer-events: none;
+}
+
+.mega-search-input {
+  width: 100%;
+  padding: 8px 30px 8px 36px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--border-radius-full);
+  color: var(--color-white);
+  font-size: 0.85rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.mega-search-input:focus {
+  border-color: var(--color-red);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 12px rgba(227, 6, 19, 0.25);
+}
+
+.mega-search-clear {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--color-gray);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.mega-badge-hint {
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  padding: 4px 12px;
+  border-radius: var(--border-radius-full);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  letter-spacing: 0.5px;
+}
+
+.dropdown-column-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-red);
+  margin-bottom: var(--spacing-4);
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 800;
+  border-bottom: 2px solid rgba(227, 6, 19, 0.4);
+  padding-bottom: 6px;
+}
+
+.column-icon {
+  font-size: 1rem;
+}
+
+.column-count-badge {
+  font-size: 0.725rem;
+  color: var(--color-gray);
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.grandchild-link-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+}
+
+.grandchild-link-chip:hover {
+  color: var(--color-white);
+  background: rgba(227, 6, 19, 0.15);
+  border-color: rgba(227, 6, 19, 0.4);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(227, 6, 19, 0.15);
+}
+
+.sub-grandchild-ver-mais-btn {
+  width: 100%;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(227, 6, 19, 0.15);
+  border: 1px solid rgba(227, 6, 19, 0.35);
+  color: var(--color-red);
+  font-size: 0.775rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.sub-grandchild-ver-mais-btn:hover {
+  background: var(--color-red);
+  color: var(--color-white);
+  box-shadow: 0 4px 14px rgba(227, 6, 19, 0.4);
 }
 
 @media (max-width: 1024px) {
