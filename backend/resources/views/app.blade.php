@@ -14,6 +14,9 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 
+        {{-- Cloudflare Turnstile --}}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
         {{-- Vite Assets --}}
         @routes
         @vite(['resources/css/admin.css', 'resources/js/app.js'])

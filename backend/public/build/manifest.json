@@ -73,7 +73,7 @@
     ]
   },
   "resources/js/Pages/Auth/Login.vue": {
-    "file": "assets/Login-BI-Aoyy_.js",
+    "file": "assets/Login-SUzTNQxr.js",
     "name": "Login",
     "src": "resources/js/Pages/Auth/Login.vue",
     "isDynamicEntry": true,
@@ -81,7 +81,7 @@
       "_vendor-CvtE0i2L.js"
     ],
     "css": [
-      "assets/Login-DP0cOiok.css"
+      "assets/Login-OTuvG4cD.css"
     ]
   },
   "resources/js/Pages/Auth/Verify2FA.vue": {
@@ -593,7 +593,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-B7FeqpQo.js",
+    "file": "assets/app-BtJn3S6P.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,

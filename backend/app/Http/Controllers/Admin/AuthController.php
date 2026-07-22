@@ -20,7 +20,9 @@ class AuthController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
-        return Inertia::render('Auth/Login');
+        return Inertia::render('Auth/Login', [
+            'turnstileSiteKey' => env('TURNSTILE_SITE_KEY'),
+        ]);
     }
 
     /**
@@ -28,11 +30,39 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email'    => 'required|email',
             'password' => 'required|string',
         ]);
 
+        // Validação Cloudflare Turnstile
+        $secretKey = env('TURNSTILE_SECRET_KEY');
+        if (!empty($secretKey)) {
+            $token = $request->input('cf-turnstile-response');
+            if (empty($token)) {
+                return back()->withErrors([
+                    'email' => 'Por favor, complete a verificação de segurança da Cloudflare.',
+                ]);
+            }
+
+            try {
+                $response = \Illuminate\Support\Facades\Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                    'secret'   => $secretKey,
+                    'response' => $token,
+                    'remoteip' => $request->ip(),
+                ]);
+
+                if (!$response->successful() || !$response->json('success')) {
+                    return back()->withErrors([
+                        'email' => 'Falha na verificação de segurança (Turnstile). Tente novamente.',
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Failsafe se API estiver inacessível
+            }
+        }
+
+        $credentials = $request->only('email', 'password');
         $remember = $request->boolean('remember', false);
 
         if (Auth::guard('admin')->attempt($credentials, $remember)) {

@@ -123,6 +123,16 @@
               </label>
             </div>
 
+            <!-- Cloudflare Turnstile CAPTCHA -->
+            <div v-if="siteKey" class="turnstile-wrapper">
+              <div
+                ref="turnstileContainer"
+                class="cf-turnstile"
+                :data-sitekey="siteKey"
+                data-theme="dark"
+              ></div>
+            </div>
+
             <button type="submit" class="btn-asgard" :disabled="form.processing">
               <span class="btn-lightning" v-if="!form.processing">⚡</span>
               <span class="btn-spinner" v-if="form.processing">
@@ -143,22 +153,65 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useForm, usePage } from '@inertiajs/vue3'
+
+const props = defineProps({
+  turnstileSiteKey: {
+    type: String,
+    default: ''
+  }
+})
 
 const page = usePage()
 const errorMsg = computed(() => page.props.flash?.error || '')
 const showPass = ref(false)
+const turnstileContainer = ref(null)
+
+const siteKey = computed(() => props.turnstileSiteKey || '0x4AAAAAAD7aAREUvmBJOxtu')
 
 const form = useForm({
   email: '',
   password: '',
   remember: false,
+  'cf-turnstile-response': '',
 })
 
 const errors = computed(() => form.errors)
 
+onMounted(() => {
+  if (typeof window !== 'undefined' && siteKey.value) {
+    const checkTurnstile = setInterval(() => {
+      if (window.turnstile && turnstileContainer.value) {
+        clearInterval(checkTurnstile)
+        try {
+          window.turnstile.render(turnstileContainer.value, {
+            sitekey: siteKey.value,
+            theme: 'dark',
+            callback: (token) => {
+              form['cf-turnstile-response'] = token
+            },
+            'expired-callback': () => {
+              form['cf-turnstile-response'] = ''
+            }
+          })
+        } catch (e) {
+          // Ignora se já estiver renderizado
+        }
+      }
+    }, 200)
+
+    setTimeout(() => clearInterval(checkTurnstile), 5000)
+  }
+})
+
 function submit() {
+  // Se o Turnstile tiver um input no DOM com a resposta
+  const turnstileInput = document.querySelector('[name="cf-turnstile-response"]')
+  if (turnstileInput && turnstileInput.value) {
+    form['cf-turnstile-response'] = turnstileInput.value
+  }
+
   form.post(route('admin.login.post'), {
     onFinish: () => form.reset('password'),
   })
@@ -781,5 +834,13 @@ const runes = Array.from({ length: 20 }, (_, i) => ({
   color: rgba(165,180,252,0.3);
   margin: 0;
   letter-spacing: 0.05em;
+}
+
+/* ──── Turnstile CAPTCHA ────────────────────────────── */
+.turnstile-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 0.25rem 0 0.5rem;
+  min-height: 65px;
 }
 </style>
