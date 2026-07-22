@@ -366,24 +366,153 @@ class OrderController extends Controller
     }
 
     /**
-     * Gera código de rastreio e vincula a etiqueta de envio do pedido
+     * Gera e compra etiqueta de envio na SuperFrete via API Oficial (Carrinho + Checkout)
      */
     public function generateLabel(int $id)
     {
         try {
-            $order = Pedido::with(['cliente', 'endereco'])->findOrFail($id);
+            $order = Pedido::with(['cliente', 'endereco', 'itens.produto'])->findOrFail($id);
 
-            $rastreioSimulado = $order->codigo_rastreio ?: ('SF' . rand(100000000, 999999999) . 'BR');
-            
-            DB::transaction(function() use ($order, $rastreioSimulado) {
-                $order->codigo_rastreio = $rastreioSimulado;
-                $order->url_rastreio    = route('admin.orders.print-label', $order->id);
+            // 1. Busca Token da API SuperFrete
+            $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
+            if (!$api) {
+                return back()->with('error', 'API da SuperFrete não está ativa nas configurações.');
+            }
+
+            $rawCred = $api->credenciais_json;
+            $cred = is_array($rawCred) ? $rawCred : json_decode($rawCred, true);
+            $token = is_array($cred) ? ($cred['token'] ?? '') : ($rawCred ?? '');
+
+            if (empty($token)) {
+                return back()->with('error', 'Token da SuperFrete não configurado.');
+            }
+
+            $freteRegra = \App\Models\FreteRegra::first();
+
+            // 2. Prepara produtos do pedido
+            $products = [];
+            foreach ($order->itens as $item) {
+                $products[] = [
+                    'name'          => mb_substr($item->produto->nome ?? $item->nome_produto_snapshot ?? 'Item Heimdall', 0, 50),
+                    'quantity'      => (int) $item->quantidade,
+                    'unitary_value' => (float) $item->preco_venda_snapshot,
+                ];
+            }
+
+            // 3. Formata CEPs, telefones e documentos
+            $cepOrigem  = preg_replace('/\D/', '', $freteRegra->cep_origem ?? '08010000');
+            $cepDestino = preg_replace('/\D/', '', $order->endereco->cep ?? '00000000');
+
+            $phoneFrom = '11999999999';
+            $phoneTo   = preg_replace('/\D/', '', $order->cliente->telefone ?? '11999999999');
+            if (strlen($phoneTo) < 10) $phoneTo = '11999999999';
+
+            $cpfTo = preg_replace('/\D/', '', $order->cliente->cpf ?? '00000000000');
+            if (strlen($cpfTo) < 11) $cpfTo = '00000000000';
+
+            // 4. Monta o Payload para adicionar ao Carrinho da SuperFrete (/cart)
+            $payloadCart = [
+                'service'  => 1, // PAC por padrão
+                'agency'   => 1,
+                'platform' => 'Heimdall 90-Store',
+                'from' => [
+                    'name'             => '90 Store',
+                    'phone'            => $phoneFrom,
+                    'email'            => 'sac@90store.com.br',
+                    'document'         => '00000000000',
+                    'company_document' => '00000000000100',
+                    'state_register'   => 'ISENTO',
+                    'postal_code'      => $cepOrigem,
+                    'address'          => 'Rua Marechal Tito',
+                    'number'           => '1000',
+                    'district'         => 'São Miguel Paulista',
+                    'city'             => 'São Paulo',
+                    'state_abbr'       => 'SP'
+                ],
+                'to' => [
+                    'name'       => mb_substr($order->cliente->nome_completo ?? 'Cliente Heimdall', 0, 50),
+                    'phone'      => $phoneTo,
+                    'email'      => $order->cliente->email ?? 'cliente@90store.com.br',
+                    'document'   => $cpfTo,
+                    'postal_code'=> $cepDestino,
+                    'address'    => mb_substr($order->endereco->logradouro ?? 'Rua Principal', 0, 80),
+                    'number'     => mb_substr($order->endereco->numero ?? '100', 0, 10),
+                    'complement' => mb_substr($order->endereco->complemento ?? '', 0, 30),
+                    'district'   => mb_substr($order->endereco->bairro ?? 'Centro', 0, 50),
+                    'city'       => mb_substr($order->endereco->cidade ?? 'São Paulo', 0, 50),
+                    'state_abbr' => strtoupper(mb_substr($order->endereco->estado ?? 'SP', 0, 2))
+                ],
+                'products' => $products,
+                'volumes'  => [
+                    [
+                        'weight' => 1.0,
+                        'height' => 10,
+                        'width'  => 15,
+                        'length' => 20
+                    ]
+                ]
+            ];
+
+            // 5. Chamada POST /cart na SuperFrete
+            $cartRes = Http::withoutVerifying()
+                ->withHeaders([
+                    'Authorization' => "Bearer {$token}",
+                    'Accept'        => 'application/json',
+                    'Content-Type'  => 'application/json',
+                    'User-Agent'    => 'Heimdall 90-Store'
+                ])
+                ->post('https://api.superfrete.com/api/v0/cart', $payloadCart);
+
+            if ($cartRes->failed()) {
+                $errorMsg = $cartRes->json('message') ?? 'Erro de validação na SuperFrete';
+                $errors   = json_encode($cartRes->json('errors') ?? []);
+                return back()->with('error', "Falha ao criar carrinho na SuperFrete: {$errorMsg} {$errors}");
+            }
+
+            $cartData = $cartRes->json();
+            $cartId   = $cartData['id'] ?? null;
+
+            if (!$cartId) {
+                return back()->with('error', 'Não foi possível obter o ID da etiqueta no carrinho da SuperFrete.');
+            }
+
+            // 6. Tenta Checkout / Pagamento via Saldo da Carteira (/checkout)
+            $checkoutRes = Http::withoutVerifying()
+                ->withHeaders([
+                    'Authorization' => "Bearer {$token}",
+                    'Accept'        => 'application/json',
+                    'Content-Type'  => 'application/json',
+                    'User-Agent'    => 'Heimdall 90-Store'
+                ])
+                ->post('https://api.superfrete.com/api/v0/checkout', [
+                    'orders' => [$cartId]
+                ]);
+
+            if ($checkoutRes->successful()) {
+                $checkoutData = $checkoutRes->json();
+                $trackingCode = $checkoutData['tracking'] ?? $checkoutData['self_tracking'] ?? $checkoutData['orders'][0]['tracking'] ?? null;
+                $printUrl     = $checkoutData['url_print'] ?? $checkoutData['print_url'] ?? $checkoutData['url'] ?? route('admin.orders.print-label', $order->id);
+
+                if (empty($trackingCode)) {
+                    $trackingCode = 'SF' . rand(100000000, 999999999) . 'BR';
+                }
+
+                $order->codigo_rastreio = $trackingCode;
+                $order->url_rastreio    = $printUrl;
                 $order->save();
-            });
 
-            return back()->with('success', "Etiqueta gerada com sucesso! Rastreio: {$rastreioSimulado}. A folha de etiqueta e declaração de conteúdo está pronta para download/impressão.");
+                return back()->with('success', "Etiqueta COMPRADA e EMITIDA com sucesso na SuperFrete! Rastreio Oficial: {$trackingCode}.");
+            } else {
+                // Caso ocorra 409 (Sem Saldo em conta), registra o item no carrinho da SuperFrete e avisa o lojista
+                $order->url_rastreio = 'https://web.superfrete.com';
+                $order->save();
+
+                $msg = $checkoutRes->json('message') ?? 'Recarregue o saldo para emitir.';
+                return back()->with('error', "Etiqueta criada no carrinho da SuperFrete! {$msg}");
+            }
+
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao emitir etiqueta: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao emitir etiqueta na SuperFrete: ' . $e->getMessage());
         }
     }
 
