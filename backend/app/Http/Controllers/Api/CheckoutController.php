@@ -174,11 +174,20 @@ class CheckoutController extends Controller
 
         // Tratamento para PIX Manual
         if ($request->gateway === 'pix_manual') {
+            DB::table('pagamentos')->insert([
+                'pedido_id' => $order->id,
+                'gateway' => 'pix_manual',
+                'metodo' => 'pix',
+                'status' => 'pendente',
+                'valor' => $order->total,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
             $apiPix = \App\Models\ApiConfiguracao::where('slug', 'pix_manual')->first();
             $chavePix = '';
             if ($apiPix && $apiPix->credenciais_json) {
                 $creds = json_decode($apiPix->credenciais_json, true);
-                // Pega o valor do campo 'chave_pix' ou simplesmente o primeiro valor cadastrado nas credenciais
                 $chavePix = $creds['chave_pix'] ?? reset($creds) ?? '';
             }
 
@@ -192,7 +201,19 @@ class CheckoutController extends Controller
         }
 
         // Tratamento para InfinitePay
-        if ($request->gateway === 'infinitepay') {
+        if (str_starts_with($request->gateway, 'infinitepay')) {
+            $metodo = $request->input('metodo_pagamento', str_contains($request->gateway, 'cartao') ? 'cartao_credito' : 'pix');
+
+            DB::table('pagamentos')->insert([
+                'pedido_id' => $order->id,
+                'gateway' => 'infinitepay',
+                'metodo' => $metodo,
+                'status' => 'pendente',
+                'valor' => $order->total,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
             $resInfinite = $this->infinitePayService->createPaymentLink($order);
             if ($resInfinite['success']) {
                 return response()->json([

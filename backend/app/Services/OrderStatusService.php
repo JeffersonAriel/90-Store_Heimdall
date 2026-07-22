@@ -74,6 +74,47 @@ class OrderStatusService
     }
 
     /**
+     * Avança o pedido sequencialmente até o status de destino (ex: em_separacao -> em_envio -> enviado -> entregue).
+     */
+    public function advanceToStatus(int $orderId, string $targetStatus, ?int $employeeId = null, ?string $observation = null): bool
+    {
+        $pedido = Pedido::find($orderId);
+        if (!$pedido) return false;
+
+        $currentStatus = $pedido->status;
+
+        if ($currentStatus === $targetStatus) {
+            return true;
+        }
+
+        // Caso especial: cancelado ou devolvido
+        if (in_array($targetStatus, ['cancelado', 'devolvido'])) {
+            return $this->transitionTo($orderId, $targetStatus, $employeeId, $observation);
+        }
+
+        $currentIndex = array_search($currentStatus, $this->statusSequence);
+        $targetIndex  = array_search($targetStatus, $this->statusSequence);
+
+        if ($currentIndex === false || $targetIndex === false) {
+            return false;
+        }
+
+        if ($targetIndex <= $currentIndex) {
+            // Não regride status já alcançados
+            return false;
+        }
+
+        // Executa cada transição da sequência passo a passo
+        for ($i = $currentIndex + 1; $i <= $targetIndex; $i++) {
+            $nextStatus = $this->statusSequence[$i];
+            $obsStep = ($i === $targetIndex && $observation) ? $observation : "Avanço automático para {$nextStatus}.";
+            $this->transitionTo($orderId, $nextStatus, $employeeId, $obsStep);
+        }
+
+        return true;
+    }
+
+    /**
      * Confirmação manual de pagamento (PIX direto no banco, etc.)
      */
     public function confirmPaymentManually(int $orderId, int $employeeId, string $obs): bool

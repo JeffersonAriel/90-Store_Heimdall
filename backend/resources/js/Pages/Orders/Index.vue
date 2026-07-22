@@ -131,7 +131,7 @@
                 <span class="font-bold">R$ {{ formatMoney(ord.total) }}</span>
               </td>
               <td data-label="Gateway">
-                <span class="badge badge-secondary">{{ ord.gateway_pagamento || 'Pix Manual' }}</span>
+                <span class="badge" :class="getGatewayBadgeClass(ord.gateway_pagamento)">{{ ord.gateway_pagamento || 'Pix Manual' }}</span>
               </td>
               <td data-label="Status">
                 <span class="badge" :class="getStatusBadgeClass(ord.status)">
@@ -224,6 +224,14 @@ function getStatusBadgeClass(status) {
     case 'devolvido':            return 'badge-danger'
     default:                     return 'badge-secondary'
   }
+}
+
+function getGatewayBadgeClass(gw) {
+  if (!gw) return 'badge-secondary'
+  const lower = gw.toLowerCase()
+  if (lower.includes('infinitepay')) return 'badge-info'
+  if (lower.includes('pix')) return 'badge-success'
+  return 'badge-secondary'
 }
 </script>
 

@@ -33,7 +33,7 @@ class OrderController extends Controller
         $status = $request->input('status');
 
         $orders = Pedido::query()
-            ->with(['cliente'])
+            ->with(['cliente', 'pagamentos'])
             ->when($search, function ($query, $search) {
                 $query->where('id', $search)
                       ->orWhereHas('cliente', function ($q) use ($search) {
@@ -192,11 +192,15 @@ class OrderController extends Controller
             }
 
             // 6. Registra o Pagamento
+            $gwInput = $validated['gateway_pagamento'];
+            $gateway = str_starts_with($gwInput, 'infinitepay') ? 'infinitepay' : $gwInput;
+            $metodo  = str_contains($gwInput, 'pix') ? 'pix' : (str_contains($gwInput, 'cartao') ? 'cartao_credito' : 'outro');
+
             $order->pagamentos()->create([
-                'gateway' => $validated['gateway_pagamento'],
-                'metodo' => $validated['gateway_pagamento'] === 'pix_manual' ? 'pix' : 'outro',
-                'status' => $validated['status'] === 'aguardando_pagamento' ? 'pendente' : 'aprovado',
-                'valor' => $total,
+                'gateway' => $gateway,
+                'metodo'  => $metodo,
+                'status'  => $validated['status'] === 'aguardando_pagamento' ? 'pendente' : 'aprovado',
+                'valor'   => $total,
                 'paid_at' => $validated['status'] === 'aguardando_pagamento' ? null : now(),
             ]);
 
@@ -700,5 +704,72 @@ class OrderController extends Controller
         });
 
         return back()->with('success', 'Valores de custo atualizados e repasses aos fornecedores salvos com sucesso!');
+    }
+
+    /**
+     * Sincroniza manualmente o rastreamento do pedido com a SuperFrete via botão no painel
+     */
+    public function syncSuperFreteTracking(int $id, OrderStatusService $orderStatusService)
+    {
+        $order = Pedido::findOrFail($id);
+
+        if (empty($order->codigo_rastreio)) {
+            return back()->with('error', 'Este pedido não possui código de rastreamento cadastrado.');
+        }
+
+        $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
+        if (!$api) {
+            return back()->with('error', 'API da SuperFrete não está ativa.');
+        }
+
+        $creds = is_string($api->credenciais_json) ? json_decode($api->credenciais_json, true) : $api->credenciais_json;
+        $token = $creds['token'] ?? null;
+
+        if (!$token) {
+            return back()->with('error', 'Token da SuperFrete não configurado.');
+        }
+
+        try {
+            $response = Http::withoutVerifying()
+                ->withHeaders([
+                    'Authorization' => "Bearer {$token}",
+                    'Accept'        => 'application/json',
+                    'User-Agent'    => 'Heimdall 90-Store'
+                ])
+                ->post('https://api.superfrete.com/api/v0/tracking', [
+                    'codes' => [$order->codigo_rastreio]
+                ]);
+
+            if ($response->successful()) {
+                $trackingData = $response->json();
+                $events = $trackingData[0]['events'] ?? $trackingData['events'] ?? $trackingData['status'] ?? [];
+                $lastStatusStr = '';
+
+                if (is_array($events) && !empty($events)) {
+                    $lastEvent = end($events);
+                    $lastStatusStr = is_array($lastEvent) ? ($lastEvent['status'] ?? $lastEvent['description'] ?? '') : (string)$lastEvent;
+                } elseif (is_string($events)) {
+                    $lastStatusStr = $events;
+                }
+
+                if ($lastStatusStr) {
+                    $targetStatus = \App\Http\Controllers\Api\SuperFreteWebhookController::mapTrackingStatus($lastStatusStr);
+                    if ($targetStatus) {
+                        $orderStatusService->advanceToStatus(
+                            $order->id,
+                            $targetStatus,
+                            Auth::guard('admin')->id(),
+                            "Sincronização manual via SuperFrete. Status da transportadora: {$lastStatusStr}"
+                        );
+                        return back()->with('success', "Status do pedido sincronizado com sucesso: atualizado para '{$targetStatus}'.");
+                    }
+                    return back()->with('info', "Consulta realizada com sucesso. Status atual na transportadora: {$lastStatusStr}");
+                }
+            }
+
+            return back()->with('info', 'Objeto rastreado, porém nenhum evento de transporte foi retornado no momento.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Falha ao consultar rastreamento na SuperFrete: ' . $e->getMessage());
+        }
     }
 }

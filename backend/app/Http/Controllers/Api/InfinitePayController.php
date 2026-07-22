@@ -70,9 +70,15 @@ class InfinitePayController extends Controller
                 $gatewayIdExterno = $transactionNsu;
                 $payloadJson = json_encode($checkData);
 
+                $rawMethod = strtolower($checkData['payment_method'] ?? 'pix');
+                $metodoFormatted = (str_contains($rawMethod, 'card') || str_contains($rawMethod, 'cartao') || str_contains($rawMethod, 'credit') || str_contains($rawMethod, 'debit')) 
+                    ? 'cartao_credito' 
+                    : 'pix';
+
                 if ($pagamento) {
                     DB::table('pagamentos')->where('id', $pagamento->id)->update([
                         'gateway_id_externo' => $gatewayIdExterno,
+                        'metodo' => $metodoFormatted,
                         'status' => 'aprovado',
                         'valor' => $pedido->total,
                         'payload_json' => $payloadJson,
@@ -85,7 +91,7 @@ class InfinitePayController extends Controller
                         'pedido_id' => $pedido->id,
                         'gateway' => 'infinitepay',
                         'gateway_id_externo' => $gatewayIdExterno,
-                        'metodo' => $checkData['payment_method'] ?? 'cartao_credito',
+                        'metodo' => $metodoFormatted,
                         'status' => 'aprovado',
                         'valor' => $pedido->total,
                         'payload_json' => $payloadJson,
@@ -107,7 +113,8 @@ class InfinitePayController extends Controller
                 ]);
 
                 // Registrar entrada no caixa financeiro com o comprovante
-                $this->financialService->registerSaleEntry($pedido->id, $pedido->total, 'infinitepay', $comprovanteUrl);
+                $gwDesc = ($metodoFormatted === 'pix') ? 'InfinitePay - Pix' : 'InfinitePay - Cartão';
+                $this->financialService->registerSaleEntry($pedido->id, $pedido->total, $gwDesc, $comprovanteUrl);
 
                 // Transiciona para a próxima etapa (em_separacao)
                 $this->orderStatusService->transitionTo(

@@ -14,7 +14,7 @@ class CustomerOrderController extends Controller
     public function index(Request $request)
     {
         $pedidos = Pedido::where('cliente_id', $request->user()->id)
-            ->with(['itens.produto.fotoCapa', 'itens.variacao'])
+            ->with(['itens.produto.fotoCapa', 'itens.variacao', 'pagamentos'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -35,6 +35,7 @@ class CustomerOrderController extends Controller
                 'itens.produto.fotoCapa', 
                 'itens.variacao',
                 'endereco',
+                'pagamentos',
                 'historicoStatus' => function($q) {
                     $q->orderBy('created_at', 'desc');
                 }

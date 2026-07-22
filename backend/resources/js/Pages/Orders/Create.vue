@@ -204,6 +204,8 @@
                   <label class="form-label">Método / Canal de Venda *</label>
                   <select v-model="form.gateway_pagamento" class="form-select" required>
                     <option value="pix_manual">Pix Manual (WhatsApp)</option>
+                    <option value="infinitepay_pix">InfinitePay - Pix</option>
+                    <option value="infinitepay_cartao">InfinitePay - Cartão</option>
                     <option value="dinheiro">Dinheiro</option>
                     <option value="cartao_presencial">Cartão de Crédito/Débito Presencial</option>
                     <option value="outro">Outro Canal/Manual</option>

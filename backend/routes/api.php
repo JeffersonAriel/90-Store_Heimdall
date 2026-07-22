@@ -28,6 +28,8 @@ Route::post('/login', [CustomerAuthController::class, 'login']);
 
 // ─── ROTAS DO WEBHOOK E CONSULTAS PÚBLICAS/SEGURAS ───
 Route::post('/payments/infinitepay/webhook', [\App\Http\Controllers\Api\InfinitePayController::class, 'webhook']);
+Route::post('/shipping/superfrete/webhook', [\App\Http\Controllers\Api\SuperFreteWebhookController::class, 'handle']);
+Route::post('/webhooks/superfrete', [\App\Http\Controllers\Api\SuperFreteWebhookController::class, 'handle']);
 Route::get('/orders/public/{id}', [\App\Http\Controllers\Api\CustomerOrderController::class, 'showPublic']);
 
 // ─── ROTAS PROTEGIDAS VIA SANCTUM ───

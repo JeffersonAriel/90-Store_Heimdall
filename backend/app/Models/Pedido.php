@@ -42,6 +42,56 @@ class Pedido extends Model
         'cancelado_em' => 'datetime',
     ];
 
+    protected $appends = ['gateway_pagamento'];
+
+    public function getGatewayPagamentoAttribute(): string
+    {
+        // 1. Tenta obter o pagamento mais recente da relação pagamentos
+        $pagamentos = $this->relationLoaded('pagamentos') ? $this->pagamentos : $this->pagamentos()->get();
+        if ($pagamentos && $pagamentos->isNotEmpty()) {
+            $pagamento = $pagamentos->last();
+            $gw  = strtolower($pagamento->gateway ?? '');
+            $met = strtolower($pagamento->metodo ?? '');
+
+            if ($gw === 'infinitepay' || str_contains($gw, 'infinitepay')) {
+                if ($met === 'pix' || str_contains($met, 'pix')) {
+                    return 'InfinitePay - Pix';
+                }
+                if (str_contains($met, 'cartao') || str_contains($met, 'card') || str_contains($met, 'credit') || str_contains($met, 'debit')) {
+                    return 'InfinitePay - Cartão';
+                }
+                return 'InfinitePay';
+            }
+
+            if ($gw === 'pix_manual') {
+                return 'Pix Manual';
+            }
+
+            if ($gw === 'dinheiro') return 'Dinheiro';
+            if ($gw === 'cartao_presencial') return 'Cartão Presencial';
+            if ($gw === 'mercadopago') return 'Mercado Pago';
+            if ($gw === 'pagseguro') return 'PagSeguro';
+            if ($gw === 'stripe') return 'Stripe';
+
+            if (!empty($pagamento->gateway)) {
+                return ucfirst($pagamento->gateway);
+            }
+        }
+
+        // 2. Fallback caso não haja registro em pagamentos: verifica observações ou comprovante
+        $obs = strtolower($this->observacoes ?? '');
+        $comprovante = strtolower($this->url_comprovante_pagamento ?? '');
+
+        if (str_contains($obs, 'infinitepay') || str_contains($comprovante, 'infinitepay') || str_contains($comprovante, 'pay.infinitepay.io')) {
+            if (str_contains($obs, 'pix') || str_contains($comprovante, 'pix')) {
+                return 'InfinitePay - Pix';
+            }
+            return 'InfinitePay - Cartão';
+        }
+
+        return 'Pix Manual';
+    }
+
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');

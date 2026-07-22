@@ -108,6 +108,9 @@
               <a v-if="order.codigo_rastreio" :href="route('admin.orders.print-label', order.id)" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;" title="Baixar e imprimir etiqueta de envio">
                 🖨️ Imprimir Etiqueta Oficial SuperFrete (PDF)
               </a>
+              <button v-if="order.codigo_rastreio" @click="syncSuperFreteTracking" class="btn btn-secondary" title="Sincronizar status do frete na SuperFrete">
+                🔄 Sincronizar Status SuperFrete
+              </button>
 
               <!-- Exceções aplicáveis a qualquer momento -->
               <button v-if="order.status !== 'cancelado' && order.status !== 'entregue'" @click="advanceStatus('cancelado')" class="btn btn-danger">
@@ -239,6 +242,10 @@
             <h3 class="card-title">📊 Resumo Financeiro (Snapshot)</h3>
           </div>
           <div class="card-body" style="font-size:0.875rem;">
+            <div class="flex justify-between p-2 items-center">
+              <span>Gateway / Meio de Pagamento:</span>
+              <span class="badge badge-info">{{ order.gateway_pagamento || 'Pix Manual' }}</span>
+            </div>
             <div class="flex justify-between p-2">
               <span>Valor dos Itens:</span>
               <span>R$ {{ formatMoney(order.total - order.valor_frete) }}</span>
@@ -511,6 +518,12 @@ function generateSuperFreteLabel() {
       }
     })
   }
+}
+
+function syncSuperFreteTracking() {
+  router.post(route('admin.orders.sync-tracking', props.order.id), {}, {
+    preserveScroll: true
+  })
 }
 
 function formatMoney(value) {
