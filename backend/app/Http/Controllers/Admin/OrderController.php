@@ -550,18 +550,15 @@ class OrderController extends Controller
                     ?? $checkoutData['self_tracking']
                     ?? null;
 
-                // Extrai o ID oficial do pedido comprado na SuperFrete (ex: 01KY5PHXBB8VYCRHBX9RXB9WNR)
-                $purchasedOrderId = $checkoutData['orders'][0]['id']
-                    ?? $checkoutData['id']
-                    ?? $cartId;
-
-                // Extrai a URL oficial devolvida pela SuperFrete ou monta base64_encode({"order_id": "$purchasedOrderId"})
+                // Extrai a URL oficial devolvida pela SuperFrete ou monta a URL Pública
                 $rawUrl = $checkoutData['url'] ?? $checkoutData['url_print'] ?? $checkoutData['print_url'] ?? null;
 
                 if ($rawUrl && str_contains($rawUrl, 'eyJ')) {
                     $printUrl = $rawUrl;
                 } else {
-                    $base64Token = base64_encode(json_encode(['order_id' => $purchasedOrderId]));
+                    // CRÍTICO: Sempre usar o $cartId (ULID de 26 caracteres) para montar o token. 
+                    // O ID retornado no checkout (`orders[0][id]`) geralmente é um NanoID (20 chars) que retorna erro 500.
+                    $base64Token = base64_encode(json_encode(['order_id' => $cartId]));
                     $printUrl = "https://etiqueta.superfrete.com/_etiqueta/pdf/{$base64Token}?format=A6";
                 }
 
