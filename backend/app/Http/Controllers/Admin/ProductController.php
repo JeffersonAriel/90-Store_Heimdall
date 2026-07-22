@@ -389,9 +389,15 @@ class ProductController extends Controller
                                 'cor' => $corValue,
                                 'ordem' => $index + 100
                             ]);
-                        }
                     }
                 }
+            }
+
+            // Garante que a PRIMEIRA foto cadastrada seja marcada como a capa oficial (is_capa = true)
+            $firstPhoto = $product->fotos()->orderBy('ordem', 'asc')->orderBy('id', 'asc')->first();
+            if ($firstPhoto) {
+                $product->fotos()->update(['is_capa' => false]);
+                $firstPhoto->update(['is_capa' => true]);
             }
         });
 

@@ -15,7 +15,7 @@
     
     <RouterLink :to="`/produto/${product.slug}`" class="card-image-link">
       <img 
-        :src="product.foto_capa?.url || product.fotos?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop'" 
+        :src="product.fotos?.[0]?.url || product.foto_capa?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop'" 
         class="card-image" 
         :alt="product.nome" 
         loading="lazy"

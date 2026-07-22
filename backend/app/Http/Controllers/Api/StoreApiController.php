@@ -105,12 +105,19 @@ class StoreApiController extends Controller
             })
             ->get();
 
-        // Limpa custos confidenciais da resposta JSON da loja e garante capa válida
+        // Limpa custos confidenciais da resposta JSON da loja e garante que a PRIMEIRA foto seja a capa
         $products->each(function ($p) {
             unset($p->preco_custo);
-            if (!$p->fotoCapa && $p->fotos->count() > 0) {
-                $p->setRelation('fotoCapa', $p->fotos->first());
+            
+            // A capa é estritamente a PRIMEIRA foto cadastrada do produto (menor ordem/primeira da galeria)
+            $sortedPhotos = $p->fotos->sortBy(function ($foto) {
+                return sprintf('%05d_%010d', $foto->ordem ?? 0, $foto->id);
+            });
+            $firstPhoto = $sortedPhotos->first();
+            if ($firstPhoto) {
+                $p->setRelation('fotoCapa', $firstPhoto);
             }
+
             $p->variacoes->each(function ($v) {
                 unset($v->estoque_quantidade); // Mostra apenas se tem estoque (disponivel)
                 $v->makeHidden(['estoque_quantidade', 'estoque_minimo', 'estoque_critico']);
