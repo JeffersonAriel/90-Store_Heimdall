@@ -565,7 +565,13 @@ class OrderController extends Controller
                 }
 
                 if (empty($printUrl)) {
-                    $printUrl = $checkoutData['url_print'] ?? $checkoutData['print_url'] ?? $checkoutData['url'] ?? route('admin.orders.print-label', $order->id);
+                    $rawUrl = $checkoutData['url_print'] ?? $checkoutData['print_url'] ?? $checkoutData['url'] ?? null;
+                    if ($rawUrl && str_contains($rawUrl, 'eyJ')) {
+                        $printUrl = $rawUrl;
+                    } else {
+                        $base64Token = base64_encode(json_encode(['order_id' => $cartId]));
+                        $printUrl = "https://etiqueta.superfrete.com/_etiqueta/pdf/{$base64Token}?format=A6";
+                    }
                 }
 
                 if (empty($trackingCode)) {
