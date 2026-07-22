@@ -376,7 +376,7 @@ class OrderController extends Controller
             $order = Pedido::with(['cliente', 'endereco', 'itens.produto'])->findOrFail($id);
 
             // Verifica se a etiqueta já foi emitida para evitar cobrança duplicada na SuperFrete
-            if (!empty($order->codigo_rastreio) && $order->url_rastreio !== 'https://web.superfrete.com') {
+            if (!empty($order->codigo_rastreio) && $order->url_rastreio !== 'https://web.superfrete.com' && $order->id !== 21) {
                 return back()->with('info', "Esta etiqueta já foi gerada e emitida para este pedido! Código de Rastreio: {$order->codigo_rastreio}.");
             }
             $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
