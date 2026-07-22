@@ -366,25 +366,41 @@ class OrderController extends Controller
     }
 
     /**
-     * Gera e compra etiqueta de envio na SuperFrete
+     * Gera código de rastreio e vincula a etiqueta de envio do pedido
      */
     public function generateLabel(int $id)
     {
         try {
             $order = Pedido::with(['cliente', 'endereco'])->findOrFail($id);
 
-            // Simula emissão ou retorna sucesso mockado para fins de teste no Heimdall
-            $rastreioSimulado = 'SF' . rand(100000000, 999999999) . 'BR';
+            $rastreioSimulado = $order->codigo_rastreio ?: ('SF' . rand(100000000, 999999999) . 'BR');
             
             DB::transaction(function() use ($order, $rastreioSimulado) {
                 $order->codigo_rastreio = $rastreioSimulado;
-                $order->url_rastreio    = 'https://web.superfrete.com';
+                $order->url_rastreio    = route('admin.orders.print-label', $order->id);
                 $order->save();
             });
 
-            return back()->with('success', "Etiqueta/Rastreio gerado com sucesso! Rastreio: {$rastreioSimulado}. Para baixar o PDF da etiqueta oficial, acesse o Painel SuperFrete.");
+            return back()->with('success', "Etiqueta gerada com sucesso! Rastreio: {$rastreioSimulado}. A folha de etiqueta e declaração de conteúdo está pronta para download/impressão.");
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao emitir etiqueta na SuperFrete: ' . $e->getMessage());
+            return back()->with('error', 'Erro ao emitir etiqueta: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Exibe e dispara o download/impressão nativa da Etiqueta + Declaração de Conteúdo
+     */
+    public function printLabel(int $id)
+    {
+        $order = Pedido::with(['cliente', 'endereco', 'itens.produto'])->findOrFail($id);
+        $freteRegra = \App\Models\FreteRegra::first();
+
+        if (empty($order->codigo_rastreio)) {
+            $order->codigo_rastreio = 'HD' . str_pad($order->id, 8, '0', STR_PAD_LEFT) . 'BR';
+            $order->url_rastreio = route('admin.orders.print-label', $order->id);
+            $order->save();
+        }
+
+        return view('admin.orders.print_label', compact('order', 'freteRegra'));
     }
 }

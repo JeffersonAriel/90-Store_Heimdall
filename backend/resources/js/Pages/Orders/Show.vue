@@ -88,12 +88,12 @@
                 ✅ Marcar como Entregue
               </button>
 
-              <!-- Integração SuperFrete: Emitir e Imprimir Etiqueta -->
+              <!-- Gerador de Etiqueta Nativa Heimdall (Etiqueta + Declaração de Conteúdo) -->
               <button v-if="order.status === 'em_separacao' || order.status === 'em_envio'" @click="generateSuperFreteLabel" class="btn btn-primary" style="background-color: #10b981; border-color: #10b981;">
-                🏷️ Gerar Etiqueta SuperFrete
+                🏷️ Gerar Etiqueta de Envio
               </button>
-              <a v-if="order.codigo_rastreio" :href="order.url_rastreio || 'https://web.superfrete.com'" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;" title="Abrir Painel SuperFrete para emitir e baixar PDF da etiqueta">
-                🖨️ Abrir Painel / Imprimir Etiqueta
+              <a v-if="order.codigo_rastreio" :href="route('admin.orders.print-label', order.id)" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;" title="Baixar e imprimir etiqueta + declaração de conteúdo em PDF">
+                🖨️ Imprimir Etiqueta / Declaração (PDF)
               </a>
 
               <!-- Exceções aplicáveis a qualquer momento -->
@@ -345,8 +345,12 @@ function submitTracking() {
 }
 
 function generateSuperFreteLabel() {
-  if (confirm('Deseja emitir e comprar a etiqueta deste pedido na SuperFrete?')) {
-    router.post(route('admin.orders.generate-label', props.order.id))
+  if (confirm('Deseja gerar a etiqueta de envio e declaração de conteúdo deste pedido?')) {
+    router.post(route('admin.orders.generate-label', props.order.id), {}, {
+      onSuccess: () => {
+        window.open(route('admin.orders.print-label', props.order.id), '_blank')
+      }
+    })
   }
 }
 

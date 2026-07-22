@@ -84,6 +84,7 @@ Route::prefix('heimdall')->group(function () {
         Route::post('orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('admin.orders.confirm-payment');
         Route::patch('orders/{order}/update-frete', [OrderController::class, 'updateFrete'])->name('admin.orders.update-frete');
         Route::post('orders/{order}/generate-label', [OrderController::class, 'generateLabel'])->name('admin.orders.generate-label');
+        Route::get('orders/{order}/print-label', [OrderController::class, 'printLabel'])->name('admin.orders.print-label');
 
         Route::resource('agenda', AgendaController::class)->names('admin.agenda');
 
