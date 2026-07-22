@@ -389,6 +389,7 @@ class ProductController extends Controller
                                 'cor' => $corValue,
                                 'ordem' => $index + 100
                             ]);
+                        }
                     }
                 }
             }
