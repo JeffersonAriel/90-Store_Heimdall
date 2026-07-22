@@ -92,7 +92,7 @@
               <button v-if="order.status === 'em_separacao' || order.status === 'em_envio'" @click="generateSuperFreteLabel" class="btn btn-primary" style="background-color: #10b981; border-color: #10b981;">
                 🏷️ Gerar Etiqueta SuperFrete
               </button>
-              <a v-if="order.codigo_rastreio" :href="order.url_rastreio || route('admin.orders.print-label', order.id)" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;" title="Baixar e imprimir etiqueta oficial PDF da SuperFrete">
+              <a v-if="order.codigo_rastreio" :href="route('admin.orders.print-label', order.id)" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;" title="Baixar e imprimir etiqueta de envio">
                 🖨️ Imprimir Etiqueta Oficial SuperFrete (PDF)
               </a>
 
@@ -353,8 +353,7 @@ function generateSuperFreteLabel() {
       `Deseja imprimir novamente a etiqueta oficial da SuperFrete?`
     )
     if (confirmReprint) {
-      const printUrl = props.order.url_rastreio || route('admin.orders.print-label', props.order.id)
-      window.open(printUrl, '_blank')
+      window.open(route('admin.orders.print-label', props.order.id), '_blank')
     }
     return
   }
@@ -363,10 +362,7 @@ function generateSuperFreteLabel() {
   if (confirm('Deseja emitir e comprar a etiqueta deste pedido na SuperFrete?')) {
     router.post(route('admin.orders.generate-label', props.order.id), {}, {
       onSuccess: (page) => {
-        const printUrl = page?.props?.order?.url_rastreio || props.order?.url_rastreio || route('admin.orders.print-label', props.order.id)
-        if (printUrl) {
-          window.open(printUrl, '_blank')
-        }
+        window.open(route('admin.orders.print-label', props.order.id), '_blank')
       }
     })
   }
