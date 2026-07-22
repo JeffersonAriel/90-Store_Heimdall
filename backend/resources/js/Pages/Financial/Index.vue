@@ -209,11 +209,11 @@
                 <div v-if="t.pedido" class="text-muted font-mono" style="font-size: 0.75rem;">Pedido #{{ t.pedido.id }}</div>
                 <div v-if="t.fornecedor" class="text-secondary" style="font-size: 0.75rem;">{{ t.fornecedor.razao_social }}</div>
                 <div v-if="t.comprovante" class="mt-1">
-                  <a :href="t.comprovante" target="_blank" class="text-success" style="font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 3px;">
+                  <a :href="t.comprovante.startsWith('http') ? t.comprovante : ('https://pay.infinitepay.io/receipt/' + t.comprovante)" target="_blank" style="font-size: 0.75rem; font-weight: 600; padding: 2px 8px; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
                     </svg>
-                    Comprovante
+                    Abrir Comprovante ↗
                   </a>
                 </div>
               </td>

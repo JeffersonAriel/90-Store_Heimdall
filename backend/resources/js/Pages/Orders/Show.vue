@@ -198,17 +198,17 @@
         </div>
 
         <!-- Comprovante de Pagamento (InfinitePay / Gateway) -->
-        <div v-if="order.url_comprovante_pagamento || (order.observacoes && order.observacoes.includes('InfinitePay'))" class="card" style="border-color: #10b981; background: rgba(16, 185, 129, 0.05);">
-          <div class="card-header flex justify-between items-center">
+        <div v-if="comprovanteUrl || (order.observacoes && order.observacoes.includes('InfinitePay'))" class="card" style="border-color: #10b981; background: rgba(16, 185, 129, 0.05);">
+          <div class="card-header flex justify-between items-center" style="flex-wrap: wrap; gap: 0.5rem;">
             <h3 class="card-title" style="color: #10b981;">💳 Comprovante de Pagamento</h3>
-            <a v-if="order.url_comprovante_pagamento" :href="order.url_comprovante_pagamento" target="_blank" class="btn btn-sm btn-success" style="background-color: #10b981; border-color: #10b981; color: white;">
-              📄 Abrir Comprovante InfinitePay ↗
+            <a v-if="comprovanteUrl" :href="comprovanteUrl" target="_blank" class="btn btn-sm btn-success" style="background-color: #10b981; border-color: #10b981; color: white;">
+              📄 Abrir Comprovante Oficial ↗
             </a>
           </div>
           <div class="card-body" style="font-size: 0.875rem; line-height: 1.6;">
-            <div v-if="order.url_comprovante_pagamento" class="text-secondary mb-2">
-              <strong>URL do Comprovante:</strong> <br/>
-              <a :href="order.url_comprovante_pagamento" target="_blank" class="text-brand underline font-mono" style="word-break: break-all;">{{ order.url_comprovante_pagamento }}</a>
+            <div v-if="comprovanteUrl" class="text-secondary mb-2">
+              <strong>Link do Comprovante:</strong> <br/>
+              <a :href="comprovanteUrl" target="_blank" class="text-brand underline font-mono" style="word-break: break-all;">{{ comprovanteUrl }}</a>
             </div>
             <div v-if="order.observacoes" class="text-muted" style="font-size: 0.75rem; border-top: 1px dashed rgba(16, 185, 129, 0.3); padding-top: 0.5rem;">
               {{ order.observacoes }}
@@ -368,6 +368,29 @@ const hasUnsetCosts = computed(() => {
   return (props.order.itens || []).some(item => {
     return item.tipo_estoque_snapshot === 'dropshipping' && (!item.preco_custo_snapshot || parseFloat(item.preco_custo_snapshot) === 0)
   })
+})
+
+// Extrai ou calcula a URL clicável do comprovante de pagamento
+const comprovanteUrl = computed(() => {
+  if (props.order.url_comprovante_pagamento && props.order.url_comprovante_pagamento.startsWith('http')) {
+    return props.order.url_comprovante_pagamento
+  }
+  
+  if (props.order.observacoes) {
+    const match = props.order.observacoes.match(/(https?:\/\/[^\s\|]+)/)
+    if (match && match[1]) {
+      return match[1]
+    }
+  }
+
+  if (props.order.pagamentos && props.order.pagamentos.length > 0) {
+    const pag = props.order.pagamentos[0]
+    if (pag.gateway_id_externo) {
+      return `https://pay.infinitepay.io/receipt/${pag.gateway_id_externo}`
+    }
+  }
+
+  return null
 })
 
 function openCostsModal() {
