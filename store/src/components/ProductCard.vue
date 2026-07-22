@@ -15,7 +15,7 @@
     
     <RouterLink :to="`/produto/${product.slug}`" class="card-image-link">
       <img 
-        :src="product.foto_capa?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop'" 
+        :src="product.foto_capa?.url || product.fotos?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&auto=format&fit=crop'" 
         class="card-image" 
         :alt="product.nome" 
         loading="lazy"
@@ -133,7 +133,7 @@ function formatMoney(val) {
 .card-image-link {
   display: block;
   overflow: hidden;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 5;
   background-color: var(--color-black-lighter);
 }
 
@@ -141,6 +141,7 @@ function formatMoney(val) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   transition: transform 0.5s ease;
 }
 

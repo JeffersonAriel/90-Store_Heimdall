@@ -105,9 +105,12 @@ class StoreApiController extends Controller
             })
             ->get();
 
-        // Limpa custos confidenciais da resposta JSON da loja
+        // Limpa custos confidenciais da resposta JSON da loja e garante capa válida
         $products->each(function ($p) {
             unset($p->preco_custo);
+            if (!$p->fotoCapa && $p->fotos->count() > 0) {
+                $p->setRelation('fotoCapa', $p->fotos->first());
+            }
             $p->variacoes->each(function ($v) {
                 unset($v->estoque_quantidade); // Mostra apenas se tem estoque (disponivel)
                 $v->makeHidden(['estoque_quantidade', 'estoque_minimo', 'estoque_critico']);
