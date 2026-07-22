@@ -189,10 +189,10 @@ class FullCategoryStructureSeeder extends Seeder
         $keptIds = [];
         $this->syncCategoryTree($tree, null, $keptIds);
 
-        // Mapear produtos vinculados a categorias legadas antes de deletá-las
+        // Mapear produtos vinculados a categorias legadas (inclusive lixeira) antes de deletá-las
         $oldCategories = CategoriaTipoProduto::whereNotIn('id', $keptIds)->get();
         foreach ($oldCategories as $oldCat) {
-            $prods = Produto::where('categoria_id', $oldCat->id)->get();
+            $prods = Produto::withTrashed()->where('categoria_id', $oldCat->id)->get();
             if ($prods->count() > 0) {
                 $newCat = CategoriaTipoProduto::whereIn('id', $keptIds)->where('nome', $oldCat->nome)->first()
                        ?? CategoriaTipoProduto::where('nome', 'Futebol')->first();
@@ -202,8 +202,10 @@ class FullCategoryStructureSeeder extends Seeder
             }
         }
 
-        // Remove categorias antigas duplicadas/legadas
+        // Remove categorias antigas duplicadas/legadas desativando temporariamente as FKs para evitar erro 1451 do MySQL
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         CategoriaTipoProduto::whereNotIn('id', $keptIds)->delete();
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
     private function syncCategoryTree($categories, $parentId, &$keptIds)
