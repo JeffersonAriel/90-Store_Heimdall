@@ -598,23 +598,29 @@ class OrderController extends Controller
     {
         $order = Pedido::with(['cliente', 'endereco', 'itens.produto'])->findOrFail($id);
 
-        // 1. Se o pedido já possui URL com token de impressão válido (?format=A6 ou ?format=A4), redireciona direto para o PDF da SuperFrete
-        if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, 'etiqueta.superfrete.com') && str_contains($order->url_rastreio, 'format=')) {
+        // 1. Se o pedido já possui URL com token Base64 ou format=A6 válido da SuperFrete, redireciona direto
+        if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, 'etiqueta.superfrete.com') && (str_contains($order->url_rastreio, 'format=') || str_contains($order->url_rastreio, 'eyJ'))) {
             return redirect()->away($order->url_rastreio);
         }
 
-        // 2. Extrai o ID da tag da SuperFrete (ex: DAWLiecFhz9cSJ9FRwu) para obter o token de impressão da API
+        // 2. Extrai o ID do pedido/tag da SuperFrete
         $tagId = null;
         if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, '_etiqueta/pdf/')) {
             $parts = explode('_etiqueta/pdf/', $order->url_rastreio);
-            $tagId = strtok($parts[1] ?? '', '?');
+            $rawSegment = strtok($parts[1] ?? '', '?');
+            if (str_starts_with($rawSegment, 'eyJ')) {
+                $decoded = json_decode(base64_decode($rawSegment), true);
+                $tagId = $decoded['order_id'] ?? $rawSegment;
+            } else {
+                $tagId = $rawSegment;
+            }
         }
 
         if (empty($tagId) && !empty($order->codigo_rastreio) && !str_starts_with($order->codigo_rastreio, 'HD') && !str_starts_with($order->codigo_rastreio, 'SF')) {
             $tagId = $order->codigo_rastreio;
         }
 
-        // 3. Solicita o link oficial de impressão à API da SuperFrete (/tag/print)
+        // 3. Tenta buscar o link oficial via API SuperFrete (/tag/print)
         if (!empty($tagId)) {
             $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
             if ($api) {
@@ -642,13 +648,22 @@ class OrderController extends Controller
                             return redirect()->away($pdfUrl);
                         }
                     } catch (\Exception $e) {
-                        // Segue para o fallback nativo caso falhe
+                        // Ignora exceção e recai no construtor Base64 abaixo
                     }
                 }
             }
+
+            // 4. Constrói o link oficial no formato exato da SuperFrete: base64({"order_id": "ID"})?format=A6
+            $base64Token = base64_encode(json_encode(['order_id' => $tagId]));
+            $pdfUrl = "https://etiqueta.superfrete.com/_etiqueta/pdf/{$base64Token}?format=A6";
+
+            $order->url_rastreio = $pdfUrl;
+            $order->save();
+
+            return redirect()->away($pdfUrl);
         }
 
-        // 4. Fallback nativo apenas caso o pedido não possua etiqueta emitida na SuperFrete
+        // 5. Fallback nativo apenas caso o pedido realmente não possua tag/rastreio emitido na SuperFrete
         $freteRegra = \App\Models\FreteRegra::first();
         return view('admin.orders.print_label', compact('order', 'freteRegra'));
     }
