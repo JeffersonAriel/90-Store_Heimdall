@@ -33,8 +33,28 @@ class StoreApiController extends Controller
             ->when($request->input('categoria'), function ($query, $slug) {
                 $category = CategoriaTipoProduto::where('slug', $slug)->first();
                 if ($category) {
-                    $categoryIds = $this->getAllCategoryDescendants($category->id);
-                    $query->whereIn('categoria_id', $categoryIds);
+                    $slugLower = strtolower($slug);
+                    $catNameLower = strtolower($category->nome);
+
+                    // Busca automática inteligente para categorias Retrô e por Décadas
+                    if ($catNameLower === 'retrô' || $catNameLower === 'retro' || $slugLower === 'retro') {
+                        $query->where(function ($q) {
+                            $q->where('is_retro', true)->orWhereNotNull('retro_year');
+                        });
+                    } elseif (str_contains($catNameLower, 'anos 70') || str_contains($slugLower, '70')) {
+                        $query->whereBetween('retro_year', [1970, 1979]);
+                    } elseif (str_contains($catNameLower, 'anos 80') || str_contains($slugLower, '80')) {
+                        $query->whereBetween('retro_year', [1980, 1989]);
+                    } elseif (str_contains($catNameLower, 'anos 90') || str_contains($slugLower, '90')) {
+                        $query->whereBetween('retro_year', [1990, 1999]);
+                    } elseif (str_contains($catNameLower, 'anos 2000') || str_contains($slugLower, '2000')) {
+                        $query->whereBetween('retro_year', [2000, 2009]);
+                    } elseif (str_contains($catNameLower, 'anos 2010') || str_contains($slugLower, '2010')) {
+                        $query->whereBetween('retro_year', [2010, 2019]);
+                    } else {
+                        $categoryIds = $this->getAllCategoryDescendants($category->id);
+                        $query->whereIn('categoria_id', $categoryIds);
+                    }
                 }
             })
             ->when($request->input('marca'), function ($query, $marca) {

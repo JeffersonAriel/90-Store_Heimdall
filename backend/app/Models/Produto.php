@@ -57,6 +57,15 @@ class Produto extends Model
         'permite_personalizacao' => 'boolean',
     ];
 
+    protected static function booted()
+    {
+        static::saving(function ($produto) {
+            if (!empty($produto->retro_year) && (int)$produto->retro_year <= ((int)date('Y') - 4)) {
+                $produto->is_retro = true;
+            }
+        });
+    }
+
     /**
      * Relacionamento com o Fornecedor (Obrigatório)
      */

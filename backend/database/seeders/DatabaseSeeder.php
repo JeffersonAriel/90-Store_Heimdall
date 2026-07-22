@@ -10,8 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PerfilPermissaoSeeder::class,
-            CategorySeeder::class,
-            SportsCategorySeeder::class,
+            FullCategoryStructureSeeder::class,
             ApiConfigSeeder::class,
             FreteRegraSeeder::class,
             RegrasPontosSeeder::class,
