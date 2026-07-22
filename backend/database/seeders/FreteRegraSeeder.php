@@ -13,7 +13,7 @@ class FreteRegraSeeder extends Seeder
             ['nome' => 'Regra Principal'],
             [
                 'tipo'               => 'nacional',
-                'valor_minimo_gratis'=> 299.90,
+                'valor_minimo_gratis'=> 0.00,
                 'raio_km_local'      => 50,
                 'lat_origem'         => -23.5044,
                 'lng_origem'         => -46.4600,
