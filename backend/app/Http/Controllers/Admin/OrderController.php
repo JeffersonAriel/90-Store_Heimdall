@@ -542,7 +542,31 @@ class OrderController extends Controller
             if ($checkoutRes->successful()) {
                 $checkoutData = $checkoutRes->json();
                 $trackingCode = $checkoutData['tracking'] ?? $checkoutData['self_tracking'] ?? $checkoutData['orders'][0]['tracking'] ?? null;
-                $printUrl     = $checkoutData['url_print'] ?? $checkoutData['print_url'] ?? $checkoutData['url'] ?? route('admin.orders.print-label', $order->id);
+
+                // Busca o PDF oficial da SuperFrete chamando POST /tag/print
+                $printUrl = null;
+                try {
+                    $tagPrintRes = Http::withoutVerifying()
+                        ->withHeaders([
+                            'Authorization' => "Bearer {$token}",
+                            'Accept'        => 'application/json',
+                            'Content-Type'  => 'application/json',
+                            'User-Agent'    => 'Heimdall 90-Store'
+                        ])
+                        ->post('https://api.superfrete.com/api/v0/tag/print', [
+                            'orders' => [$cartId]
+                        ]);
+
+                    if ($tagPrintRes->successful()) {
+                        $printUrl = $tagPrintRes->json('url');
+                    }
+                } catch (\Exception $e) {
+                    // Fallback se a chamada falhar
+                }
+
+                if (empty($printUrl)) {
+                    $printUrl = $checkoutData['url_print'] ?? $checkoutData['print_url'] ?? $checkoutData['url'] ?? route('admin.orders.print-label', $order->id);
+                }
 
                 if (empty($trackingCode)) {
                     $trackingCode = 'SF' . rand(100000000, 999999999) . 'BR';

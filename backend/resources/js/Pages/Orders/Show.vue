@@ -88,12 +88,12 @@
                 ✅ Marcar como Entregue
               </button>
 
-              <!-- Gerador de Etiqueta Nativa Heimdall (Etiqueta + Declaração de Conteúdo) -->
+              <!-- Integração SuperFrete: Emitir e Imprimir Etiqueta PDF Oficial -->
               <button v-if="order.status === 'em_separacao' || order.status === 'em_envio'" @click="generateSuperFreteLabel" class="btn btn-primary" style="background-color: #10b981; border-color: #10b981;">
-                🏷️ Gerar Etiqueta de Envio
+                🏷️ Gerar Etiqueta SuperFrete
               </button>
-              <a v-if="order.codigo_rastreio" :href="route('admin.orders.print-label', order.id)" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;" title="Baixar e imprimir etiqueta + declaração de conteúdo em PDF">
-                🖨️ Imprimir Etiqueta / Declaração (PDF)
+              <a v-if="order.codigo_rastreio" :href="order.url_rastreio || route('admin.orders.print-label', order.id)" target="_blank" class="btn btn-secondary" style="background-color: #4b5563; border-color: #4b5563;" title="Baixar e imprimir etiqueta oficial PDF da SuperFrete">
+                🖨️ Imprimir Etiqueta Oficial SuperFrete (PDF)
               </a>
 
               <!-- Exceções aplicáveis a qualquer momento -->
