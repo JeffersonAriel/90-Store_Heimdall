@@ -29,9 +29,18 @@ class ShippingController extends Controller
         $regra = FreteRegra::findOrFail($id);
 
         $validated = $request->validate([
-            'valor_minimo_gratis' => 'required|numeric|min:0',
+            'valor_minimo_gratis' => 'nullable|numeric|min:0',
             'raio_km_local' => 'required|numeric|min:0',
             'cep_origem' => 'required|string|max:10',
+            'logradouro_origem' => 'nullable|string|max:100',
+            'numero_origem' => 'nullable|string|max:20',
+            'complemento_origem' => 'nullable|string|max:50',
+            'bairro_origem' => 'nullable|string|max:60',
+            'cidade_origem' => 'nullable|string|max:60',
+            'estado_origem' => 'nullable|string|max:2',
+            'documento_origem' => 'nullable|string|max:20',
+            'telefone_origem' => 'nullable|string|max:20',
+            'email_origem' => 'nullable|email|max:100',
             'lat_origem' => 'required|numeric',
             'lng_origem' => 'required|numeric',
             'servicos_locais_json' => 'nullable|string',
@@ -39,6 +48,6 @@ class ShippingController extends Controller
 
         $regra->update($validated);
 
-        return back()->with('success', 'Regras de frete e coordenadas locais atualizadas com sucesso!');
+        return back()->with('success', 'Regras de frete e endereço de origem atualizados com sucesso!');
     }
 }

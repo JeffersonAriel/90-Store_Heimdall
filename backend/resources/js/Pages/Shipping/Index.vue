@@ -48,7 +48,40 @@
             </div>
             <div class="form-group">
               <label class="form-label">CEP de Origem (Remetente)</label>
-              <input v-model="shippingForm.cep_origem" type="text" class="form-input" maxlength="9" placeholder="00000-000" />
+              <input v-model="shippingForm.cep_origem" type="text" class="form-input" maxlength="9" placeholder="08010-000" />
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Logradouro (Rua/Av.)</label>
+                <input v-model="shippingForm.logradouro_origem" type="text" class="form-input" placeholder="Ex: Av. Marechal Tito" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Número</label>
+                <input v-model="shippingForm.numero_origem" type="text" class="form-input" placeholder="Ex: 1000" />
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">Bairro</label>
+                <input v-model="shippingForm.bairro_origem" type="text" class="form-input" placeholder="Ex: São Miguel Paulista" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Cidade / UF</label>
+                <div class="flex gap-2">
+                  <input v-model="shippingForm.cidade_origem" type="text" class="form-input" placeholder="São Paulo" />
+                  <input v-model="shippingForm.estado_origem" type="text" class="form-input" style="width: 70px;" maxlength="2" placeholder="SP" />
+                </div>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label">CNPJ / CPF do Remetente</label>
+                <input v-model="shippingForm.documento_origem" type="text" class="form-input" placeholder="00.000.000/0001-00" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Telefone de Contato</label>
+                <input v-model="shippingForm.telefone_origem" type="text" class="form-input" placeholder="(11) 99999-9999" />
+              </div>
             </div>
             <div class="grid-2">
               <div class="form-group">
@@ -160,6 +193,15 @@ const shippingForm   = ref({
   valor_minimo_gratis: props.freteRegra?.valor_minimo_gratis || 0,
   raio_km_local:       props.freteRegra?.raio_km_local       || 0,
   cep_origem:          props.freteRegra?.cep_origem           || '',
+  logradouro_origem:   props.freteRegra?.logradouro_origem   || 'Rua Marechal Tito',
+  numero_origem:       props.freteRegra?.numero_origem       || '1000',
+  complemento_origem:  props.freteRegra?.complemento_origem  || '',
+  bairro_origem:       props.freteRegra?.bairro_origem       || 'São Miguel Paulista',
+  cidade_origem:       props.freteRegra?.cidade_origem       || 'São Paulo',
+  estado_origem:       props.freteRegra?.estado_origem       || 'SP',
+  documento_origem:    props.freteRegra?.documento_origem    || '',
+  telefone_origem:     props.freteRegra?.telefone_origem     || '',
+  email_origem:        props.freteRegra?.email_origem        || '',
   lat_origem:          props.freteRegra?.lat_origem           || 0,
   lng_origem:          props.freteRegra?.lng_origem           || 0,
 })

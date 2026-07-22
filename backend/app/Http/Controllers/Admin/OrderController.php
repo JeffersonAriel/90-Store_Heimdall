@@ -468,17 +468,17 @@ class OrderController extends Controller
                 'platform' => 'Heimdall 90-Store',
                 'from' => [
                     'name'             => '90 Store',
-                    'phone'            => $phoneFrom,
-                    'email'            => 'sac@90store.com.br',
-                    'document'         => '00000000000',
-                    'company_document' => '00000000000100',
+                    'phone'            => preg_replace('/\D/', '', $freteRegra->telefone_origem ?? '11999999999'),
+                    'email'            => $freteRegra->email_origem ?? 'sac@90store.com.br',
+                    'document'         => preg_replace('/\D/', '', $freteRegra->documento_origem ?? '00000000000'),
+                    'company_document' => preg_replace('/\D/', '', $freteRegra->documento_origem ?? '00000000000100'),
                     'state_register'   => 'ISENTO',
                     'postal_code'      => $cepOrigem,
-                    'address'          => 'Rua Marechal Tito',
-                    'number'           => '1000',
-                    'district'         => 'São Miguel Paulista',
-                    'city'             => 'São Paulo',
-                    'state_abbr'       => 'SP'
+                    'address'          => mb_substr($freteRegra->logradouro_origem ?? 'Rua Marechal Tito', 0, 80),
+                    'number'           => mb_substr($freteRegra->numero_origem ?? '1000', 0, 10),
+                    'district'         => mb_substr($freteRegra->bairro_origem ?? 'São Miguel Paulista', 0, 50),
+                    'city'             => mb_substr($freteRegra->cidade_origem ?? 'São Paulo', 0, 50),
+                    'state_abbr'       => strtoupper(mb_substr($freteRegra->estado_origem ?? 'SP', 0, 2))
                 ],
                 'to' => [
                     'name'       => mb_substr($order->cliente->nome_completo ?? 'Cliente Heimdall', 0, 50),
