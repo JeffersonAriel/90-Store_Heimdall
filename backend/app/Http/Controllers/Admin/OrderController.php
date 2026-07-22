@@ -541,37 +541,28 @@ class OrderController extends Controller
 
             if ($checkoutRes->successful()) {
                 $checkoutData = $checkoutRes->json();
-                $trackingCode = $checkoutData['tracking'] ?? $checkoutData['self_tracking'] ?? $checkoutData['orders'][0]['tracking'] ?? null;
 
-                // Busca o PDF oficial da SuperFrete chamando POST /tag/print
-                $printUrl = null;
-                try {
-                    $tagPrintRes = Http::withoutVerifying()
-                        ->withHeaders([
-                            'Authorization' => "Bearer {$token}",
-                            'Accept'        => 'application/json',
-                            'Content-Type'  => 'application/json',
-                            'User-Agent'    => 'Heimdall 90-Store'
-                        ])
-                        ->post('https://api.superfrete.com/api/v0/tag/print', [
-                            'orders' => [$cartId]
-                        ]);
+                // Extrai o código de rastreio oficial retornado pela SuperFrete (ex: 13191900522997 ou AA123456789BR)
+                $trackingCode = $checkoutData['orders'][0]['tracking']
+                    ?? $checkoutData['orders'][0]['tag']
+                    ?? $checkoutData['orders'][0]['tracking_code']
+                    ?? $checkoutData['tracking']
+                    ?? $checkoutData['self_tracking']
+                    ?? null;
 
-                    if ($tagPrintRes->successful()) {
-                        $printUrl = $tagPrintRes->json('url');
-                    }
-                } catch (\Exception $e) {
-                    // Fallback se a chamada falhar
-                }
+                // Extrai o ID oficial do pedido comprado na SuperFrete (ex: 01KY5PHXBB8VYCRHBX9RXB9WNR)
+                $purchasedOrderId = $checkoutData['orders'][0]['id']
+                    ?? $checkoutData['id']
+                    ?? $cartId;
 
-                if (empty($printUrl)) {
-                    $rawUrl = $checkoutData['url_print'] ?? $checkoutData['print_url'] ?? $checkoutData['url'] ?? null;
-                    if ($rawUrl && str_contains($rawUrl, 'eyJ')) {
-                        $printUrl = $rawUrl;
-                    } else {
-                        $base64Token = base64_encode(json_encode(['order_id' => $cartId]));
-                        $printUrl = "https://etiqueta.superfrete.com/_etiqueta/pdf/{$base64Token}?format=A6";
-                    }
+                // Extrai a URL oficial devolvida pela SuperFrete ou monta base64_encode({"order_id": "$purchasedOrderId"})
+                $rawUrl = $checkoutData['url'] ?? $checkoutData['url_print'] ?? $checkoutData['print_url'] ?? null;
+
+                if ($rawUrl && str_contains($rawUrl, 'eyJ')) {
+                    $printUrl = $rawUrl;
+                } else {
+                    $base64Token = base64_encode(json_encode(['order_id' => $purchasedOrderId]));
+                    $printUrl = "https://etiqueta.superfrete.com/_etiqueta/pdf/{$base64Token}?format=A6";
                 }
 
                 if (empty($trackingCode)) {
