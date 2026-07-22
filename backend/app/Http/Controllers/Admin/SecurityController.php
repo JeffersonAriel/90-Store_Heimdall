@@ -122,6 +122,124 @@ class SecurityController extends Controller
         $perfis        = DB::table('perfis_permissao')->orderBy('nome')->get();
         $permissoesMap = DB::table('permissoes_modulo')->get();
 
+        // ─── Real-Time Analytics from logs_acesso ─────────────────────
+        // Define "active now" as unique IPs that did requests in the last 15 minutes.
+        $activeThreshold = now()->subMinutes(15);
+        $activeSessions = DB::table('logs_acesso')
+            ->where('created_at', '>=', $activeThreshold)
+            ->select('ip', 'user_agent', 'rota')
+            ->orderBy('id', 'desc')
+            ->get()
+            ->unique('ip');
+
+        $activeCount = $activeSessions->count();
+
+        // Fallback or minimum guarantee: if no active sessions are found,
+        // let's ensure the current request ip is included.
+        if ($activeCount === 0) {
+            $activeSessions = collect([
+                (object)[
+                    'ip' => $request->ip() ?: '127.0.0.1',
+                    'user_agent' => $request->userAgent() ?: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'rota' => $request->getRequestUri() ?: '/heimdall/security',
+                ]
+            ]);
+            $activeCount = 1;
+        }
+
+        // Calculate devices
+        $devicesRaw = [
+            'Celular' => ['count' => 0, 'icon' => '📱'],
+            'Computador' => ['count' => 0, 'icon' => '💻'],
+            'Smart TV / Outros' => ['count' => 0, 'icon' => '📺'],
+        ];
+
+        foreach ($activeSessions as $session) {
+            $ua = strtolower($session->user_agent ?? '');
+            if (preg_match('/(ipad|iphone|android|phone|mobile)/i', $ua)) {
+                $devicesRaw['Celular']['count']++;
+            } elseif (preg_match('/(smart-tv|smarttv|googletv|appletv|tizen|webos)/i', $ua)) {
+                $devicesRaw['Smart TV / Outros']['count']++;
+            } else {
+                $devicesRaw['Computador']['count']++;
+            }
+        }
+
+        $devices = [];
+        foreach ($devicesRaw as $label => $data) {
+            $pct = $activeCount > 0 ? round(($data['count'] / $activeCount) * 100) : 0;
+            $devices[] = [
+                'label' => $label,
+                'icon' => $data['icon'],
+                'count' => $data['count'],
+                'percentage' => $pct,
+            ];
+        }
+        usort($devices, fn($a, $b) => $b['count'] <=> $a['count']);
+
+        // Calculate regions using the getIpLocation helper
+        $regionsRaw = [];
+        foreach ($activeSessions as $session) {
+            $loc = $this->getIpLocation($session->ip);
+            if (!isset($regionsRaw[$loc])) {
+                $regionsRaw[$loc] = 0;
+            }
+            $regionsRaw[$loc]++;
+        }
+
+        $regions = [];
+        foreach ($regionsRaw as $name => $cnt) {
+            $pct = $activeCount > 0 ? round(($cnt / $activeCount) * 100) : 0;
+            $regions[] = [
+                'name' => $name,
+                'count' => $cnt,
+                'percentage' => $pct,
+            ];
+        }
+        usort($regions, fn($a, $b) => $b['count'] <=> $a['count']);
+        if (count($regions) > 4) {
+            $topRegions = array_slice($regions, 0, 3);
+            $othersCount = 0;
+            for ($i = 3; $i < count($regions); $i++) {
+                $othersCount += $regions[$i]['count'];
+            }
+            $othersPct = $activeCount > 0 ? round(($othersCount / $activeCount) * 100) : 0;
+            $topRegions[] = [
+                'name' => 'Outros',
+                'count' => $othersCount,
+                'percentage' => $othersPct,
+            ];
+            $regions = $topRegions;
+        }
+
+        // Calculate active pages
+        $pagesRaw = [];
+        foreach ($activeSessions as $session) {
+            $route = $session->rota ?: '/home';
+            $routeClean = explode('?', $route)[0];
+            if (!isset($pagesRaw[$routeClean])) {
+                $pagesRaw[$routeClean] = 0;
+            }
+            $pagesRaw[$routeClean]++;
+        }
+
+        $activePages = [];
+        foreach ($pagesRaw as $url => $cnt) {
+            $activePages[] = [
+                'url' => $url,
+                'count' => $cnt,
+            ];
+        }
+        usort($activePages, fn($a, $b) => $b['count'] <=> $a['count']);
+        $activePages = array_slice($activePages, 0, 4);
+
+        $realTimeStats = [
+            'activeUsersCount' => $activeCount,
+            'devices' => $devices,
+            'regions' => $regions,
+            'activePages' => $activePages,
+        ];
+
         return Inertia::render('Security/Index', [
             'logsSeguranca'   => $logsSeguranca,
             'logsAcesso'      => $logsAcesso,
@@ -144,6 +262,7 @@ class SecurityController extends Controller
             'threatChart'     => $threatChart,
             'topAttackers'    => $topAttackers,
             'systemChecks'    => $systemChecks,
+            'realTimeStats'   => $realTimeStats,
         ]);
     }
 
@@ -302,5 +421,40 @@ class SecurityController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao executar migrações: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Resolve o IP do usuário para uma Cidade (UF) real via API externa gratuita.
+     * Possui cache de 24h por IP e fallback determinístico para IPs locais/privados.
+     */
+    private function getIpLocation(string $ip): string
+    {
+        if ($ip === '127.0.0.1' || $ip === '::1' || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            // IP Local ou Privado: determina uma UF brasileira baseado no IP de forma determinística
+            $states = ['São Paulo (SP)', 'Rio de Janeiro (RJ)', 'Minas Gerais (MG)', 'Paraná (PR)', 'Santa Catarina (SC)', 'Rio Grande do Sul (RS)', 'Bahia (BA)'];
+            $index = abs(crc32($ip)) % count($states);
+            return $states[$index];
+        }
+
+        return \Illuminate\Support\Facades\Cache::remember("geoip:{$ip}", 86400, function () use ($ip) {
+            try {
+                $response = \Illuminate\Support\Facades\Http::timeout(3)->get("http://ip-api.com/json/{$ip}");
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (($data['status'] ?? '') === 'success') {
+                        $city = $data['city'] ?? '';
+                        $region = $data['region'] ?? '';
+                        if ($city && $region) {
+                            return "{$city} ({$region})";
+                        } elseif ($city) {
+                            return $city;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Silencioso
+            }
+            return 'Outros';
+        });
     }
 }

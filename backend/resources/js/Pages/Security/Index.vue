@@ -80,7 +80,7 @@
         </h3>
         <span class="badge badge-success flex items-center gap-1">
           <span class="badge-dot" style="animation: pulse 1.5s infinite;"></span>
-          12 Usuários Ativos Agora
+          {{ realTimeStats.activeUsersCount }} {{ realTimeStats.activeUsersCount === 1 ? 'Usuário Ativo' : 'Usuários Ativos' }} Agora
         </span>
       </div>
       <div class="card-body">
@@ -89,17 +89,12 @@
           <div class="info-box">
             <h4 class="font-semibold mb-2" style="font-size: 0.8125rem; text-transform: uppercase; color: var(--color-text-muted);">Dispositivos</h4>
             <div class="flex flex-col gap-2">
-              <div class="flex justify-between items-center text-sm">
-                <span class="flex items-center gap-1">📱 Celular</span>
-                <span class="font-bold">58% (7)</span>
+              <div v-for="device in realTimeStats.devices" :key="device.label" class="flex justify-between items-center text-sm">
+                <span class="flex items-center gap-1">{{ device.icon }} {{ device.label }}</span>
+                <span class="font-bold">{{ device.percentage }}% ({{ device.count }})</span>
               </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="flex items-center gap-1">💻 Computador</span>
-                <span class="font-bold">34% (4)</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="flex items-center gap-1">📺 Smart TV / Outros</span>
-                <span class="font-bold">8% (1)</span>
+              <div v-if="realTimeStats.devices.length === 0" class="text-xs text-center py-2" style="color: var(--color-text-muted);">
+                Nenhum dispositivo registrado.
               </div>
             </div>
           </div>
@@ -107,21 +102,12 @@
           <div class="info-box">
             <h4 class="font-semibold mb-2" style="font-size: 0.8125rem; text-transform: uppercase; color: var(--color-text-muted);">Origem / Regiões</h4>
             <div class="flex flex-col gap-2">
-              <div class="flex justify-between items-center text-sm">
-                <span>📍 São Paulo (SP)</span>
-                <span class="font-bold">50% (6)</span>
+              <div v-for="region in realTimeStats.regions" :key="region.name" class="flex justify-between items-center text-sm">
+                <span>📍 {{ region.name }}</span>
+                <span class="font-bold">{{ region.percentage }}% ({{ region.count }})</span>
               </div>
-              <div class="flex justify-between items-center text-sm">
-                <span>📍 Rio de Janeiro (RJ)</span>
-                <span class="font-bold">25% (3)</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span>📍 Minas Gerais (MG)</span>
-                <span class="font-bold">17% (2)</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span>📍 Outros</span>
-                <span class="font-bold">8% (1)</span>
+              <div v-if="realTimeStats.regions.length === 0" class="text-xs text-center py-2" style="color: var(--color-text-muted);">
+                Nenhuma origem registrada.
               </div>
             </div>
           </div>
@@ -129,21 +115,12 @@
           <div class="info-box">
             <h4 class="font-semibold mb-2" style="font-size: 0.8125rem; text-transform: uppercase; color: var(--color-text-muted);">Páginas Ativas</h4>
             <div class="flex flex-col gap-2">
-              <div class="flex justify-between items-center text-sm">
-                <span class="font-mono text-xs" style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/produtos/camisa-flamengo</span>
-                <span class="font-bold">5 ativos</span>
+              <div v-for="page in realTimeStats.activePages" :key="page.url" class="flex justify-between items-center text-sm">
+                <span class="font-mono text-xs" style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" :title="page.url">{{ page.url }}</span>
+                <span class="font-bold">{{ page.count }} {{ page.count === 1 ? 'ativo' : 'ativos' }}</span>
               </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="font-mono text-xs" style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/carrinho</span>
-                <span class="font-bold">4 ativos</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="font-mono text-xs" style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/checkout/pagamento</span>
-                <span class="font-bold">2 ativos</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="font-mono text-xs" style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/home</span>
-                <span class="font-bold">1 ativo</span>
+              <div v-if="realTimeStats.activePages.length === 0" class="text-xs text-center py-2" style="color: var(--color-text-muted);">
+                Nenhuma página ativa.
               </div>
             </div>
           </div>
@@ -555,6 +532,7 @@ const props = defineProps({
   threatChart:        { type: Array, default: () => [] },
   topAttackers:       { type: Array, default: () => [] },
   systemChecks:       { type: Array, default: () => [] },
+  realTimeStats:      { type: Object, required: true },
 })
 
 // ── Score ring ─────────────────────────────────────────────

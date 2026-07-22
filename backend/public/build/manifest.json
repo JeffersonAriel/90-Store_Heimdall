@@ -515,7 +515,7 @@
     ]
   },
   "resources/js/Pages/Security/Index.vue": {
-    "file": "assets/Index-CQ4VVwgj.js",
+    "file": "assets/Index-DBg7q1yt.js",
     "name": "Index",
     "src": "resources/js/Pages/Security/Index.vue",
     "isDynamicEntry": true,
@@ -525,7 +525,7 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/Index-BU1Qf0Na.css"
+      "assets/Index-B0-4LjjP.css"
     ]
   },
   "resources/js/Pages/Shipping/Index.vue": {
@@ -593,7 +593,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-Di98svBu.js",
+    "file": "assets/app-iUkrhFCX.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
