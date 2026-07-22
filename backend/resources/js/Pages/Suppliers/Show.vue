@@ -63,8 +63,8 @@
                 <a :href="'https://wa.me/55' + supplier.whatsapp.replace(/\D/g,'')" target="_blank" class="text-brand hover:underline">{{ supplier.whatsapp }}</a>
               </div>
               <div v-if="supplier.website">
-                <p class="text-xs font-semibold uppercase tracking-wide mb-1" style="color: var(--color-text-muted);">Website</p>
-                <a :href="supplier.website" target="_blank" class="text-brand hover:underline truncate block">{{ supplier.website }}</a>
+                <p class="text-xs font-semibold uppercase tracking-wide mb-1" style="color: var(--color-text-muted);">Website / Catálogo</p>
+                <a :href="supplier.website.startsWith('http') ? supplier.website : 'https://' + supplier.website" target="_blank" class="text-brand hover:underline truncate block">🌐 {{ supplier.website }}</a>
               </div>
               <div v-if="endereco" class="sm:col-span-2">
                 <p class="text-xs font-semibold uppercase tracking-wide mb-1" style="color: var(--color-text-muted);">Endereço</p>

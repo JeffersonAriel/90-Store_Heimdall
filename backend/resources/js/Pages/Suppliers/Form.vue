@@ -55,8 +55,8 @@
               <input v-model="form.whatsapp" type="text" class="form-input font-mono" placeholder="(00) 90000-0000" />
             </div>
             <div class="form-group md:col-span-3">
-              <label class="form-label">Website</label>
-              <input v-model="form.website" type="url" class="form-input" placeholder="https://..." />
+              <label class="form-label">Website / Catálogo Online</label>
+              <input v-model="form.website" type="text" class="form-input" placeholder="https://www.fornecedor.com ou link do catálogo" />
             </div>
           </div>
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Fornecedor;
 use App\Models\AvaliacaoFornecedor;
+use App\Models\Produto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,22 +16,44 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $productId = $request->input('product_id');
 
         $suppliers = Fornecedor::query()
             ->when($search, function ($query, $search) {
-                $query->where('razao_social', 'like', "%{$search}%")
+                $query->where(function ($q) use ($search) {
+                    $q->where('razao_social', 'like', "%{$search}%")
                       ->orWhere('nome_fantasia', 'like', "%{$search}%")
                       ->orWhere('cnpj', 'like', "%{$search}%")
-                      ->orWhere('cpf', 'like', "%{$search}%");
+                      ->orWhere('cpf', 'like', "%{$search}%")
+                      ->orWhere('website', 'like', "%{$search}%")
+                      ->orWhereHas('produtos', function ($pq) use ($search) {
+                          $pq->where('nome', 'like', "%{$search}%")
+                             ->orWhere('sku_base', 'like', "%{$search}%");
+                      });
+                });
             })
+            ->when($productId, function ($query, $productId) {
+                $query->whereHas('produtos', function ($q) use ($productId) {
+                    $q->where('id', $productId);
+                });
+            })
+            ->with(['produtos' => function ($query) {
+                $query->select('id', 'fornecedor_id', 'nome', 'sku_base', 'ativo');
+            }])
             ->withCount('produtos')
             ->orderBy('id', 'desc')
             ->paginate(10)
             ->withQueryString();
 
+        $allProducts = Produto::query()
+            ->select('id', 'nome')
+            ->orderBy('nome')
+            ->get();
+
         return Inertia::render('Suppliers/Index', [
             'suppliers' => $suppliers,
-            'filters' => $request->only('search')
+            'products' => $allProducts,
+            'filters' => $request->only('search', 'product_id')
         ]);
     }
 

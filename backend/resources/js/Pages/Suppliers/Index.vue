@@ -17,7 +17,7 @@
           </span>
           Fornecedores
         </h1>
-        <p class="page-subtitle">Cadastre e avalie os fornecedores da sua loja.</p>
+        <p class="page-subtitle">Cadastre, filtre e avalie os fornecedores da sua loja.</p>
       </div>
       <div class="page-actions">
         <Link :href="route('admin.suppliers.create')" class="btn btn-primary">
@@ -34,14 +34,25 @@
       <div class="card-body">
         <form @submit.prevent="handleSearch" class="flex gap-3 items-end flex-wrap">
           <div class="form-group flex-1" style="min-width: 220px; margin-bottom: 0;">
-            <label class="form-label">Buscar fornecedor</label>
+            <label class="form-label">Buscar fornecedor ou produto</label>
             <div class="form-input-wrap">
               <svg class="form-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
-              <input v-model="form.search" type="text" class="form-input" placeholder="Razão social, Nome fantasia, CNPJ ou CPF..." />
+              <input v-model="form.search" type="text" class="form-input" placeholder="Razão social, CNPJ, website ou nome do produto..." />
             </div>
           </div>
+
+          <div class="form-group" style="min-width: 220px; margin-bottom: 0;">
+            <label class="form-label">Filtrar por Produto</label>
+            <select v-model="form.product_id" class="form-select">
+              <option value="">Todos os produtos</option>
+              <option v-for="prod in products" :key="prod.id" :value="prod.id">
+                {{ prod.nome }}
+              </option>
+            </select>
+          </div>
+
           <div class="flex gap-2" style="flex-shrink: 0;">
             <button type="submit" class="btn btn-primary">Filtrar</button>
             <button type="button" @click="resetFilters" class="btn btn-secondary">Limpar</button>
@@ -59,7 +70,7 @@
           </svg>
         </div>
         <p class="empty-state-title">Nenhum fornecedor encontrado</p>
-        <p class="empty-state-desc">Cadastre o primeiro fornecedor para começar.</p>
+        <p class="empty-state-desc">Tente alterar os termos de busca ou cadastrar um novo fornecedor.</p>
       </div>
       <div v-else class="table-wrapper">
         <table>
@@ -67,10 +78,10 @@
             <tr>
               <th>Nome / Razão Social</th>
               <th>Documento</th>
-              <th>Contato</th>
+              <th>Contato & Website</th>
               <th>Prazo Médio</th>
               <th>Avaliação</th>
-              <th>Produtos</th>
+              <th>Produtos Cadastrados</th>
               <th>Status</th>
               <th style="width: 140px; text-align: right;">Ações</th>
             </tr>
@@ -84,11 +95,19 @@
               <td data-label="Documento">
                 <span class="font-mono text-secondary" style="font-size: 0.8125rem;">{{ sup.tipo_pessoa === 'juridica' ? sup.cnpj : sup.cpf }}</span>
               </td>
-              <td data-label="Contato">
-                <div v-if="sup.telefone" class="text-secondary" style="font-size: 0.8125rem;">{{ sup.telefone }}</div>
-                <div v-if="sup.whatsapp">
+              <td data-label="Contato & Website">
+                <div v-if="sup.telefone" class="text-secondary" style="font-size: 0.8125rem;">📞 {{ sup.telefone }}</div>
+                <div v-if="sup.whatsapp" class="mt-0.5">
                   <a :href="`https://wa.me/${sup.whatsapp.replace(/\D/g, '')}`" target="_blank" class="text-brand" style="font-size: 0.8125rem;">
-                    {{ sup.whatsapp }}
+                    💬 {{ sup.whatsapp }}
+                  </a>
+                </div>
+                <div v-if="sup.website" class="mt-1">
+                  <a :href="formatUrl(sup.website)" target="_blank" class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-blue-900/30 text-blue-300 hover:text-blue-200 border border-blue-700/40">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    <span>Website / Catálogo</span>
                   </a>
                 </div>
               </td>
@@ -101,8 +120,20 @@
                   <span class="text-muted" style="font-size: 0.75rem;">({{ sup.avaliacao_media }})</span>
                 </div>
               </td>
-              <td data-label="Produtos">
-                <span class="badge badge-primary">{{ sup.produtos_count || 0 }}</span>
+              <td data-label="Produtos Cadastrados">
+                <div class="flex flex-col gap-1">
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-primary font-bold">{{ sup.produtos_count || 0 }} {{ sup.produtos_count === 1 ? 'item' : 'itens' }}</span>
+                  </div>
+                  <div v-if="sup.produtos && sup.produtos.length > 0" class="flex flex-wrap gap-1 mt-1 max-w-xs">
+                    <span v-for="prod in sup.produtos.slice(0, 3)" :key="prod.id" class="px-2 py-0.5 text-xs rounded bg-slate-800 text-slate-300 border border-slate-700 truncate max-w-[140px]" :title="prod.nome">
+                      {{ prod.nome }}
+                    </span>
+                    <span v-if="sup.produtos.length > 3" class="px-2 py-0.5 text-xs rounded bg-slate-800 text-slate-400 border border-slate-700 font-semibold" :title="sup.produtos.slice(3).map(p => p.nome).join(', ')">
+                      +{{ sup.produtos.length - 3 }} outros
+                    </span>
+                  </div>
+                </div>
               </td>
               <td data-label="Status">
                 <span :class="sup.ativo ? 'badge badge-success' : 'badge badge-danger'">
@@ -141,15 +172,35 @@ import AdminLayout from '@/Layouts/AdminLayout.vue'
 
 const props = defineProps({
   suppliers: { type: Object, required: true },
+  products:  { type: Array, default: () => [] },
   filters:   { type: Object, default: () => ({}) }
 })
 
-const form = ref({ search: props.filters.search || '' })
+const form = ref({
+  search: props.filters.search || '',
+  product_id: props.filters.product_id || ''
+})
 
-function handleSearch() { router.get(route('admin.suppliers.index'), form.value, { preserveState: true }) }
-function resetFilters() { form.value.search = ''; handleSearch() }
+function formatUrl(url) {
+  if (!url) return '#'
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  return `https://${url}`
+}
+
+function handleSearch() {
+  router.get(route('admin.suppliers.index'), form.value, { preserveState: true })
+}
+
+function resetFilters() {
+  form.value.search = ''
+  form.value.product_id = ''
+  handleSearch()
+}
+
 function deleteSupplier(id) {
-  if (confirm('Tem certeza que deseja remover este fornecedor?')) router.delete(route('admin.suppliers.destroy', id))
+  if (confirm('Tem certeza que deseja remover este fornecedor?')) {
+    router.delete(route('admin.suppliers.destroy', id))
+  }
 }
 </script>
 
