@@ -93,11 +93,11 @@
                     ✓ Categoria final selecionada com sucesso.
                   </div>
 
-                  <!-- ANO DA CAMISETA (SE FOR DE TIME/SELEÇÃO) -->
-                  <div v-if="isTimeCategory" class="mt-4 pt-4 border-t border-dashed animate-fade-in" style="border-color: var(--color-border);">
+                  <!-- ANO DA CAMISETA / TEMPORADA -->
+                  <div v-if="form.categoria_id" class="mt-4 pt-4 border-t border-dashed animate-fade-in" style="border-color: var(--color-border);">
                     <div class="form-group max-w-xs mb-0">
-                      <label class="form-label font-bold text-indigo-500">Ano da Camiseta</label>
-                      <input v-model="form.retro_year" type="number" class="form-input" placeholder="Ex: 2026, 1998..." />
+                      <label class="form-label font-bold text-indigo-400">📅 Ano / Temporada da Camiseta</label>
+                      <input v-model="form.retro_year" type="number" class="form-input font-mono" placeholder="Ex: 2026, 2024, 1998..." min="1950" max="2035" />
                     </div>
                   </div>
                 </div>
