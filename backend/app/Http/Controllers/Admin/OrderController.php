@@ -589,78 +589,65 @@ class OrderController extends Controller
     }
 
     /**
-     * Redireciona diretamente para o PDF Oficial da SuperFrete (Imagem 2)
+     * Exibe / Transmite diretamente o PDF Oficial da SuperFrete (Imagem 2)
      */
     public function printLabel(int $id)
     {
         $order = Pedido::with(['cliente', 'endereco', 'itens.produto'])->findOrFail($id);
 
-        // 1. Apenas redireciona direto se a URL já possuir o token Base64 oficial da SuperFrete (começando com eyJ)
-        if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, 'etiqueta.superfrete.com') && str_contains($order->url_rastreio, 'eyJ')) {
-            return redirect()->away($order->url_rastreio);
-        }
+        $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
+        if ($api) {
+            $rawCred = $api->credenciais_json;
+            $cred = is_array($rawCred) ? $rawCred : json_decode($rawCred, true);
+            $token = is_array($cred) ? ($cred['token'] ?? '') : ($rawCred ?? '');
 
-        // 2. Extrai o ID do pedido/tag da SuperFrete
-        $tagId = null;
-        if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, '_etiqueta/pdf/')) {
-            $parts = explode('_etiqueta/pdf/', $order->url_rastreio);
-            $rawSegment = strtok($parts[1] ?? '', '?');
-            if (str_starts_with($rawSegment, 'eyJ')) {
-                $decoded = json_decode(base64_decode($rawSegment), true);
-                $tagId = $decoded['order_id'] ?? $rawSegment;
-            } else {
-                $tagId = $rawSegment;
-            }
-        }
+            if (!empty($token)) {
+                $targetPdfUrl = $order->url_rastreio;
 
-        if (empty($tagId) && !empty($order->codigo_rastreio) && !str_starts_with($order->codigo_rastreio, 'HD') && !str_starts_with($order->codigo_rastreio, 'SF')) {
-            $tagId = $order->codigo_rastreio;
-        }
+                // Se não tem URL do PDF ou não tem Base64 eyJ, tenta obter/montar
+                if (empty($targetPdfUrl) || !str_contains($targetPdfUrl, 'etiqueta.superfrete.com')) {
+                    $tagId = null;
+                    if (!empty($order->codigo_rastreio) && !str_starts_with($order->codigo_rastreio, 'HD')) {
+                        $tagId = $order->codigo_rastreio;
+                    }
 
-        // 3. Tenta buscar o link oficial via API SuperFrete (/tag/print)
-        if (!empty($tagId)) {
-            $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
-            if ($api) {
-                $rawCred = $api->credenciais_json;
-                $cred = is_array($rawCred) ? $rawCred : json_decode($rawCred, true);
-                $token = is_array($cred) ? ($cred['token'] ?? '') : ($rawCred ?? '');
+                    if ($tagId) {
+                        $base64Token = base64_encode(json_encode(['order_id' => $tagId]));
+                        $targetPdfUrl = "https://etiqueta.superfrete.com/_etiqueta/pdf/{$base64Token}?format=A6";
+                    }
+                }
 
-                if (!empty($token)) {
+                if (!empty($targetPdfUrl)) {
                     try {
-                        $res = Http::withoutVerifying()
+                        $pdfRes = Http::withoutVerifying()
+                            ->timeout(12)
                             ->withHeaders([
                                 'Authorization' => "Bearer {$token}",
-                                'Accept'        => 'application/json',
-                                'Content-Type'  => 'application/json'
+                                'Accept'        => 'application/pdf, text/html, */*',
+                                'User-Agent'    => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                             ])
-                            ->post('https://api.superfrete.com/api/v0/tag/print', [
-                                'orders' => [$tagId]
+                            ->get($targetPdfUrl);
+
+                        if ($pdfRes->successful() && (str_contains($pdfRes->header('Content-Type', ''), 'pdf') || str_starts_with($pdfRes->body(), '%PDF'))) {
+                            // Salva a URL confirmada se ainda não estava salva
+                            if ($order->url_rastreio !== $targetPdfUrl) {
+                                $order->url_rastreio = $targetPdfUrl;
+                                $order->save();
+                            }
+
+                            return response($pdfRes->body(), 200, [
+                                'Content-Type'        => 'application/pdf',
+                                'Content-Disposition' => 'inline; filename="etiqueta_superfrete_pedido_' . $order->id . '.pdf"'
                             ]);
-
-                        if ($res->successful() && $res->json('url')) {
-                            $pdfUrl = $res->json('url');
-                            $order->url_rastreio = $pdfUrl;
-                            $order->save();
-
-                            return redirect()->away($pdfUrl);
                         }
                     } catch (\Exception $e) {
-                        // Ignora exceção e recai no construtor Base64 abaixo
+                        // Ignora e cai no fallback nativo caso falhe
                     }
                 }
             }
-
-            // 4. Constrói o link oficial no formato exato da SuperFrete: base64({"order_id": "ID"})?format=A6
-            $base64Token = base64_encode(json_encode(['order_id' => $tagId]));
-            $pdfUrl = "https://etiqueta.superfrete.com/_etiqueta/pdf/{$base64Token}?format=A6";
-
-            $order->url_rastreio = $pdfUrl;
-            $order->save();
-
-            return redirect()->away($pdfUrl);
         }
 
-        // 5. Fallback nativo apenas caso o pedido realmente não possua tag/rastreio emitido na SuperFrete
+        // Fallback nativo apenas caso o servidor da SuperFrete esteja indisponível
         $freteRegra = \App\Models\FreteRegra::first();
         return view('admin.orders.print_label', compact('order', 'freteRegra'));
     }
