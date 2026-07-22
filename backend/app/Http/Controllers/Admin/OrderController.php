@@ -412,9 +412,55 @@ class OrderController extends Controller
             $cpfTo = preg_replace('/\D/', '', $order->cliente->cpf ?? '00000000000');
             if (strlen($cpfTo) < 11) $cpfTo = '00000000000';
 
-            // 4. Monta o Payload para adicionar ao Carrinho da SuperFrete (/cart)
+            // 4. Calcula peso e dimensões IDÊNTICOS ao FreteService
+            $itensCount = (int) $order->itens->sum('quantidade');
+            if ($itensCount < 1) $itensCount = 1;
+
+            $pesoFinal        = 1.0 * $itensCount;
+            $alturaFinal      = 3 * $itensCount;
+            $larguraFinal     = 40;
+            $comprimentoFinal = 50;
+
+            // 5. Descobre automaticamente o Serviço SuperFrete (PAC=1, SEDEX=2, Mini=17, Jadlog=3, Loggi=31)
+            $serviceId = 1; // Padrão PAC
+            try {
+                $calcRes = Http::withoutVerifying()
+                    ->withHeaders([
+                        'Authorization' => "Bearer {$token}",
+                        'Accept'        => 'application/json',
+                        'Content-Type'  => 'application/json',
+                        'User-Agent'    => 'Heimdall 90-Store'
+                    ])
+                    ->post('https://api.superfrete.com/api/v0/calculator', [
+                        'from' => ['postal_code' => $cepOrigem],
+                        'to'   => ['postal_code' => $cepDestino],
+                        'services' => '1,2,17,3,31',
+                        'package' => [
+                            'weight' => $pesoFinal,
+                            'width'  => $larguraFinal,
+                            'height' => $alturaFinal,
+                            'length' => $comprimentoFinal
+                        ]
+                    ]);
+
+                if ($calcRes->successful()) {
+                    $servicesOptions = $calcRes->json();
+                    $orderFreightVal = (float) $order->valor_frete;
+
+                    foreach ($servicesOptions as $opt) {
+                        if (isset($opt['price']) && abs((float)$opt['price'] - $orderFreightVal) < 0.50) {
+                            $serviceId = (int) $opt['id'];
+                            break;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Fallback serviceId = 1
+            }
+
+            // 6. Monta o Payload para adicionar ao Carrinho da SuperFrete (/cart)
             $payloadCart = [
-                'service'  => 1, // PAC por padrão
+                'service'  => $serviceId,
                 'agency'   => 1,
                 'platform' => 'Heimdall 90-Store',
                 'from' => [
@@ -447,10 +493,10 @@ class OrderController extends Controller
                 'products' => $products,
                 'volumes'  => [
                     [
-                        'weight' => 1.0,
-                        'height' => 10,
-                        'width'  => 15,
-                        'length' => 20
+                        'weight' => $pesoFinal,
+                        'height' => $alturaFinal,
+                        'width'  => $larguraFinal,
+                        'length' => $comprimentoFinal
                     ]
                 ]
             ];
