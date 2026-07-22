@@ -345,10 +345,25 @@ function submitTracking() {
 }
 
 function generateSuperFreteLabel() {
-  if (confirm('Deseja emitir a etiqueta deste pedido na SuperFrete?')) {
+  // Se a etiqueta já foi emitida para este pedido
+  if (props.order.codigo_rastreio) {
+    const confirmReprint = confirm(
+      `Já foi gerada uma etiqueta de entrega para este pedido!\n\n` +
+      `Código de Rastreio: ${props.order.codigo_rastreio}\n\n` +
+      `Deseja imprimir novamente a etiqueta oficial da SuperFrete?`
+    )
+    if (confirmReprint) {
+      const printUrl = props.order.url_rastreio || route('admin.orders.print-label', props.order.id)
+      window.open(printUrl, '_blank')
+    }
+    return
+  }
+
+  // Se ainda não possui etiqueta emitida
+  if (confirm('Deseja emitir e comprar a etiqueta deste pedido na SuperFrete?')) {
     router.post(route('admin.orders.generate-label', props.order.id), {}, {
       onSuccess: (page) => {
-        const printUrl = page?.props?.order?.url_rastreio || props.order?.url_rastreio
+        const printUrl = page?.props?.order?.url_rastreio || props.order?.url_rastreio || route('admin.orders.print-label', props.order.id)
         if (printUrl) {
           window.open(printUrl, '_blank')
         }

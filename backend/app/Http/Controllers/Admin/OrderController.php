@@ -592,19 +592,53 @@ class OrderController extends Controller
     }
 
     /**
-     * Exibe e dispara o download/impressão nativa da Etiqueta + Declaração de Conteúdo
+     * Exibe e dispara o download/impressão da Etiqueta Oficial da SuperFrete (Imagem 2)
      */
     public function printLabel(int $id)
     {
         $order = Pedido::with(['cliente', 'endereco', 'itens.produto'])->findOrFail($id);
-        $freteRegra = \App\Models\FreteRegra::first();
 
-        if (empty($order->codigo_rastreio)) {
-            $order->codigo_rastreio = 'HD' . str_pad($order->id, 8, '0', STR_PAD_LEFT) . 'BR';
-            $order->url_rastreio = route('admin.orders.print-label', $order->id);
-            $order->save();
+        // 1. Se já possui a URL oficial do PDF da SuperFrete, redireciona diretamente para ela (Imagem 2)
+        if (!empty($order->url_rastreio) && str_contains($order->url_rastreio, 'etiqueta.superfrete.com')) {
+            return redirect()->away($order->url_rastreio);
         }
 
+        // 2. Se o pedido tem rastreio mas a URL ainda não foi gravada, consulta a API da SuperFrete em tempo real
+        if (!empty($order->codigo_rastreio)) {
+            $api = ApiConfiguracao::where('slug', 'superfrete')->where('ativo', true)->first();
+            if ($api) {
+                $rawCred = $api->credenciais_json;
+                $cred = is_array($rawCred) ? $rawCred : json_decode($rawCred, true);
+                $token = is_array($cred) ? ($cred['token'] ?? '') : ($rawCred ?? '');
+
+                if (!empty($token)) {
+                    try {
+                        $res = Http::withoutVerifying()
+                            ->withHeaders([
+                                'Authorization' => "Bearer {$token}",
+                                'Accept'        => 'application/json',
+                                'Content-Type'  => 'application/json'
+                            ])
+                            ->post('https://api.superfrete.com/api/v0/tag/print', [
+                                'orders' => [$order->codigo_rastreio]
+                            ]);
+
+                        if ($res->successful() && $res->json('url')) {
+                            $pdfUrl = $res->json('url');
+                            $order->url_rastreio = $pdfUrl;
+                            $order->save();
+
+                            return redirect()->away($pdfUrl);
+                        }
+                    } catch (\Exception $e) {
+                        // Caso a busca falhe, utiliza o fallback nativo
+                    }
+                }
+            }
+        }
+
+        // Fallback nativo (caso a etiqueta não tenha sido gerada na SuperFrete)
+        $freteRegra = \App\Models\FreteRegra::first();
         return view('admin.orders.print_label', compact('order', 'freteRegra'));
     }
 }
