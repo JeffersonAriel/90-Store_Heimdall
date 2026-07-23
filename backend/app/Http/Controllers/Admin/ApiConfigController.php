@@ -13,16 +13,53 @@ class ApiConfigController extends Controller
 {
     public function index()
     {
+        // Garante que a integração do Servidor de E-mail (SMTP / Titan Mail) sempre exista no banco
+        ApiConfiguracao::firstOrCreate(
+            ['slug' => 'smtp_mail'],
+            [
+                'nome'            => 'Servidor de E-mail (SMTP / Titan Mail)',
+                'tipo'            => 'outro',
+                'fallback_ordem'  => 1,
+                'ativo'           => true,
+                'sandbox'         => false,
+                'template_campos_json' => [
+                    ['campo' => 'host',         'label' => 'Host SMTP (ex: smtp.titan.email)', 'obrigatorio' => true,  'tipo' => 'text'],
+                    ['campo' => 'port',         'label' => 'Porta (ex: 465 ou 587)',          'obrigatorio' => true,  'tipo' => 'text'],
+                    ['campo' => 'encryption',   'label' => 'Criptografia (ssl, tls ou none)', 'obrigatorio' => true,  'tipo' => 'text'],
+                    ['campo' => 'username',     'label' => 'Usuário / E-mail de Autenticação', 'obrigatorio' => true,  'tipo' => 'text'],
+                    ['campo' => 'password',     'label' => 'Senha / Token de App',            'obrigatorio' => true,  'tipo' => 'password'],
+                    ['campo' => 'from_address', 'label' => 'E-mail Remetente Exibido',         'obrigatorio' => true,  'tipo' => 'text'],
+                    ['campo' => 'from_name',    'label' => 'Nome do Remetente Exibido',        'obrigatorio' => true,  'tipo' => 'text'],
+                ],
+                'credenciais_json' => [
+                    'host'         => env('MAIL_HOST', 'smtp.titan.email'),
+                    'port'         => env('MAIL_PORT', '465'),
+                    'encryption'   => env('MAIL_ENCRYPTION', 'ssl'),
+                    'username'     => env('MAIL_USERNAME', 'noreply@90store.com.br'),
+                    'password'     => env('MAIL_PASSWORD', 'Store90Mais1910!'),
+                    'from_address' => env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br'),
+                    'from_name'    => env('MAIL_FROM_NAME', '90 Store'),
+                ],
+                'webhook_url'     => null,
+            ]
+        );
+
         $apis = ApiConfiguracao::orderBy('tipo')->orderBy('fallback_ordem')->get();
         $freteRegra = FreteRegra::where('ativo', true)->first();
 
-        // Oculta/limpa credenciais encriptadas enviadas para o front-end por segurança
+        // Oculta/limpa apenas senhas e segredos encriptados enviados para o front-end
         $apis->each(function ($api) {
             if ($api->credenciais_json) {
-                $creds = json_decode($api->credenciais_json, true);
+                $creds = is_array($api->credenciais_json) ? $api->credenciais_json : json_decode($api->credenciais_json, true);
                 $masked = [];
-                foreach ($creds as $key => $val) {
-                    $masked[$key] = '********'; // Mascara campos confidenciais
+                if (is_array($creds)) {
+                    foreach ($creds as $key => $val) {
+                        if (in_array($key, ['password', 'token', 'secret_key', 'access_token', 'client_secret', 'webhook_secret'])) {
+                            $masked[$key] = '********';
+                        } else {
+                            $masked[$key] = $val;
+                        }
+                    }
                 }
                 $api->credenciais_json = json_encode($masked);
             }

@@ -90,25 +90,46 @@
 
         <!-- Servidor de E-mail SMTP / CRM Integration -->
         <div class="card">
-          <div class="card-header">
+          <div class="card-header flex justify-between items-center">
             <h3 class="card-title">📧 Servidor de Disparo de E-mails (SMTP & CRM)</h3>
+            <span class="badge badge-success" style="font-size: 0.75rem;">HostGator Titan Mail</span>
           </div>
           <div class="card-body flex flex-col gap-4">
             <div v-for="api in emailApis" :key="api.id" class="api-item p-4" style="background: var(--color-bg-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-md);">
-              <div class="flex justify-between items-center">
+              <div class="flex justify-between items-start mb-4">
                 <div>
-                  <h4 class="font-bold flex items-center gap-2">
+                  <h4 class="font-bold flex items-center gap-2 text-brand">
                     {{ api.nome }}
                   </h4>
-                  <p class="text-secondary" style="font-size: 0.8125rem;">Configure o servidor SMTP (HostGator Titan Mail, Gmail, Resend, etc.) para envio de e-mails das campanhas do CRM, contatos e notificações de pedidos.</p>
+                  <p class="text-secondary mt-1" style="font-size: 0.8125rem;">Configure o servidor SMTP (HostGator Titan Mail, Gmail, Resend, etc.) para envio de e-mails das campanhas do CRM, contatos e notificações de pedidos.</p>
                 </div>
                 <div class="flex items-center gap-3">
                   <label class="flex items-center gap-1 cursor-pointer">
                     <input type="checkbox" v-model="api.ativo" @change="toggleApi(api)" />
-                    <span style="font-size: 0.875rem;">Ativo</span>
+                    <span style="font-size: 0.875rem;" class="font-semibold">Ativo</span>
                   </label>
-                  <button @click="editApi(api)" class="btn btn-secondary btn-sm">Configurar</button>
-                  <button @click="openTestEmailModal" class="btn btn-outline btn-sm" style="color: var(--color-brand);">✉️ Testar Envio</button>
+                  <button @click="editApi(api)" class="btn btn-secondary btn-sm">⚙️ Configurar</button>
+                  <button @click="openTestEmailModal" class="btn btn-primary btn-sm">🚀 Disparar E-mail de Teste</button>
+                </div>
+              </div>
+
+              <!-- Pré-visualização das configurações ativas -->
+              <div class="grid-4 gap-4 p-3 rounded-lg" style="background: rgba(0,0,0,0.15); border: 1px dashed var(--color-border);">
+                <div>
+                  <span class="text-secondary block text-xs">Host SMTP</span>
+                  <strong class="font-mono text-sm">{{ getCreds(api).host || 'smtp.titan.email' }}</strong>
+                </div>
+                <div>
+                  <span class="text-secondary block text-xs">Porta & Criptografia</span>
+                  <strong class="font-mono text-sm">{{ getCreds(api).port || '465' }} ({{ (getCreds(api).encryption || 'ssl').toUpperCase() }})</strong>
+                </div>
+                <div>
+                  <span class="text-secondary block text-xs">Usuário / Remetente</span>
+                  <strong class="font-mono text-sm">{{ getCreds(api).username || 'noreply@90store.com.br' }}</strong>
+                </div>
+                <div>
+                  <span class="text-secondary block text-xs">Nome Exibido</span>
+                  <strong class="font-mono text-sm">{{ getCreds(api).from_name || '90 Store' }}</strong>
                 </div>
               </div>
             </div>
@@ -338,6 +359,15 @@ function createApi() {
 function deleteApi(api) {
   if (confirm(`Tem certeza que deseja excluir o gateway ${api.nome}?`)) {
     router.delete(route('admin.api-config.destroy', api.slug))
+  }
+}
+
+function getCreds(api) {
+  if (!api || !api.credenciais_json) return {}
+  try {
+    return typeof api.credenciais_json === 'string' ? JSON.parse(api.credenciais_json) : api.credenciais_json
+  } catch (e) {
+    return {}
   }
 }
 
