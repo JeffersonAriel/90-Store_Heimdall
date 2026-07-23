@@ -12,7 +12,7 @@ return new class extends Migration
             ['slug' => 'smtp_mail'],
             [
                 'nome'            => 'Servidor de E-mail (SMTP / Titan Mail)',
-                'tipo'            => 'email',
+                'tipo'            => 'outro',
                 'fallback_ordem'  => 1,
                 'ativo'           => true,
                 'sandbox'         => false,
