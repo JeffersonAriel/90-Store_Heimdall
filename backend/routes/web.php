@@ -108,6 +108,7 @@ Route::prefix('heimdall')->group(function () {
         Route::put('api-config/{slug}', [ApiConfigController::class, 'update'])->name('admin.api-config.update');
         Route::delete('api-config/{slug}', [ApiConfigController::class, 'destroy'])->name('admin.api-config.destroy');
         Route::post('api-config/test-email', [ApiConfigController::class, 'testEmail'])->name('admin.api-config.test-email');
+        Route::get('mail-tester', function () { return redirect()->route('admin.api-config.index'); })->name('admin.mail-tester.index');
 
         Route::get('import-export', [ImportExportController::class, 'index'])->name('admin.import-export.index');
         Route::get('import-export/template/{tipo}', [ImportExportController::class, 'downloadTemplate'])->name('admin.import-export.template');
