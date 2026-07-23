@@ -5,7 +5,8 @@
       <div v-for="(banner, index) in banners" :key="banner.id" 
            class="hero-slide" 
            :class="{ active: currentBannerIndex === index }"
-           :style="{ backgroundImage: `url('${banner.image_path}')` }">
+           :style="banner.video_path ? {} : { backgroundImage: `url('${banner.image_path}')` }">
+        <video v-if="banner.video_path" class="hero-video" autoplay loop muted playsinline :src="banner.video_path"></video>
         <div class="hero-content container">
           <span class="hero-badge animate-fade-in" v-if="banner.subtitle">{{ banner.subtitle }}</span>
           <h1 class="title-xl animate-fade-in" style="animation-delay: 0.2s" v-if="banner.title">{{ banner.title }}</h1>
@@ -231,6 +232,16 @@ onUnmounted(() => {
 .hero-slide.active {
   opacity: 1;
   z-index: 2;
+}
+
+.hero-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
 }
 
 .carousel-dots {

@@ -44,7 +44,7 @@ return [
             'host' => env('MAIL_HOST', 'smtp.titan.email'),
             'port' => env('MAIL_PORT', 465),
             'username' => env('MAIL_USERNAME', 'noreply@90store.com.br'),
-            'password' => env('MAIL_PASSWORD', '90Mais1910#'),
+            'password' => env('MAIL_PASSWORD', 'Store90Mais1910!'),
             'timeout' => 15,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],

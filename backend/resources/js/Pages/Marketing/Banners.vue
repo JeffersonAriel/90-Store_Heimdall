@@ -78,6 +78,12 @@
                 <input type="text" v-model="form.image_path" required class="form-input" placeholder="https://exemplo.com/imagem.jpg">
                 <p class="text-xs text-gray-500 mt-1">Insira a URL absoluta da imagem.</p>
               </div>
+
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">URL do Vídeo (Opcional)</label>
+                <input type="text" v-model="form.video_path" class="form-input" placeholder="https://exemplo.com/video.mp4">
+                <p class="text-xs text-gray-500 mt-1">Se preenchido, o vídeo será reproduzido no banner.</p>
+              </div>
               
               <div class="grid grid-cols-2 gap-4">
                 <div class="form-group">
@@ -219,6 +225,7 @@ const form = useForm({
   title: '',
   subtitle: '',
   image_path: '',
+  video_path: '',
   link_url: '',
   order: 0,
   is_active: true,
@@ -233,6 +240,7 @@ const openModal = (banner = null) => {
     form.title = banner.title;
     form.subtitle = banner.subtitle;
     form.image_path = banner.image_path;
+    form.video_path = banner.video_path || '';
     form.link_url = banner.link_url;
     form.order = banner.order;
     form.is_active = banner.is_active;
