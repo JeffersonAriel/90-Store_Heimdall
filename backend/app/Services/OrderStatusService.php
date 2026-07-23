@@ -69,6 +69,16 @@ class OrderStatusService
             $pedido->update(['status' => $newStatus]);
             $this->saveHistory($orderId, $currentStatus, $newStatus, $employeeId, $observation);
 
+            // Dispara e-mail automático ao cliente sobre a atualização do pedido via Titan Mail HostGator
+            try {
+                if ($pedido->cliente && !empty($pedido->cliente->email)) {
+                    \Illuminate\Support\Facades\Mail::to($pedido->cliente->email)
+                        ->send(new \App\Mail\OrderStatusUpdatedMail($pedido));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Falha ao enviar e-mail de atualização do pedido #{$pedido->id}: " . $e->getMessage());
+            }
+
             return true;
         });
     }

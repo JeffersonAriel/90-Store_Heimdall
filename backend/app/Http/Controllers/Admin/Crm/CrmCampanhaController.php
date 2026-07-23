@@ -100,11 +100,25 @@ class CrmCampanhaController extends Controller
         CrmCampanhaEnvio::insert($envios);
 
         $campanha->update([
-            'status'              => 'enviando',
+            'status'              => 'concluida',
             'iniciada_em'         => now(),
+            'concluida_em'        => now(),
             'total_destinatarios' => $clienteIds->count(),
+            'total_enviados'      => $clienteIds->count(),
         ]);
 
-        return back()->with('success', "Campanha disparada para {$clienteIds->count()} clientes!");
+        if ($campanha->tipo === 'email') {
+            $clientes = \App\Models\Cliente::whereIn('id', $clienteIds)->whereNotNull('email')->get();
+            foreach ($clientes as $cliente) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($cliente->email)
+                        ->send(new \App\Mail\CrmEmailMail($cliente->nome_completo, $campanha->nome, $campanha->conteudo ?: ''));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Erro no envio da campanha #{$campanha->id} para {$cliente->email}: " . $e->getMessage());
+                }
+            }
+        }
+
+        return back()->with('success', "Campanha de e-mail disparada com sucesso para {$clienteIds->count()} clientes!");
     }
 }

@@ -88,6 +88,10 @@ Route::prefix('heimdall')->group(function () {
         Route::post('orders/{order}/sync-tracking', [OrderController::class, 'syncSuperFreteTracking'])->name('admin.orders.sync-tracking');
         Route::post('orders/{order}/update-item-costs', [OrderController::class, 'updateItemCosts'])->name('admin.orders.update-item-costs');
 
+        // Testador de E-mails
+        Route::get('mail-tester', [\App\Http\Controllers\Admin\MailTesterController::class, 'index'])->name('admin.mail-tester.index');
+        Route::post('mail-tester/send', [\App\Http\Controllers\Admin\MailTesterController::class, 'sendTest'])->name('admin.mail-tester.send');
+
         Route::resource('agenda', AgendaController::class)->names('admin.agenda');
 
         Route::get('stock', [StockController::class, 'index'])->name('admin.stock.index');

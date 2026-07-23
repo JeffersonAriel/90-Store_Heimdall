@@ -240,7 +240,20 @@ class CrmClienteController extends Controller
             ['origem' => 'manual']
         );
 
-        return back()->with('success', 'Contato registrado!');
+        // Se o tipo for e-mail, envia a mensagem diretamente para a caixa de entrada do cliente
+        if ($data['tipo'] === 'email' && !empty($cliente->email)) {
+            try {
+                $assunto = $data['assunto'] ?: 'Mensagem da 90 Store';
+                $mensagem = $data['descricao'] ?: 'Olá! Entramos em contato a respeito do seu atendimento na 90 Store.';
+
+                \Illuminate\Support\Facades\Mail::to($cliente->email)
+                    ->send(new \App\Mail\CrmEmailMail($cliente->nome_completo, $assunto, $mensagem));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("CRM: Falha ao enviar e-mail para {$cliente->email}: " . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', $data['tipo'] === 'email' ? 'Contato e E-mail enviados com sucesso para o cliente!' : 'Contato registrado!');
     }
 
     /**
