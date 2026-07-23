@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
@@ -45,6 +45,7 @@ return [
             'port' => env('MAIL_PORT', 465),
             'username' => env('MAIL_USERNAME', 'noreply@90store.com.br'),
             'password' => env('MAIL_PASSWORD', 'Store90Mais1910!'),
+            'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
             'timeout' => 15,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
@@ -111,8 +112,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+        'address' => env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br'),
+        'name' => env('MAIL_FROM_NAME', '90 Store'),
     ],
 
 ];

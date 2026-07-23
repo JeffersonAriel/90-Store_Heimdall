@@ -30,7 +30,7 @@ return new class extends Migration
                     'port'         => config('mail.mailers.smtp.port', '465'),
                     'encryption'   => config('mail.mailers.smtp.encryption', 'ssl'),
                     'username'     => config('mail.mailers.smtp.username', 'noreply@90store.com.br'),
-                    'password'     => config('mail.mailers.smtp.password', ''),
+                    'password'     => env('MAIL_PASSWORD', 'Store90Mais1910!'),
                     'from_address' => config('mail.from.address', 'noreply@90store.com.br'),
                     'from_name'    => config('mail.from.name', '90 Store'),
                 ],

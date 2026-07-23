@@ -10,6 +10,7 @@ class MailConfigService
 {
     /**
      * Aplica dinamicamente as credenciais de SMTP salvas no módulo de APIs (apis_configuracao)
+     * com suporte completo ao HostGator Titan Mail (Porta 465 / SSL / smtps).
      */
     public static function apply(): bool
     {
@@ -18,33 +19,35 @@ class MailConfigService
                 ->where('ativo', true)
                 ->first();
 
-            if (!$api || empty($api->credenciais_json)) {
-                return false;
+            $creds = [];
+            if ($api && !empty($api->credenciais_json)) {
+                $creds = is_array($api->credenciais_json) 
+                    ? $api->credenciais_json 
+                    : json_decode($api->credenciais_json, true);
             }
 
-            $creds = is_array($api->credenciais_json) 
-                ? $api->credenciais_json 
-                : json_decode($api->credenciais_json, true);
-
-            if (empty($creds['host'])) {
-                return false;
-            }
+            $host = !empty($creds['host']) ? $creds['host'] : env('MAIL_HOST', 'smtp.titan.email');
+            $port = !empty($creds['port']) ? (int) $creds['port'] : (int) env('MAIL_PORT', 465);
+            $username = !empty($creds['username']) ? $creds['username'] : env('MAIL_USERNAME', 'noreply@90store.com.br');
+            $password = !empty($creds['password']) ? $creds['password'] : env('MAIL_PASSWORD', 'Store90Mais1910!');
+            $encryption = !empty($creds['encryption']) ? strtolower($creds['encryption']) : env('MAIL_ENCRYPTION', 'ssl');
+            $fromAddress = !empty($creds['from_address']) ? $creds['from_address'] : env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br');
+            $fromName = !empty($creds['from_name']) ? $creds['from_name'] : env('MAIL_FROM_NAME', '90 Store');
 
             Config::set('mail.default', 'smtp');
-            Config::set('mail.mailers.smtp.host', $creds['host'] ?? 'smtp.titan.email');
-            Config::set('mail.mailers.smtp.port', (int) ($creds['port'] ?? 465));
-            Config::set('mail.mailers.smtp.username', $creds['username'] ?? 'noreply@90store.com.br');
-            Config::set('mail.mailers.smtp.password', $creds['password'] ?? '');
-            
-            $encryption = strtolower($creds['encryption'] ?? 'ssl');
+            Config::set('mail.mailers.smtp.transport', 'smtp');
+            Config::set('mail.mailers.smtp.host', $host);
+            Config::set('mail.mailers.smtp.port', $port);
+            Config::set('mail.mailers.smtp.username', $username);
+            Config::set('mail.mailers.smtp.password', $password);
             Config::set('mail.mailers.smtp.encryption', $encryption === 'none' ? null : $encryption);
+            
+            if ($port === 465 || $encryption === 'ssl') {
+                Config::set('mail.mailers.smtp.scheme', 'smtps');
+            }
 
-            if (!empty($creds['from_address'])) {
-                Config::set('mail.from.address', $creds['from_address']);
-            }
-            if (!empty($creds['from_name'])) {
-                Config::set('mail.from.name', $creds['from_name']);
-            }
+            Config::set('mail.from.address', $fromAddress);
+            Config::set('mail.from.name', $fromName);
 
             return true;
         } catch (\Throwable $e) {
