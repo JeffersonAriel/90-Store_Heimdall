@@ -86,12 +86,6 @@ Route::prefix('heimdall')->group(function () {
         Route::post('orders/{order}/generate-label', [OrderController::class, 'generateLabel'])->name('admin.orders.generate-label');
         Route::get('orders/{order}/print-label', [OrderController::class, 'printLabel'])->name('admin.orders.print-label');
         Route::post('orders/{order}/sync-tracking', [OrderController::class, 'syncSuperFreteTracking'])->name('admin.orders.sync-tracking');
-        Route::post('orders/{order}/update-item-costs', [OrderController::class, 'updateItemCosts'])->name('admin.orders.update-item-costs');
-
-        // Testador de E-mails
-        Route::get('mail-tester', [\App\Http\Controllers\Admin\MailTesterController::class, 'index'])->name('admin.mail-tester.index');
-        Route::post('mail-tester/send', [\App\Http\Controllers\Admin\MailTesterController::class, 'sendTest'])->name('admin.mail-tester.send');
-
         Route::resource('agenda', AgendaController::class)->names('admin.agenda');
 
         Route::get('stock', [StockController::class, 'index'])->name('admin.stock.index');
@@ -113,6 +107,7 @@ Route::prefix('heimdall')->group(function () {
         Route::post('api-config', [ApiConfigController::class, 'store'])->name('admin.api-config.store');
         Route::put('api-config/{slug}', [ApiConfigController::class, 'update'])->name('admin.api-config.update');
         Route::delete('api-config/{slug}', [ApiConfigController::class, 'destroy'])->name('admin.api-config.destroy');
+        Route::post('api-config/test-email', [ApiConfigController::class, 'testEmail'])->name('admin.api-config.test-email');
 
         Route::get('import-export', [ImportExportController::class, 'index'])->name('admin.import-export.index');
         Route::get('import-export/template/{tipo}', [ImportExportController::class, 'downloadTemplate'])->name('admin.import-export.template');

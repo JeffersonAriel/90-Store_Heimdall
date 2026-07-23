@@ -72,6 +72,7 @@ class OrderStatusService
             // Dispara e-mail automático ao cliente sobre a atualização do pedido via Titan Mail HostGator
             try {
                 if ($pedido->cliente && !empty($pedido->cliente->email)) {
+                    \App\Services\MailConfigService::apply();
                     \Illuminate\Support\Facades\Mail::to($pedido->cliente->email)
                         ->send(new \App\Mail\OrderStatusUpdatedMail($pedido));
                 }

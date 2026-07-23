@@ -45,7 +45,6 @@
         <div class="nav-section-label">Configurações</div>
         <NavItem v-if="can('frete', 'view')"       :href="route('admin.shipping.index')"    icon="shipping"  label="Frete"        :active="$page.url.startsWith('/heimdall/shipping')" />
         <NavItem v-if="can('api_config', 'view')"  :href="route('admin.api-config.index')"  icon="api"       label="APIs"         :active="$page.url.startsWith('/heimdall/api-config')" />
-        <NavItem :href="route('admin.mail-tester.index')" icon="api" label="Testador E-mails" :active="$page.url.startsWith('/heimdall/mail-tester')" />
         <NavItem v-if="can('funcionarios', 'view')" :href="route('admin.employees.index')"  icon="employees" label="Funcionários" :active="$page.url.startsWith('/heimdall/employees')" />
 
         <!-- Marketing & Vitrine -->

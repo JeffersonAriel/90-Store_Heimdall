@@ -76,7 +76,7 @@ class ApiConfigController extends Controller
         $request->validate([
             'nome' => 'required|string|max:100',
             'slug' => 'required|string|max:100|unique:apis_configuracao,slug',
-            'tipo' => 'required|in:gateway,cep,frete',
+            'tipo' => 'required|in:gateway,cep,frete,email,outro',
             'ativo' => 'boolean',
             'credenciais' => 'required|array',
         ]);
@@ -102,5 +102,33 @@ class ApiConfigController extends Controller
         $api->delete();
 
         return back()->with('success', "Gateway {$api->nome} removido com sucesso!");
+    }
+
+    /**
+     * Dispara e-mail de teste utilizando as configurações ativas de SMTP em APIs
+     */
+    public function testEmail(Request $request)
+    {
+        $request->validate([
+            'email_destino' => 'required|email',
+            'assunto'       => 'nullable|string',
+            'mensagem'      => 'nullable|string',
+        ]);
+
+        $emailDestino = $request->input('email_destino');
+        $assunto = $request->input('assunto') ?: 'Teste de Envio de E-mail — 90 Store APIs';
+        $mensagem = $request->input('mensagem') ?: 'Este é um e-mail de teste disparado via configurações de SMTP em APIs & Integrações.';
+
+        // Aplica credenciais dinâmicas do BD se ativas
+        \App\Services\MailConfigService::apply();
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($emailDestino)
+                ->send(new \App\Mail\CrmEmailMail('Administrador', $assunto, $mensagem));
+
+            return back()->with('success', "E-mail de teste enviado com sucesso para {$emailDestino}!");
+        } catch (\Throwable $e) {
+            return back()->with('error', "Falha ao enviar e-mail de teste: " . $e->getMessage());
+        }
     }
 }

@@ -108,6 +108,7 @@ class CrmCampanhaController extends Controller
         ]);
 
         if ($campanha->tipo === 'email') {
+            \App\Services\MailConfigService::apply();
             $clientes = \App\Models\Cliente::whereIn('id', $clienteIds)->whereNotNull('email')->get();
             foreach ($clientes as $cliente) {
                 try {

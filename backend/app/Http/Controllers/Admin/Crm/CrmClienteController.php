@@ -243,6 +243,7 @@ class CrmClienteController extends Controller
         // Se o tipo for e-mail, envia a mensagem diretamente para a caixa de entrada do cliente
         if ($data['tipo'] === 'email' && !empty($cliente->email)) {
             try {
+                \App\Services\MailConfigService::apply();
                 $assunto = $data['assunto'] ?: 'Mensagem da 90 Store';
                 $mensagem = $data['descricao'] ?: 'Olá! Entramos em contato a respeito do seu atendimento na 90 Store.';
 
