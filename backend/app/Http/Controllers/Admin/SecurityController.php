@@ -407,7 +407,10 @@ class SecurityController extends Controller
                 \App\Services\Crm\CrmKpiService::recalcularCliente($c->id);
             }
 
-            // Limpa todos os caches de rotas, configuracoes e otimizacoes para evitar o erro 500
+            // Aplica credenciais do Titan Mail
+            \App\Services\MailConfigService::apply();
+
+            // Limpa todos os caches de rotas, configuracoes e otimizacoes para evitar erro de versao/cache
             \Illuminate\Support\Facades\Artisan::call('optimize:clear');
             \Illuminate\Support\Facades\Artisan::call('route:clear');
             \Illuminate\Support\Facades\Artisan::call('config:clear');
