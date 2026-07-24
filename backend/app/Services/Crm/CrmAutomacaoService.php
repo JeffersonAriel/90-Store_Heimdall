@@ -151,13 +151,34 @@ class CrmAutomacaoService
             $dados = $acao['dados'] ?? [];
 
             $nomeCliente = $cliente->nome_social ?: $cliente->nome_completo;
-            $assunto = str_replace('{{cliente}}', $nomeCliente, $dados['assunto'] ?? $dados['titulo'] ?? 'Mensagem 90 Store');
-            $mensagem = str_replace('{{cliente}}', $nomeCliente, $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá {{cliente}}, temos novidades!');
+
+            // Busca último pedido do cliente para detalhamento no e-mail
+            $ultimoPedido = \App\Models\Pedido::where('cliente_id', $cliente->id)
+                ->with(['endereco', 'itens.produto'])
+                ->orderByDesc('id')
+                ->first();
+
+            $numPedido    = $ultimoPedido ? "#{$ultimoPedido->id}" : '';
+            $valorPedido  = $ultimoPedido ? 'R$ ' . number_format($ultimoPedido->total, 2, ',', '.') : '';
+            $statusPedido = $ultimoPedido ? ucfirst($ultimoPedido->status) : '';
+            $dataPedido   = $ultimoPedido ? $ultimoPedido->created_at->format('d/m/Y') : '';
+
+            $assunto = str_replace(
+                ['{{cliente}}', '{{pedido}}', '{{valor}}', '{{status}}', '{{data}}'],
+                [$nomeCliente, $numPedido, $valorPedido, $statusPedido, $dataPedido],
+                $dados['assunto'] ?? $dados['titulo'] ?? 'Mensagem 90 Store'
+            );
+
+            $mensagem = str_replace(
+                ['{{cliente}}', '{{pedido}}', '{{valor}}', '{{status}}', '{{data}}'],
+                [$nomeCliente, $numPedido, $valorPedido, $statusPedido, $dataPedido],
+                $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá {{cliente}}, temos novidades!'
+            );
 
             switch ($tipo) {
                 case 'enviar_email':
                     if (!empty($cliente->email)) {
-                        Mail::to($cliente->email)->send(new CrmEmailMail($nomeCliente, $assunto, $mensagem));
+                        Mail::to($cliente->email)->send(new CrmEmailMail($nomeCliente, $assunto, $mensagem, $ultimoPedido));
                     }
                     break;
 

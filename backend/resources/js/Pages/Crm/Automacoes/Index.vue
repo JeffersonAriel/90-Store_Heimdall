@@ -76,7 +76,7 @@
               <label>Mensagem do E-mail (suporta {{cliente}}) *</label>
               <textarea v-model="actionForm.mensagem" class="crm-textarea" style="height: 90px;" placeholder="Olá {{cliente}}, tudo bem? Estamos com condições especiais..." required></textarea>
             </div>
-            <span class="hint-text">💡 Dica: Use <code>&#123;&#123;cliente&#125;&#125;</code> para personalizar automaticamente o nome do cliente.</span>
+            <span class="hint-text">💡 Variaveis disponíveis: <code>&#123;&#123;cliente&#125;&#125;</code> (Nome), <code>&#123;&#123;pedido&#125;&#125;</code> (Nº Pedido), <code>&#123;&#123;valor&#125;&#125;</code> (Total), <code>&#123;&#123;status&#125;&#125;</code> (Status), <code>&#123;&#123;data&#125;&#125;</code> (Data).</span>
           </div>
 
           <!-- Campos dinâmicos de Tarefa / Alerta -->
