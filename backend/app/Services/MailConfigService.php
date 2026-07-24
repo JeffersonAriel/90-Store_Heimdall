@@ -88,9 +88,14 @@ class MailConfigService
             Config::set('mail.from.address', $fromAddress);
             Config::set('mail.from.name', $fromName);
 
-            // Reseta a instância do mailer no container para aplicar novas credenciais imediatamente
+            // Reseta completamente as instâncias do Mailer no container do Laravel
             try {
                 Mail::purge('smtp');
+            } catch (\Throwable $e) {}
+
+            try {
+                app()->forgetInstance('mailer');
+                app()->forgetInstance('mail.manager');
             } catch (\Throwable $e) {}
 
             return true;
