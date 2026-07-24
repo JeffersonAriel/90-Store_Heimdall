@@ -314,6 +314,25 @@ const cartTotal = computed(() => {
   return cartSubtotal.value + (form.valor_frete || 0)
 })
 
+function parsePrice(val) {
+  if (val === null || val === undefined) return 0
+  if (typeof val === 'number') return val
+  const str = String(val).replace(',', '.')
+  const clean = str.replace(/[^0-9.]/g, '')
+  const parsed = parseFloat(clean)
+  return isNaN(parsed) ? 0 : parsed
+}
+
+function getProductPrice(prod) {
+  if (!prod) return 0
+  const priceVenda = parsePrice(prod.preco_venda)
+  const priceDesconto = parsePrice(prod.preco_desconto)
+  if (prod.tem_desconto && priceDesconto > 0) {
+    return priceDesconto
+  }
+  return priceVenda
+}
+
 function addItemToCart() {
   if (selectedProductIndex.value === '' || selectedVariationIndex.value === '') {
     alert('Selecione o produto e a variação.')
@@ -334,7 +353,7 @@ function addItemToCart() {
       size: vr.tamanho,
       color: vr.cor,
       quantidade: 1,
-      preco_venda_snapshot: parseFloat(prod.tem_desconto && parseFloat(prod.preco_desconto) > 0 ? prod.preco_desconto : prod.preco_venda)
+      preco_venda_snapshot: getProductPrice(prod)
     })
   }
 
