@@ -17,10 +17,8 @@
               <table role="presentation" width="100%">
                 <tr>
                   <td align="center">
-                    <div style="display: inline-block; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); padding: 6px 16px; border-radius: 30px; margin-bottom: 8px;">
-                      <span style="color: #818cf8; font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">★ 90 MAIS ★</span>
-                    </div>
-                    <h1 style="color: #ffffff; font-size: 26px; font-weight: 800; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">
+                    <img src="{{ config('app.url') }}/logo-heimdall.png" alt="90 Store 90 Mais" style="max-height: 55px; width: auto; display: block; margin: 0 auto 10px auto; border: 0;" />
+                    <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">
                       90 Store
                     </h1>
                   </td>
