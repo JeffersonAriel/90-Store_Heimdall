@@ -127,10 +127,19 @@ class CrmAutomacaoController extends Controller
         );
 
         try {
-            \App\Services\MailConfigService::apply();
-            
-            \Illuminate\Support\Facades\Mail::to($emailTest)
-                ->send(new \App\Mail\CrmEmailMail($nomeTest, "[TESTE ADMIN] " . $assunto, $mensagem, $pedidoAmostra));
+            $html = \App\Services\DirectMailService::renderBlade('emails.crm_email_html', [
+                'clienteNome'   => $nomeTest,
+                'assuntoTexto'  => "[TESTE ADMIN] " . $assunto,
+                'mensagemTexto' => $mensagem,
+                'pedido'        => $pedidoAmostra,
+            ]);
+
+            \App\Services\DirectMailService::sendDirect(
+                $emailTest,
+                $nomeTest,
+                "[TESTE ADMIN] " . $assunto,
+                $html
+            );
 
             return back()->with('success', "E-mail de teste da automação '{$automacao->nome}' enviado com sucesso para {$emailTest}!");
         } catch (\Throwable $e) {

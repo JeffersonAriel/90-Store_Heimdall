@@ -175,10 +175,21 @@ class CrmAutomacaoService
                 $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá {{cliente}}, temos novidades!'
             );
 
-            switch ($tipo) {
                 case 'enviar_email':
                     if (!empty($cliente->email)) {
-                        Mail::to($cliente->email)->send(new CrmEmailMail($nomeCliente, $assunto, $mensagem, $ultimoPedido));
+                        $html = \App\Services\DirectMailService::renderBlade('emails.crm_email_html', [
+                            'clienteNome'   => $nomeCliente,
+                            'assuntoTexto'  => $assunto,
+                            'mensagemTexto' => $mensagem,
+                            'pedido'        => $ultimoPedido,
+                        ]);
+
+                        \App\Services\DirectMailService::sendDirect(
+                            $cliente->email,
+                            $nomeCliente,
+                            $assunto,
+                            $html
+                        );
                     }
                     break;
 

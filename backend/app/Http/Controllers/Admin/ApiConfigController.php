@@ -168,12 +168,20 @@ class ApiConfigController extends Controller
         $assunto = $request->input('assunto') ?: 'Teste de Envio de E-mail — 90 Store APIs';
         $mensagem = $request->input('mensagem') ?: 'Este é um e-mail de teste disparado via configurações de SMTP em APIs & Integrações.';
 
-        // Aplica credenciais dinâmicas do BD se ativas
-        \App\Services\MailConfigService::apply();
-
         try {
-            \Illuminate\Support\Facades\Mail::to($emailDestino)
-                ->send(new \App\Mail\CrmEmailMail('Administrador', $assunto, $mensagem));
+            $html = \App\Services\DirectMailService::renderBlade('emails.crm_email_html', [
+                'clienteNome'   => 'Administrador',
+                'assuntoTexto'  => $assunto,
+                'mensagemTexto' => $mensagem,
+                'pedido'        => null,
+            ]);
+
+            \App\Services\DirectMailService::sendDirect(
+                $emailDestino,
+                'Administrador',
+                $assunto,
+                $html
+            );
 
             return back()->with('success', "E-mail de teste enviado com sucesso para {$emailDestino}!");
         } catch (\Throwable $e) {
