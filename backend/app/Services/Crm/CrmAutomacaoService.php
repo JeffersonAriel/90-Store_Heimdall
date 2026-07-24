@@ -163,25 +163,39 @@ class CrmAutomacaoService
             $statusPedido = $ultimoPedido ? ucfirst($ultimoPedido->status) : '';
             $dataPedido   = $ultimoPedido ? $ultimoPedido->created_at->format('d/m/Y') : '';
 
+            $rawAssunto  = $dados['assunto'] ?? $dados['titulo'] ?? 'Mensagem 90 Store';
+            $rawMensagem = $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá {{cliente}}, temos novidades!';
+
             $assunto = str_replace(
                 ['{{cliente}}', '{{pedido}}', '{{valor}}', '{{status}}', '{{data}}'],
                 [$nomeCliente, $numPedido, $valorPedido, $statusPedido, $dataPedido],
-                $dados['assunto'] ?? $dados['titulo'] ?? 'Mensagem 90 Store'
+                $rawAssunto
             );
 
             $mensagem = str_replace(
                 ['{{cliente}}', '{{pedido}}', '{{valor}}', '{{status}}', '{{data}}'],
                 [$nomeCliente, $numPedido, $valorPedido, $statusPedido, $dataPedido],
-                $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá {{cliente}}, temos novidades!'
+                $rawMensagem
             );
 
+            $precisaPedido = ($automacao->gatilho === 'apos_entrega')
+                || str_contains($rawAssunto, '{{pedido}}')
+                || str_contains($rawMensagem, '{{pedido}}')
+                || str_contains($rawAssunto, '{{valor}}')
+                || str_contains($rawMensagem, '{{valor}}')
+                || str_contains($rawAssunto, '{{status}}')
+                || str_contains($rawMensagem, '{{status}}');
+
+            $pedidoExibir = $precisaPedido ? $ultimoPedido : null;
+
+            switch ($tipo) {
                 case 'enviar_email':
                     if (!empty($cliente->email)) {
                         $html = \App\Services\DirectMailService::renderBlade('emails.crm_email_html', [
                             'clienteNome'   => $nomeCliente,
                             'assuntoTexto'  => $assunto,
                             'mensagemTexto' => $mensagem,
-                            'pedido'        => $ultimoPedido,
+                            'pedido'        => $pedidoExibir,
                         ]);
 
                         \App\Services\DirectMailService::sendDirect(

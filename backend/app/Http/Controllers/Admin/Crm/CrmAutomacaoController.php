@@ -114,24 +114,37 @@ class CrmAutomacaoController extends Controller
         $statusPedido = $pedidoAmostra ? ucfirst($pedidoAmostra->status) : 'Entregue';
         $dataPedido   = $pedidoAmostra ? $pedidoAmostra->created_at->format('d/m/Y') : date('d/m/Y');
 
+        $rawAssunto  = $dados['assunto'] ?? $dados['titulo'] ?? "Teste de Automação — {$automacao->nome}";
+        $rawMensagem = $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá, este é um e-mail de teste isolado disparado pelo administrador.';
+
         $assunto = str_replace(
             ['{{cliente}}', '{{pedido}}', '{{valor}}', '{{status}}', '{{data}}'],
             [$nomeTest, $numPedido, $valorPedido, $statusPedido, $dataPedido],
-            $dados['assunto'] ?? $dados['titulo'] ?? "Teste de Automação — {$automacao->nome}"
+            $rawAssunto
         );
 
         $mensagem = str_replace(
             ['{{cliente}}', '{{pedido}}', '{{valor}}', '{{status}}', '{{data}}'],
             [$nomeTest, $numPedido, $valorPedido, $statusPedido, $dataPedido],
-            $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá, este é um e-mail de teste isolado disparado pelo administrador.'
+            $rawMensagem
         );
+
+        $precisaPedido = ($automacao->gatilho === 'apos_entrega')
+            || str_contains($rawAssunto, '{{pedido}}')
+            || str_contains($rawMensagem, '{{pedido}}')
+            || str_contains($rawAssunto, '{{valor}}')
+            || str_contains($rawMensagem, '{{valor}}')
+            || str_contains($rawAssunto, '{{status}}')
+            || str_contains($rawMensagem, '{{status}}');
+
+        $pedidoExibir = $precisaPedido ? $pedidoAmostra : null;
 
         try {
             $html = \App\Services\DirectMailService::renderBlade('emails.crm_email_html', [
                 'clienteNome'   => $nomeTest,
                 'assuntoTexto'  => "[TESTE ADMIN] " . $assunto,
                 'mensagemTexto' => $mensagem,
-                'pedido'        => $pedidoAmostra,
+                'pedido'        => $pedidoExibir,
             ]);
 
             \App\Services\DirectMailService::sendDirect(
