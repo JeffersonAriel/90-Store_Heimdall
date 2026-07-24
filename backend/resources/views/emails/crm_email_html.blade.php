@@ -17,7 +17,7 @@
               <table role="presentation" width="100%">
                 <tr>
                   <td align="center">
-                    <img src="{{ config('app.url') }}/logo-heimdall.png" alt="90 Store 90 Mais" style="max-height: 55px; width: auto; display: block; margin: 0 auto 10px auto; border: 0;" />
+                    <img src="{{ config('app.url') }}/logo.svg" alt="90 Store 90 Mais" style="max-height: 55px; width: auto; display: block; margin: 0 auto 10px auto; border: 0;" />
                     <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 1px;">
                       90 Store
                     </h1>
