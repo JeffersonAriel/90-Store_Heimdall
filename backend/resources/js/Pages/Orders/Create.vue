@@ -334,7 +334,7 @@ function addItemToCart() {
       size: vr.tamanho,
       color: vr.cor,
       quantidade: 1,
-      preco_venda_snapshot: parseFloat(prod.preco_desconto || prod.preco_venda)
+      preco_venda_snapshot: parseFloat(prod.tem_desconto && parseFloat(prod.preco_desconto) > 0 ? prod.preco_desconto : prod.preco_venda)
     })
   }
 

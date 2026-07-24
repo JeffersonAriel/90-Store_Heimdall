@@ -115,117 +115,122 @@ class OrderController extends Controller
 
         $validated = $request->validate($rules);
 
-        $order = DB::transaction(function () use ($validated) {
-            // 1. Resolve Cliente
-            $clienteId = $validated['cliente_id'];
-            if (!$clienteId) {
-                $clientData = $validated['novo_cliente'];
-                $clientData['password'] = bcrypt(\Illuminate\Support\Str::random(12));
-                $clientData['ativo'] = true;
-                $newClient = Cliente::create($clientData);
-                $clienteId = $newClient->id;
-            }
-
-            // 2. Resolve Endereço
-            $addrData = $validated['endereco'];
-            $addrData['cliente_id'] = $clienteId;
-            $addrData['apelido'] = $addrData['apelido'] ?? 'Manual';
-            $addrData['is_principal'] = false;
-            
-            $endereco = EnderecoCliente::create($addrData);
-
-            // 3. Calcula Totais
-            $subtotal = 0;
-            $itemsToCreate = [];
-
-            foreach ($validated['itens'] as $itemData) {
-                // Carrega a variação e o produto
-                $variation = \App\Models\VariacaoProduto::with('produto')->findOrFail($itemData['variacao_id']);
-                $subtotal += $itemData['preco_venda_snapshot'] * $itemData['quantidade'];
-
-                // Valida/Decrementa estoque
-                if ($variation->tipo_estoque === 'proprio') {
-                    $estoqueAntes = $variation->estoque_quantidade;
-                    $estoqueDepois = max(0, $estoqueAntes - $itemData['quantidade']);
-                    $variation->update(['estoque_quantidade' => $estoqueDepois]);
-
-                    // Registra log de movimentação de estoque
-                    MovimentacaoEstoque::create([
-                        'variacao_id' => $variation->id,
-                        'quantidade' => $itemData['quantidade'],
-                        'estoque_antes' => $estoqueAntes,
-                        'estoque_depois' => $estoqueDepois,
-                        'tipo' => 'baixa_confirmada',
-                        'motivo' => 'Pedido manual criado pelo Administrador',
-                    ]);
+        try {
+            $order = DB::transaction(function () use ($validated) {
+                // 1. Resolve Cliente
+                $clienteId = $validated['cliente_id'];
+                if (!$clienteId) {
+                    $clientData = $validated['novo_cliente'];
+                    $clientData['password'] = bcrypt(\Illuminate\Support\Str::random(12));
+                    $clientData['ativo'] = true;
+                    $newClient = Cliente::create($clientData);
+                    $clienteId = $newClient->id;
                 }
 
-                $itemsToCreate[] = [
-                    'produto_id' => $variation->produto_id,
-                    'variacao_id' => $variation->id,
-                    'quantidade' => $itemData['quantidade'],
-                    'nome_snapshot' => $variation->produto->nome,
-                    'sku_snapshot' => $variation->sku,
-                    'preco_custo_snapshot' => $variation->produto->preco_custo,
-                    'preco_venda_snapshot' => $itemData['preco_venda_snapshot'],
-                    'tipo_estoque_snapshot' => $variation->tipo_estoque,
-                    'subtotal' => $itemData['preco_venda_snapshot'] * $itemData['quantidade'],
-                ];
-            }
+                // 2. Resolve Endereço
+                $addrData = $validated['endereco'];
+                $addrData['cliente_id'] = $clienteId;
+                $addrData['apelido'] = $addrData['apelido'] ?? 'Manual';
+                $addrData['is_principal'] = false;
+                
+                $endereco = EnderecoCliente::create($addrData);
 
-            $total = $subtotal + $validated['valor_frete'];
+                // 3. Calcula Totais
+                $subtotal = 0;
+                $itemsToCreate = [];
 
-            // 4. Cria o Pedido
-            $order = Pedido::create([
-                'cliente_id' => $clienteId,
-                'endereco_id' => $endereco->id,
-                'subtotal' => $subtotal,
-                'valor_frete' => $validated['valor_frete'],
-                'total' => $total,
-                'status' => $validated['status'],
-                'observacoes' => 'Pedido criado manualmente pelo painel administrador.',
-            ]);
+                foreach ($validated['itens'] as $itemData) {
+                    // Carrega a variação e o produto
+                    $variation = \App\Models\VariacaoProduto::with('produto')->findOrFail($itemData['variacao_id']);
+                    $subtotal += $itemData['preco_venda_snapshot'] * $itemData['quantidade'];
 
-            // 5. Associa Itens ao Pedido
-            foreach ($itemsToCreate as $item) {
-                $order->itens()->create($item);
-            }
+                    // Valida/Decrementa estoque
+                    if ($variation->tipo_estoque === 'proprio') {
+                        $estoqueAntes = $variation->estoque_quantidade;
+                        $estoqueDepois = max(0, $estoqueAntes - $itemData['quantidade']);
+                        $variation->update(['estoque_quantidade' => $estoqueDepois]);
 
-            // 6. Registra o Pagamento
-            $gwInput = $validated['gateway_pagamento'];
-            $gateway = str_starts_with($gwInput, 'infinitepay') ? 'infinitepay' : $gwInput;
-            $metodo  = str_contains($gwInput, 'pix') ? 'pix' : (str_contains($gwInput, 'cartao') ? 'cartao_credito' : 'outro');
+                        // Registra log de movimentação de estoque
+                        MovimentacaoEstoque::create([
+                            'variacao_id' => $variation->id,
+                            'quantidade' => $itemData['quantidade'],
+                            'estoque_antes' => $estoqueAntes,
+                            'estoque_depois' => $estoqueDepois,
+                            'tipo' => 'baixa_confirmada',
+                            'motivo' => 'Pedido manual criado pelo Administrador',
+                        ]);
+                    }
 
-            $order->pagamentos()->create([
-                'gateway' => $gateway,
-                'metodo'  => $metodo,
-                'status'  => $validated['status'] === 'aguardando_pagamento' ? 'pendente' : 'aprovado',
-                'valor'   => $total,
-                'paid_at' => $validated['status'] === 'aguardando_pagamento' ? null : now(),
-            ]);
+                    $itemsToCreate[] = [
+                        'produto_id' => $variation->produto_id,
+                        'variacao_id' => $variation->id,
+                        'quantidade' => $itemData['quantidade'],
+                        'nome_snapshot' => $variation->produto->nome,
+                        'sku_snapshot' => $variation->sku,
+                        'preco_custo_snapshot' => $variation->produto->preco_custo,
+                        'preco_venda_snapshot' => $itemData['preco_venda_snapshot'],
+                        'tipo_estoque_snapshot' => $variation->tipo_estoque,
+                        'subtotal' => $itemData['preco_venda_snapshot'] * $itemData['quantidade'],
+                    ];
+                }
 
-            // 7. Registra histórico de status
-            $order->historicoStatus()->create([
-                'status_novo' => $validated['status'],
-                'funcionario_id' => Auth::guard('admin')->id(),
-                'observacao' => 'Criação manual do pedido via painel de administração',
-            ]);
+                $total = $subtotal + $validated['valor_frete'];
 
-            // 8. Registra Lançamento Financeiro se já pago
-            if ($validated['status'] !== 'aguardando_pagamento' && $validated['status'] !== 'cancelado') {
-                $this->financialService->registerSaleEntry($order->id, $total, $validated['gateway_pagamento']);
-            }
+                // 4. Cria o Pedido
+                $order = Pedido::create([
+                    'cliente_id' => $clienteId,
+                    'endereco_id' => $endereco->id,
+                    'subtotal' => $subtotal,
+                    'valor_frete' => $validated['valor_frete'],
+                    'total' => $total,
+                    'status' => $validated['status'],
+                    'observacoes' => 'Pedido criado manualmente pelo painel administrador.',
+                ]);
 
-            // Hook para recalcular os dados de LTV, ticket médio e pedidos do cliente no CRM
-            \App\Services\Crm\CrmKpiService::recalcularCliente($clienteId);
+                // 5. Associa Itens ao Pedido
+                foreach ($itemsToCreate as $item) {
+                    $order->itens()->create($item);
+                }
 
-            // Hook para registrar o evento na Timeline CRM
-            \App\Services\Crm\CrmTimelineService::pedidoCriado($clienteId, $order->id, $total);
+                // 6. Registra o Pagamento
+                $gwInput = $validated['gateway_pagamento'];
+                $gateway = str_starts_with($gwInput, 'infinitepay') ? 'infinitepay' : $gwInput;
+                $metodo  = str_contains($gwInput, 'pix') ? 'pix' : (str_contains($gwInput, 'cartao') ? 'cartao_credito' : 'outro');
 
-            return $order;
-        });
+                $order->pagamentos()->create([
+                    'gateway' => $gateway,
+                    'metodo'  => $metodo,
+                    'status'  => $validated['status'] === 'aguardando_pagamento' ? 'pendente' : 'aprovado',
+                    'valor'   => $total,
+                    'paid_at' => $validated['status'] === 'aguardando_pagamento' ? null : now(),
+                ]);
 
-        return redirect()->route('admin.orders.index')->with('success', 'Pedido manual criado com sucesso!');
+                // 7. Registra histórico de status
+                $order->historicoStatus()->create([
+                    'status_novo' => $validated['status'],
+                    'funcionario_id' => Auth::guard('admin')->id(),
+                    'observacao' => 'Criação manual do pedido via painel de administração',
+                ]);
+
+                // 8. Registra Lançamento Financeiro se já pago
+                if ($validated['status'] !== 'aguardando_pagamento' && $validated['status'] !== 'cancelado') {
+                    $this->financialService->registerSaleEntry($order->id, $total, $validated['gateway_pagamento']);
+                }
+
+                // Hook para recalcular os dados de LTV, ticket médio e pedidos do cliente no CRM
+                \App\Services\Crm\CrmKpiService::recalcularCliente($clienteId);
+
+                // Hook para registrar o evento na Timeline CRM
+                \App\Services\Crm\CrmTimelineService::pedidoCriado($clienteId, $order->id, $total);
+
+                return $order;
+            });
+
+            return redirect()->route('admin.orders.index')->with('success', 'Pedido manual criado com sucesso!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao criar pedido manual: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['erro_500' => $e->getMessage()]);
+        }
     }
 
     public function show(int $id)
