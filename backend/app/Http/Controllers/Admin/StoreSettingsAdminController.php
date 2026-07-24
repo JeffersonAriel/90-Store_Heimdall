@@ -27,12 +27,13 @@ class StoreSettingsAdminController extends Controller
             'title' => 'nullable|string',
             'subtitle' => 'nullable|string',
             'image_path' => 'required|string',
+            'image_mobile_path' => 'nullable|string',
             'video_path' => 'nullable|string',
             'link_url' => 'nullable|string',
             'order' => 'integer',
             'is_active' => 'boolean',
             'type' => 'required|string|in:vitrine,megamenu',
-            'aspect_ratio' => 'required|string|in:16:9,4:3,1:1',
+            'aspect_ratio' => 'required|string|in:16:9,4:3,1:1,9:16,4:5',
             'category_id' => 'nullable|exists:categorias_tipo_produto,id',
         ]);
         StoreBanner::create($validated);
@@ -46,12 +47,13 @@ class StoreSettingsAdminController extends Controller
             'title' => 'nullable|string',
             'subtitle' => 'nullable|string',
             'image_path' => 'required|string',
+            'image_mobile_path' => 'nullable|string',
             'video_path' => 'nullable|string',
             'link_url' => 'nullable|string',
             'order' => 'integer',
             'is_active' => 'boolean',
             'type' => 'required|string|in:vitrine,megamenu',
-            'aspect_ratio' => 'required|string|in:16:9,4:3,1:1',
+            'aspect_ratio' => 'required|string|in:16:9,4:3,1:1,9:16,4:5',
             'category_id' => 'nullable|exists:categorias_tipo_produto,id',
         ]);
         $banner->update($validated);

@@ -10,6 +10,7 @@ class StoreBanner extends Model
         'title',
         'subtitle',
         'image_path',
+        'image_mobile_path',
         'video_path',
         'link_url',
         'order',

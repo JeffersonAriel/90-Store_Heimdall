@@ -74,9 +74,15 @@
               </div>
 
               <div class="form-group">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">URL da Imagem</label>
-                <input type="text" v-model="form.image_path" required class="form-input" placeholder="https://exemplo.com/imagem.jpg">
-                <p class="text-xs text-gray-500 mt-1">Insira a URL absoluta da imagem.</p>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">URL da Imagem (Desktop / Principal)</label>
+                <input type="text" v-model="form.image_path" required class="form-input" placeholder="https://exemplo.com/imagem-desktop.jpg">
+                <p class="text-xs text-gray-500 mt-1">Insira a URL da imagem horizontal para computador.</p>
+              </div>
+
+              <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">📱 URL da Imagem Mobile / Celular (Opcional)</label>
+                <input type="text" v-model="form.image_mobile_path" class="form-input" placeholder="https://exemplo.com/imagem-mobile.jpg">
+                <p class="text-xs text-gray-500 mt-1">Imagem otimizada para telas de celulares (Vertical 9:16, Retrato 4:5 ou Quadrada 1:1). Evita cortes no mobile!</p>
               </div>
 
               <div class="form-group">
@@ -112,9 +118,11 @@
                 <div class="form-group">
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Proporção da Imagem</label>
                   <select v-model="form.aspect_ratio" required class="form-select">
-                    <option value="16:9">16:9 (Padrão Vitrine)</option>
-                    <option value="4:3">4:3 (Padrão Mega Menu)</option>
+                    <option value="16:9">16:9 (Landscape - Vitrine Desktop)</option>
+                    <option value="9:16">9:16 (Vertical - Celular / Mobile)</option>
+                    <option value="4:5">4:5 (Retrato Mobile)</option>
                     <option value="1:1">1:1 (Quadrado)</option>
+                    <option value="4:3">4:3 (Padrão Mega Menu)</option>
                   </select>
                 </div>
               </div>
@@ -225,6 +233,7 @@ const form = useForm({
   title: '',
   subtitle: '',
   image_path: '',
+  image_mobile_path: '',
   video_path: '',
   link_url: '',
   order: 0,
@@ -240,6 +249,7 @@ const openModal = (banner = null) => {
     form.title = banner.title;
     form.subtitle = banner.subtitle;
     form.image_path = banner.image_path;
+    form.image_mobile_path = banner.image_mobile_path || '';
     form.video_path = banner.video_path || '';
     form.link_url = banner.link_url;
     form.order = banner.order;
