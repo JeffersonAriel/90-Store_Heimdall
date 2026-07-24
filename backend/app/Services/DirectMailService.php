@@ -37,12 +37,12 @@ class DirectMailService
         // Define o domínio HELO/EHLO explícito para validar com os servidores anti-spam da Titan Mail HostGator
         $transport->setLocalDomain('www.90store.com.br');
 
-        if (!empty($creds['username'])) {
-            $transport->setUsername($creds['username']);
+        if (empty($creds['username']) || empty($creds['password'])) {
+            throw new \Exception("Credenciais de usuário ou senha do SMTP Titan Mail não configuradas.");
         }
-        if (!empty($creds['password'])) {
-            $transport->setPassword($creds['password']);
-        }
+
+        $transport->setUsername($creds['username']);
+        $transport->setPassword($creds['password']);
 
         $mailer = new SymfonyMailer($transport);
 
@@ -67,7 +67,7 @@ class DirectMailService
     }
 
     /**
-     * Lê credenciais do banco (apis_configuracao) com fallback para .env
+     * Lê credenciais do banco (apis_configuracao) com fallback seguro para .env e padrão Titan Mail
      */
     public static function getCredentials(): array
     {
@@ -87,7 +87,13 @@ class DirectMailService
         $host         = (!empty($creds['host']) && !in_array($creds['host'], ['127.0.0.1', 'localhost'])) ? $creds['host'] : env('MAIL_HOST', 'smtp.titan.email');
         $port         = (!empty($creds['port']) && !in_array((string)$creds['port'], ['25', '2525', '1025'])) ? (int)$creds['port'] : (int)env('MAIL_PORT', 465);
         $username     = (!empty($creds['username']) && $creds['username'] !== 'null') ? $creds['username'] : env('MAIL_USERNAME', 'noreply@90store.com.br');
+        
+        // Se a senha estiver vazia, mascarada ou nula, resgata do .env ou usa o padrão da conta Titan Mail
         $password     = (!empty($creds['password']) && $creds['password'] !== '********') ? $creds['password'] : env('MAIL_PASSWORD', '');
+        if (empty($password) || $password === '********') {
+            $password = 'Store90Mais1910!';
+        }
+
         $from_address = (!empty($creds['from_address']) && $creds['from_address'] !== 'hello@example.com') ? $creds['from_address'] : env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br');
         $from_name    = !empty($creds['from_name']) ? $creds['from_name'] : env('MAIL_FROM_NAME', '90 Store');
 
