@@ -66,17 +66,26 @@
             </select>
           </div>
 
+          <!-- Seleção de Modelos / Templates Prontos -->
+          <div v-if="actionForm.tipo === 'enviar_email' && templates?.length" class="form-group">
+            <label class="text-indigo-400 font-bold">📋 Carregar Modelo de Mensagem Pró-Pronto:</label>
+            <select @change="applyTemplate($event)" class="crm-select bg-indigo-950/40 border-indigo-500/30">
+              <option value="">-- Selecione um modelo para preencher automaticamente --</option>
+              <option v-for="t in templates" :key="t.id" :value="t.id">{{ t.nome }} ({{ t.categoria || 'Geral' }})</option>
+            </select>
+          </div>
+
           <!-- Campos dinâmicos da Ação de E-mail -->
           <div v-if="actionForm.tipo === 'enviar_email'" class="action-box">
             <div class="form-group">
               <label>Assunto do E-mail *</label>
-              <input v-model="actionForm.assunto" type="text" class="crm-input" placeholder="Ex: Olá {{cliente}}, temos um presente de aniversário!" required />
+              <input v-model="actionForm.assunto" type="text" class="crm-input" placeholder="Ex: Seu pedido chegou certinho, {{cliente}}? 📦" required />
             </div>
             <div class="form-group mt-2">
-              <label>Mensagem do E-mail (suporta {{cliente}}) *</label>
-              <textarea v-model="actionForm.mensagem" class="crm-textarea" style="height: 90px;" placeholder="Olá {{cliente}}, tudo bem? Estamos com condições especiais..." required></textarea>
+              <label>Mensagem do E-mail *</label>
+              <textarea v-model="actionForm.mensagem" class="crm-textarea" style="height: 110px;" placeholder="Olá {{cliente}}, tudo bem? Estamos com condições especiais..." required></textarea>
             </div>
-            <span class="hint-text">💡 Variaveis disponíveis: <code>&#123;&#123;cliente&#125;&#125;</code> (Nome), <code>&#123;&#123;pedido&#125;&#125;</code> (Nº Pedido), <code>&#123;&#123;valor&#125;&#125;</code> (Total), <code>&#123;&#123;status&#125;&#125;</code> (Status), <code>&#123;&#123;data&#125;&#125;</code> (Data).</span>
+            <span class="hint-text">💡 Variáveis disponíveis: <code>&#123;&#123;cliente&#125;&#125;</code> (Nome), <code>&#123;&#123;pedido&#125;&#125;</code> (Nº Pedido), <code>&#123;&#123;valor&#125;&#125;</code> (Total), <code>&#123;&#123;status&#125;&#125;</code> (Status), <code>&#123;&#123;data&#125;&#125;</code> (Data).</span>
           </div>
 
           <!-- Campos dinâmicos de Tarefa / Alerta -->
@@ -102,6 +111,38 @@
             <button type="button" @click="openModal = false" class="crm-btn btn-outline">Cancelar</button>
             <button type="submit" class="crm-btn btn-primary" :disabled="form.processing">
               {{ isEditing ? 'Salvar Alterações' : 'Criar Automação' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Disparo de Teste Isolado (Admin) -->
+    <div v-if="showTestModal" class="crm-modal-overlay" @click.self="showTestModal = false">
+      <div class="crm-modal-body" style="max-width: 500px;">
+        <div class="modal-header">
+          <h2>🧪 Testar E-mail da Automação (Admin)</h2>
+          <button @click="showTestModal = false" class="close-btn">&times;</button>
+        </div>
+        <form @submit.prevent="submitAdminTest" class="modal-form">
+          <p class="text-xs text-slate-300 leading-relaxed mb-2">
+            Este teste enviará o template de e-mail completo com o símbolo da <strong>90 Store ★ 90 Mais</strong> e os dados de um pedido para o e-mail informado abaixo, <strong>sem afetar nenhum cliente real</strong>.
+          </p>
+
+          <div class="form-group">
+            <label>Automação Selecionada</label>
+            <input type="text" class="crm-input" :value="testAutomation?.nome" disabled style="opacity: 0.7;" />
+          </div>
+
+          <div class="form-group">
+            <label>Enviar para qual E-mail? *</label>
+            <input v-model="testEmailInput" type="email" class="crm-input" placeholder="ex: seuemail@dominio.com" required />
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" @click="showTestModal = false" class="crm-btn btn-outline">Cancelar</button>
+            <button type="submit" class="crm-btn btn-primary" :disabled="sendingAdminTest">
+              {{ sendingAdminTest ? 'Enviando Teste...' : '🚀 Disparar E-mail de Teste' }}
             </button>
           </div>
         </form>
@@ -202,8 +243,9 @@
               </button>
             </td>
             <td>
-              <div class="flex gap-2">
-                <button @click="executarAgora(a)" class="crm-btn btn-success small" title="Executar manualmente agora">⚡ Executar</button>
+              <div class="flex gap-2 flex-wrap">
+                <button @click="openAdminTestModal(a)" class="crm-btn btn-purple small" title="Testar e-mail enviando para o seu endereço">🧪 Testar E-mail</button>
+                <button @click="executarAgora(a)" class="crm-btn btn-success small" title="Executar para clientes reais elegíveis">⚡ Rodar Clientes</button>
                 <button @click="editAutomation(a)" class="crm-btn btn-secondary small">✏️ Editar</button>
                 <button @click="deletar(a.id)" class="crm-btn btn-danger small">Deletar</button>
               </div>
@@ -269,12 +311,17 @@ import { ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 
-const props = defineProps({ automacoes: Array, logs: Array, gatilhos: Object })
+const props = defineProps({ automacoes: Array, logs: Array, templates: Array, gatilhos: Object })
 const activeTab = ref('automacoes')
 const openModal = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
 const selectedLog = ref(null)
+
+const showTestModal = ref(false)
+const testAutomation = ref(null)
+const testEmailInput = ref('')
+const sendingAdminTest = ref(false)
 
 const form = useForm({
   nome: '',
@@ -287,8 +334,8 @@ const form = useForm({
 
 const actionForm = ref({
   tipo: 'enviar_email',
-  assunto: 'Olá {{cliente}}, mensagem especial!',
-  mensagem: 'Olá {{cliente}}, temos novidades especiais para você na 90 Store.',
+  assunto: 'Seu pedido chegou certinho, {{cliente}}? 📦',
+  mensagem: 'Olá {{cliente}}!\n\nPassando para confirmar se seu último pedido chegou perfeitamente e se deu tudo certo com a entrega.\n\nSua satisfação é a nossa prioridade! Caso precise de qualquer suporte ou tenha dúvidas sobre o produto, estamos à inteira disposição.\n\nAbraços,\nEquipe 90 Store',
   titulo: 'Entrar em contato com {{cliente}}',
   descricao: ''
 })
@@ -304,8 +351,8 @@ function openCreateModal() {
   form.ativa = true
   actionForm.value = {
     tipo: 'enviar_email',
-    assunto: 'Olá {{cliente}}, mensagem especial!',
-    mensagem: 'Olá {{cliente}}, temos novidades especiais para você na 90 Store.',
+    assunto: 'Seu pedido chegou certinho, {{cliente}}? 📦',
+    mensagem: 'Olá {{cliente}}!\n\nPassando para confirmar se seu último pedido chegou perfeitamente e se deu tudo certo com a entrega.\n\nSua satisfação é a nossa prioridade! Caso precise de qualquer suporte ou tenha dúvidas sobre o produto, estamos à inteira disposição.\n\nAbraços,\nEquipe 90 Store',
     titulo: 'Entrar em contato com {{cliente}}',
     descricao: ''
   }
@@ -327,13 +374,24 @@ function editAutomation(a) {
 
   actionForm.value = {
     tipo: tipo,
-    assunto: dados.assunto || 'Olá {{cliente}}, mensagem especial!',
+    assunto: dados.assunto || 'Seu pedido chegou certinho, {{cliente}}? 📦',
     mensagem: dados.mensagem || dados.descricao || 'Olá {{cliente}}, temos novidades para você.',
     titulo: dados.titulo || 'Entrar em contato com {{cliente}}',
     descricao: dados.descricao || ''
   }
 
   openModal.value = true
+}
+
+function applyTemplate(event) {
+  const templateId = event.target.value
+  if (!templateId || !props.templates) return
+
+  const t = props.templates.find(item => item.id == templateId)
+  if (t) {
+    actionForm.value.assunto = t.nome
+    actionForm.value.mensagem = t.conteudo
+  }
 }
 
 function submitAutomation() {
@@ -369,6 +427,27 @@ function submitAutomation() {
       }
     })
   }
+}
+
+function openAdminTestModal(a) {
+  testAutomation.value = a
+  testEmailInput.value = ''
+  showTestModal.value = true
+}
+
+function submitAdminTest() {
+  if (!testEmailInput.value || !testAutomation.value) return
+
+  sendingAdminTest.value = true
+  router.post(route('admin.crm.automacoes.testar', testAutomation.value.id), {
+    email: testEmailInput.value
+  }, {
+    preserveScroll: true,
+    onFinish: () => {
+      sendingAdminTest.value = false
+      showTestModal.value = false
+    }
+  })
 }
 
 function toggleStatus(a) {
@@ -452,6 +531,8 @@ function formatDate(dateStr) {
 .btn-primary:hover { background: #4f46e5; }
 .btn-secondary { background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); }
 .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+.btn-purple { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+.btn-purple:hover { background: #a855f7; color: #fff; }
 .btn-success { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
 .btn-success:hover { background: #10b981; color: #fff; }
 .btn-danger { background: rgba(239,68,68,.1); color: #f87171; border: 1px solid rgba(239,68,68,.2); }

@@ -28,9 +28,12 @@ class CrmAutomacaoController extends Controller
             ->limit(150)
             ->get();
 
+        $templates = \App\Models\Crm\CrmTemplateMensagem::where('ativo', true)->orderBy('nome')->get();
+
         return Inertia::render('Crm/Automacoes/Index', [
             'automacoes' => $automacoes,
             'logs'       => $logs,
+            'templates'  => $templates,
             'gatilhos'   => self::getGatilhos(),
         ]);
     }
@@ -52,7 +55,7 @@ class CrmAutomacaoController extends Controller
 
         CrmAutomacao::create($data);
 
-        return back()->with('success', 'Automação criada!');
+        return back()->with('success', 'Automação criada com sucesso!');
     }
 
     public function update(Request $request, CrmAutomacao $automacao)
@@ -81,8 +84,56 @@ class CrmAutomacaoController extends Controller
 
     public function executar(CrmAutomacao $automacao)
     {
-        $count = CrmAutomacaoService::executarParaAutomacao($automacao);
+        $count = \App\Services\Crm\CrmAutomacaoService::executarParaAutomacao($automacao);
         return back()->with('success', "Automação '{$automacao->nome}' executada para {$count} cliente(s)!");
+    }
+
+    public function testar(Request $request, CrmAutomacao $automacao)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $emailTest = $request->input('email');
+        $nomeTest  = 'Administrador (Teste)';
+
+        // Aplica credenciais do Titan Mail
+        \App\Services\MailConfigService::apply();
+
+        $acoes = $automacao->acoes ?? [];
+        $acao  = $acoes[0] ?? [];
+        $dados = $acao['dados'] ?? [];
+
+        // Busca um pedido de amostra para simular o modelo HTML completo com tabela de itens
+        $pedidoAmostra = \App\Models\Pedido::with(['endereco', 'itens.produto'])
+            ->orderByDesc('id')
+            ->first();
+
+        $numPedido    = $pedidoAmostra ? "#{$pedidoAmostra->id}" : '#1045';
+        $valorPedido  = $pedidoAmostra ? 'R$ ' . number_format($pedidoAmostra->total, 2, ',', '.') : 'R$ 299,90';
+        $statusPedido = $pedidoAmostra ? ucfirst($pedidoAmostra->status) : 'Entregue';
+        $dataPedido   = $pedidoAmostra ? $pedidoAmostra->created_at->format('d/m/Y') : date('d/m/Y');
+
+        $assunto = str_replace(
+            ['{{cliente}}', '{{pedido}}', '{{valor}}', '{{status}}', '{{data}}'],
+            [$nomeTest, $numPedido, $valorPedido, $statusPedido, $dataPedido],
+            $dados['assunto'] ?? $dados['titulo'] ?? "Teste de Automação — {$automacao->nome}"
+        );
+
+        $mensagem = str_replace(
+            ['{{cliente}}', '{{pedido}}', '{{valor}}', '{{status}}', '{{data}}'],
+            [$nomeTest, $numPedido, $valorPedido, $statusPedido, $dataPedido],
+            $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá, este é um e-mail de teste isolado disparado pelo administrador.'
+        );
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($emailTest)
+                ->send(new \App\Mail\CrmEmailMail($nomeTest, "[TESTE ADMIN] " . $assunto, $mensagem, $pedidoAmostra));
+
+            return back()->with('success', "E-mail de teste da automação '{$automacao->nome}' enviado com sucesso para {$emailTest}!");
+        } catch (\Throwable $e) {
+            return back()->with('error', "Falha ao enviar e-mail de teste: " . $e->getMessage());
+        }
     }
 
     private static function getGatilhos(): array
