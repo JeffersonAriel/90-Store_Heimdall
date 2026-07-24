@@ -13,8 +13,8 @@ class ApiConfigController extends Controller
 {
     public function index()
     {
-        // Garante que a integração do Servidor de E-mail (SMTP / Titan Mail) sempre exista no banco
-        ApiConfiguracao::firstOrCreate(
+        // Garante que a integração do Servidor de E-mail (SMTP / Titan Mail) sempre exista e esteja limpa no banco
+        $smtpConfig = ApiConfiguracao::firstOrCreate(
             ['slug' => 'smtp_mail'],
             [
                 'nome'            => 'Servidor de E-mail (SMTP / Titan Mail)',
@@ -32,17 +32,29 @@ class ApiConfigController extends Controller
                     ['campo' => 'from_name',    'label' => 'Nome do Remetente Exibido',        'obrigatorio' => true,  'tipo' => 'text'],
                 ],
                 'credenciais_json' => [
-                    'host'         => env('MAIL_HOST', 'smtp.titan.email'),
-                    'port'         => env('MAIL_PORT', '465'),
-                    'encryption'   => env('MAIL_ENCRYPTION', 'ssl'),
-                    'username'     => env('MAIL_USERNAME', 'noreply@90store.com.br'),
+                    'host'         => 'smtp.titan.email',
+                    'port'         => '465',
+                    'encryption'   => 'ssl',
+                    'username'     => 'noreply@90store.com.br',
                     'password'     => env('MAIL_PASSWORD', ''),
-                    'from_address' => env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br'),
-                    'from_name'    => env('MAIL_FROM_NAME', '90 Store'),
+                    'from_address' => 'noreply@90store.com.br',
+                    'from_name'    => '90 Store',
                 ],
                 'webhook_url'     => null,
             ]
         );
+
+        // Se por algum motivo antigo as credenciais no banco contiverem 127.0.0.1 ou 2525, sobrescreve para Titan
+        $credsActual = json_decode($smtpConfig->credenciais_json ?? '{}', true) ?: [];
+        if (empty($credsActual['host']) || in_array($credsActual['host'], ['127.0.0.1', 'localhost'])) {
+            $credsActual['host'] = 'smtp.titan.email';
+            $credsActual['port'] = '465';
+            $credsActual['encryption'] = 'ssl';
+            $credsActual['username'] = 'noreply@90store.com.br';
+            $credsActual['from_address'] = 'noreply@90store.com.br';
+            $credsActual['from_name'] = '90 Store';
+            $smtpConfig->update(['credenciais_json' => json_encode($credsActual)]);
+        }
 
         $apis = ApiConfiguracao::orderBy('tipo')->orderBy('fallback_ordem')->get();
         $freteRegra = FreteRegra::where('ativo', true)->first();
