@@ -70,16 +70,20 @@ class DirectMailService
             Log::warning('DirectMailService: falha ao carregar credenciais do banco: ' . $e->getMessage());
         }
 
-        $host     = (!empty($creds['host']) && !in_array($creds['host'], ['127.0.0.1', 'localhost'])) ? $creds['host'] : env('MAIL_HOST', 'smtp.titan.email');
-        $port     = (!empty($creds['port']) && !in_array((string)$creds['port'], ['25', '2525', '1025'])) ? (int)$creds['port'] : (int)env('MAIL_PORT', 465);
-        $username = (!empty($creds['username']) && $creds['username'] !== 'null') ? $creds['username'] : env('MAIL_USERNAME', 'noreply@90store.com.br');
-        $password = (!empty($creds['password']) && $creds['password'] !== '********') ? $creds['password'] : env('MAIL_PASSWORD', '');
-        $from     = (!empty($creds['from_address']) && $creds['from_address'] !== 'hello@example.com') ? $creds['from_address'] : env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br');
-        $fromName = !empty($creds['from_name']) ? $creds['from_name'] : env('MAIL_FROM_NAME', '90 Store');
+        $host         = (!empty($creds['host']) && !in_array($creds['host'], ['127.0.0.1', 'localhost'])) ? $creds['host'] : env('MAIL_HOST', 'smtp.titan.email');
+        $port         = (!empty($creds['port']) && !in_array((string)$creds['port'], ['25', '2525', '1025'])) ? (int)$creds['port'] : (int)env('MAIL_PORT', 465);
+        $username     = (!empty($creds['username']) && $creds['username'] !== 'null') ? $creds['username'] : env('MAIL_USERNAME', 'noreply@90store.com.br');
+        $password     = (!empty($creds['password']) && $creds['password'] !== '********') ? $creds['password'] : env('MAIL_PASSWORD', '');
+        $from_address = (!empty($creds['from_address']) && $creds['from_address'] !== 'hello@example.com') ? $creds['from_address'] : env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br');
+        $from_name    = !empty($creds['from_name']) ? $creds['from_name'] : env('MAIL_FROM_NAME', '90 Store');
 
-        return compact('host', 'port', 'username', 'password', 'from_address', 'from_name') + [
-            'from_address' => $from,
-            'from_name'    => $fromName,
+        return [
+            'host'         => $host,
+            'port'         => $port,
+            'username'     => $username,
+            'password'     => $password,
+            'from_address' => $from_address,
+            'from_name'    => $from_name,
         ];
     }
 }
