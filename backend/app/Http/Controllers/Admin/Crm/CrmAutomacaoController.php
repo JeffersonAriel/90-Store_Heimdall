@@ -48,23 +48,32 @@ class CrmAutomacaoController extends Controller
 
     public function update(Request $request, CrmAutomacao $automacao)
     {
-        $automacao->update($request->validate([
+        $data = $request->validate([
             'nome'        => 'sometimes|required|string|max:191',
             'descricao'   => 'nullable|string',
+            'gatilho'     => 'nullable|string',
             'delay_dias'  => 'nullable|integer|min:0',
             'delay_horas' => 'nullable|integer|min:0',
             'condicoes'   => 'nullable|array',
             'acoes'       => 'nullable|array',
             'ativa'       => 'boolean',
-        ]));
+        ]);
 
-        return back()->with('success', 'Automação atualizada!');
+        $automacao->update($data);
+
+        return back()->with('success', 'Automação atualizada com sucesso!');
     }
 
     public function destroy(CrmAutomacao $automacao)
     {
         $automacao->delete();
-        return back()->with('success', 'Automação removida.');
+        return back()->with('success', 'Automação removida com sucesso!');
+    }
+
+    public function executar(CrmAutomacao $automacao)
+    {
+        $count = CrmAutomacaoService::executarParaAutomacao($automacao);
+        return back()->with('success', "Automação '{$automacao->nome}' executada para {$count} cliente(s)!");
     }
 
     private static function getGatilhos(): array

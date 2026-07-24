@@ -206,6 +206,7 @@ Route::prefix('heimdall')->group(function () {
             Route::post('/automacoes', [CrmAutomacaoController::class, 'store'])->name('automacoes.store');
             Route::put('/automacoes/{automacao}', [CrmAutomacaoController::class, 'update'])->name('automacoes.update');
             Route::delete('/automacoes/{automacao}', [CrmAutomacaoController::class, 'destroy'])->name('automacoes.destroy');
+            Route::post('/automacoes/{automacao}/executar', [CrmAutomacaoController::class, 'executar'])->name('automacoes.executar');
 
             // Segmentos
             Route::get('/segmentos', [CrmSegmentoController::class, 'index'])->name('segmentos.index');

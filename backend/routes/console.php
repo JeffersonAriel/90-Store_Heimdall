@@ -12,3 +12,4 @@ Artisan::command('inspire', function () {
 // Sincronização automática de rastreamentos da SuperFrete e liberação de estoque expirado
 Schedule::command('tracking:sync-superfrete')->hourly();
 Schedule::command('stock:release-expired')->everyTenMinutes();
+Schedule::command('crm:process-automacoes')->dailyAt('09:00');
