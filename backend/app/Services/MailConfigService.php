@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\ApiConfiguracao;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class MailConfigService
 {
@@ -26,31 +27,44 @@ class MailConfigService
                     : json_decode($api->credenciais_json, true);
             }
 
-            // Ignora ips locais antigos (127.0.0.1, localhost) se salvos no banco e força smtp.titan.email
-            $host = (!empty($creds['host']) && !in_array($creds['host'], ['127.0.0.1', 'localhost']))
-                ? $creds['host'] 
-                : env('MAIL_HOST', 'smtp.titan.email');
+            // Sanitização rígida de IP local legado (127.0.0.1:2525) para HostGator Titan Mail (smtp.titan.email:465)
+            $dirty = false;
+            if (empty($creds['host']) || in_array(strtolower((string)$creds['host']), ['127.0.0.1', 'localhost', 'ssl://127.0.0.1'])) {
+                $creds['host'] = 'smtp.titan.email';
+                $dirty = true;
+            }
+            if (empty($creds['port']) || in_array((string)$creds['port'], ['2525', '25', '1025'])) {
+                $creds['port'] = 465;
+                $dirty = true;
+            }
+            if (empty($creds['encryption'])) {
+                $creds['encryption'] = 'ssl';
+                $dirty = true;
+            }
+            if (empty($creds['username']) || $creds['username'] === 'null') {
+                $creds['username'] = env('MAIL_USERNAME', 'noreply@90store.com.br');
+                $dirty = true;
+            }
 
-            $port = (!empty($creds['port']) && !in_array((string)$creds['port'], ['2525', '25', '1025']))
-                ? (int) $creds['port'] 
-                : (int) env('MAIL_PORT', 465);
+            if ($api && $dirty) {
+                $api->update(['credenciais_json' => $creds]);
+            }
 
-            $username = (!empty($creds['username']) && $creds['username'] !== 'null')
-                ? $creds['username'] 
-                : env('MAIL_USERNAME', 'noreply@90store.com.br');
-            
-            // Se a senha for ******** ou vazia no banco, utiliza MAIL_PASSWORD do .env
-            $password = (!empty($creds['password']) && $creds['password'] !== '********')
-                ? $creds['password'] 
-                : env('MAIL_PASSWORD');
+            $host        = $creds['host'] ?? env('MAIL_HOST', 'smtp.titan.email');
+            $port        = (int) ($creds['port'] ?? env('MAIL_PORT', 465));
+            $username    = $creds['username'] ?? env('MAIL_USERNAME', 'noreply@90store.com.br');
+            $password    = (!empty($creds['password']) && $creds['password'] !== '********') ? $creds['password'] : env('MAIL_PASSWORD');
+            $encryption  = !empty($creds['encryption']) ? strtolower($creds['encryption']) : env('MAIL_ENCRYPTION', 'ssl');
+            $fromAddress = (!empty($creds['from_address']) && $creds['from_address'] !== 'hello@example.com') ? $creds['from_address'] : env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br');
+            $fromName    = !empty($creds['from_name']) ? $creds['from_name'] : env('MAIL_FROM_NAME', '90 Store');
 
-            $encryption = !empty($creds['encryption']) ? strtolower($creds['encryption']) : env('MAIL_ENCRYPTION', 'ssl');
-            
-            $fromAddress = (!empty($creds['from_address']) && $creds['from_address'] !== 'hello@example.com')
-                ? $creds['from_address'] 
-                : env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br');
-
-            $fromName = !empty($creds['from_name']) ? $creds['from_name'] : env('MAIL_FROM_NAME', '90 Store');
+            // Garante sanitização final na memória
+            if (in_array(strtolower((string)$host), ['127.0.0.1', 'localhost', 'ssl://127.0.0.1'])) {
+                $host = 'smtp.titan.email';
+            }
+            if (in_array((string)$port, ['2525', '25', '1025'])) {
+                $port = 465;
+            }
 
             Config::set('mail.default', 'smtp');
             Config::set('mail.mailers.smtp.transport', 'smtp');
@@ -66,6 +80,11 @@ class MailConfigService
 
             Config::set('mail.from.address', $fromAddress);
             Config::set('mail.from.name', $fromName);
+
+            // Reseta a instância do mailer no container para aplicar novas credenciais imediatamente
+            try {
+                Mail::purge('smtp');
+            } catch (\Throwable $e) {}
 
             return true;
         } catch (\Throwable $e) {
