@@ -61,16 +61,31 @@
             
             <div class="space-y-4">
               <!-- Preview de Imagem no topo do modal -->
-              <div v-if="form.image_path" class="mb-4">
-                <label class="block text-sm font-medium text-gray-400 mb-2">Pré-visualização</label>
-                <div :style="{ 
-                  aspectRatio: form.aspect_ratio.replace(':', '/'), 
-                  backgroundImage: `url(${form.image_path})`, 
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }" style="width: 100%; max-height: 180px;"></div>
+              <div v-if="form.image_path" class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label class="block text-xs font-medium text-gray-400 mb-1">🖥️ Preview Desktop</label>
+                  <div :style="{ 
+                    aspectRatio: form.aspect_ratio.replace(':', '/'), 
+                    backgroundImage: `url(${form.image_path})`, 
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }" style="width: 100%; max-height: 140px;"></div>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-emerald-400 mb-1">📱 Preview Mobile (Ajuste Automático)</label>
+                  <div :style="{ 
+                    aspectRatio: '16/9', 
+                    backgroundImage: `url(${form.image_mobile_path || form.image_path})`, 
+                    backgroundSize: 'contain',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center',
+                    backgroundColor: '#0a0a0a',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(16, 185, 129, 0.3)'
+                  }" style="width: 100%; max-height: 140px;"></div>
+                </div>
               </div>
 
               <div class="form-group">

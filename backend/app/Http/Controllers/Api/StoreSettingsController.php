@@ -18,12 +18,24 @@ class StoreSettingsController extends Controller
         $banners = StoreBanner::where('is_active', true)
             ->where('type', 'vitrine')
             ->orderBy('order')
-            ->get();
+            ->get()
+            ->map(function ($banner) {
+                if (empty($banner->image_mobile_path)) {
+                    $banner->image_mobile_path = $banner->image_path;
+                }
+                return $banner;
+            });
 
         $megaMenuBanners = StoreBanner::where('is_active', true)
             ->where('type', 'megamenu')
             ->orderBy('order')
-            ->get();
+            ->get()
+            ->map(function ($banner) {
+                if (empty($banner->image_mobile_path)) {
+                    $banner->image_mobile_path = $banner->image_path;
+                }
+                return $banner;
+            });
 
         $benefits = StoreBenefit::where('is_active', true)
             ->orderBy('order')
