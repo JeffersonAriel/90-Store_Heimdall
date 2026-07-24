@@ -33,7 +33,15 @@ class CrmEmailMail extends Mailable
 
     public function build()
     {
-        return $this->subject($this->assuntoTexto)
+        $fromAddress = config('mail.from.address');
+        if (empty($fromAddress) || $fromAddress === 'hello@example.com') {
+            $fromAddress = 'noreply@90store.com.br';
+        }
+
+        $fromName = config('mail.from.name', '90 Store');
+
+        return $this->from($fromAddress, $fromName)
+                    ->subject($this->assuntoTexto)
                     ->view('emails.crm_email_html');
     }
 }

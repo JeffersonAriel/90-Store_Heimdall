@@ -45,6 +45,10 @@ class MailConfigService
                 $creds['username'] = env('MAIL_USERNAME', 'noreply@90store.com.br');
                 $dirty = true;
             }
+            if (empty($creds['from_address']) || $creds['from_address'] === 'hello@example.com') {
+                $creds['from_address'] = 'noreply@90store.com.br';
+                $dirty = true;
+            }
 
             if ($api && $dirty) {
                 $api->update(['credenciais_json' => $creds]);
@@ -64,6 +68,9 @@ class MailConfigService
             }
             if (in_array((string)$port, ['2525', '25', '1025'])) {
                 $port = 465;
+            }
+            if (empty($fromAddress) || $fromAddress === 'hello@example.com') {
+                $fromAddress = 'noreply@90store.com.br';
             }
 
             Config::set('mail.default', 'smtp');
