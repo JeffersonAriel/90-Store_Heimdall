@@ -129,7 +129,12 @@ class CrmAutomacaoController extends Controller
             $rawMensagem
         );
 
-        $precisaPedido = ($automacao->gatilho === 'apos_entrega')
+        $statusGatilhos = [
+            'status_pendente', 'pagamento_aprovado', 'status_em_separacao',
+            'status_enviado', 'apos_entrega', 'status_cancelado', 'status_reembolsado'
+        ];
+
+        $precisaPedido = in_array($automacao->gatilho, $statusGatilhos)
             || str_contains($rawAssunto, '{{pedido}}')
             || str_contains($rawMensagem, '{{pedido}}')
             || str_contains($rawAssunto, '{{valor}}')
@@ -163,15 +168,22 @@ class CrmAutomacaoController extends Controller
     private static function getGatilhos(): array
     {
         return [
-            'apos_entrega'     => 'Após entrega do pedido',
-            'dias_sem_compra'  => 'X dias sem compra',
-            'aniversario'      => 'Aniversário do cliente',
-            'etapa_pipeline'   => 'Ao entrar em etapa do pipeline',
-            'pagamento_aprovado'=> 'Após pagamento aprovado',
-            'carrinho_abandonado'=> 'Carrinho abandonado',
-            'primeira_compra'  => 'Após primeira compra',
-            'cliente_inativo'  => 'Cliente sem contato há X dias',
-            'nps_baixo'        => 'NPS respondido <= 6',
+            // Status do Pedido
+            'status_pendente'     => 'Status: Pedido Recebido / Pendente',
+            'pagamento_aprovado'  => 'Status: Pagamento Aprovado',
+            'status_em_separacao' => 'Status: Em Separação / Preparação',
+            'status_enviado'      => 'Status: Pedido Enviado / Em Trânsito',
+            'apos_entrega'        => 'Status: Pedido Entregue / Pós-venda',
+            'status_cancelado'    => 'Status: Pedido Cancelado',
+            'status_reembolsado'  => 'Status: Pedido Reembolsado',
+
+            // Marketing & Vendas
+            'primeira_compra'     => 'Boas-Vindas: Primeira Compra',
+            'carrinho_abandonado' => 'Recuperação: Carrinho Abandonado',
+            'aniversario'         => 'Marketing: Aniversário do Cliente',
+            'dias_sem_compra'     => 'Reativação: X Dias Sem Compra',
+            'vip_upgrade'         => 'Fidelidade: Cliente VIP 90 Mais',
+            'etapa_pipeline'      => 'CRM: Ao entrar em etapa do pipeline',
         ];
     }
 }

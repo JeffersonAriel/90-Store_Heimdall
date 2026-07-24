@@ -178,7 +178,12 @@ class CrmAutomacaoService
                 $rawMensagem
             );
 
-            $precisaPedido = ($automacao->gatilho === 'apos_entrega')
+            $statusGatilhos = [
+                'status_pendente', 'pagamento_aprovado', 'status_em_separacao',
+                'status_enviado', 'apos_entrega', 'status_cancelado', 'status_reembolsado'
+            ];
+
+            $precisaPedido = in_array($automacao->gatilho, $statusGatilhos)
                 || str_contains($rawAssunto, '{{pedido}}')
                 || str_contains($rawMensagem, '{{pedido}}')
                 || str_contains($rawAssunto, '{{valor}}')

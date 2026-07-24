@@ -194,6 +194,67 @@ class CrmSeeder extends Seeder
 
         // ─── 4. Automações Padrão (Voltadas Diretamente ao Cliente) ──────
         $automacoes = [
+            // Status de Pedido
+            [
+                'nome'       => 'Status: Pedido Recebido',
+                'descricao'  => 'Envia e-mail automático ao cliente assim que o pedido é registrado',
+                'gatilho'    => 'status_pendente',
+                'delay_dias' => 0,
+                'acoes'      => [
+                    [
+                        'tipo'  => 'enviar_email',
+                        'dados' => [
+                            'assunto'   => 'Recebemos o seu pedido {{pedido}}, {{cliente}}! 🛍️',
+                            'mensagem'  => "Olá {{cliente}}!\n\nSeu pedido {{pedido}} no valor de {{valor}} foi registrado em nosso sistema com sucesso.\n\nEstamos aguardando a confirmação do pagamento para dar início ao processamento.\n\nObrigado por escolher a 90 Store!",
+                        ]
+                    ]
+                ],
+            ],
+            [
+                'nome'       => 'Status: Pagamento Aprovado',
+                'descricao'  => 'Envia e-mail de confirmação assim que o pagamento é aprovado',
+                'gatilho'    => 'pagamento_aprovado',
+                'delay_dias' => 0,
+                'acoes'      => [
+                    [
+                        'tipo'  => 'enviar_email',
+                        'dados' => [
+                            'assunto'   => 'Pagamento Aprovado! Pedido {{pedido}} 🟢',
+                            'mensagem'  => "Oba, {{cliente}}!\n\nSeu pagamento referente ao pedido {{pedido}} (Total: {{valor}}) foi confirmado com sucesso!\n\nNossa equipe já foi notificada e já iniciou o processo de separação dos seus produtos com carinho.\n\nEm breve te avisaremos sobre o envio!\n\nAbraços,\nEquipe 90 Store",
+                        ]
+                    ]
+                ],
+            ],
+            [
+                'nome'       => 'Status: Em Separação',
+                'descricao'  => 'Notifica o cliente que os itens estão em embalagem e conferência',
+                'gatilho'    => 'status_em_separacao',
+                'delay_dias' => 0,
+                'acoes'      => [
+                    [
+                        'tipo'  => 'enviar_email',
+                        'dados' => [
+                            'assunto'   => 'Seu pedido {{pedido}} está sendo embalado! 📦',
+                            'mensagem'  => "Olá {{cliente}}!\n\nPassando para avisar que seu pedido {{pedido}} deu entrada no setor de embalagem e controle de qualidade.\n\nEstamos conferindo cada item para garantir que tudo chegue impecável para você!\n\nAtenciosamente,\nEquipe 90 Store",
+                        ]
+                    ]
+                ],
+            ],
+            [
+                'nome'       => 'Status: Pedido Enviado (Em Trânsito)',
+                'descricao'  => 'Notifica o despacho do pedido e informações de transporte',
+                'gatilho'    => 'status_enviado',
+                'delay_dias' => 0,
+                'acoes'      => [
+                    [
+                        'tipo'  => 'enviar_email',
+                        'dados' => [
+                            'assunto'   => 'Seu pedido {{pedido}} foi enviado! 🚚💨',
+                            'mensagem'  => "Notícia boa, {{cliente}}!\n\nSeu pedido {{pedido}} foi coletado pela transportadora e já está a caminho do seu endereço.\n\nAcompanhe as atualizações da entrega diretamente em nosso site.\n\nCom carinho,\nEquipe 90 Store",
+                        ]
+                    ]
+                ],
+            ],
             [
                 'nome'       => 'Pós-venda: Confirmação de Entrega',
                 'descricao'  => 'Envia e-mail automático ao cliente 5 dias após a entrega para saber como foi o recebimento',
@@ -220,6 +281,52 @@ class CrmSeeder extends Seeder
                         'dados' => [
                             'assunto'   => 'Como está sendo sua experiência com a 90 Store, {{cliente}}? ⭐',
                             'mensagem'  => "Olá {{cliente}}!\n\nEsperamos que esteja aproveitando muito sua compra!\n\nSua opinião vale muito para nós. Como você avalia sua experiência de compra conosco?\n\nSe puder responder a este e-mail ou deixar sua avaliação, ficaremos imensamente gratos!\n\nAtenciosamente,\nEquipe 90 Store",
+                        ]
+                    ]
+                ],
+            ],
+            [
+                'nome'       => 'Status: Pedido Cancelado',
+                'descricao'  => 'Informa o cancelamento do pedido e coloca equipe de suporte à disposição',
+                'gatilho'    => 'status_cancelado',
+                'delay_dias' => 0,
+                'acoes'      => [
+                    [
+                        'tipo'  => 'enviar_email',
+                        'dados' => [
+                            'assunto'   => 'Atualização sobre o seu pedido {{pedido}}',
+                            'mensagem'  => "Olá {{cliente}}.\n\nInformamos que o seu pedido {{pedido}} no valor de {{valor}} foi cancelado.\n\nSe você teve qualquer problema com a opção de pagamento ou deseja refazer a compra, nossa equipe de suporte está de prontidão para ajudar!\n\nAtenciosamente,\nEquipe 90 Store",
+                        ]
+                    ]
+                ],
+            ],
+            // Marketing & Vendas
+            [
+                'nome'       => 'Boas-Vindas: Primeira Compra',
+                'descricao'  => 'Envia e-mail de boas-vindas especial para clientes em seu primeiro pedido',
+                'gatilho'    => 'primeira_compra',
+                'delay_dias' => 0,
+                'acoes'      => [
+                    [
+                        'tipo'  => 'enviar_email',
+                        'dados' => [
+                            'assunto'   => 'Seja bem-vindo(a) à 90 Store, {{cliente}}! 💙',
+                            'mensagem'  => "É uma honra ter você conosco, {{cliente}}!\n\nQueremos agradecer imensamente por confiar em nossa marca e realizar seu primeiro pedido.\n\nPreparamos tudo com o mais alto padrão de qualidade para superar suas expectativas!\n\nCom carinho,\nEquipe 90 Store",
+                        ]
+                    ]
+                ],
+            ],
+            [
+                'nome'       => 'Recuperação: Carrinho Abandonado',
+                'descricao'  => 'Lembrete amigável enviando e-mail quando o cliente deixa produtos no carrinho',
+                'gatilho'    => 'carrinho_abandonado',
+                'delay_dias' => 0,
+                'acoes'      => [
+                    [
+                        'tipo'  => 'enviar_email',
+                        'dados' => [
+                            'assunto'   => 'Você esqueceu algo incrível no seu carrinho, {{cliente}}! 🛒✨',
+                            'mensagem'  => "Olá {{cliente}}!\n\nNotamos que você deixou produtos guardados em seu carrinho de compras na 90 Store.\n\nComo nossos estoques são limitados, garantimos a reserva por tempo limitado. Volte ao site e garanta os seus favoritos com segurança!\n\nUm grande abraço,\nEquipe 90 Store",
                         ]
                     ]
                 ],
@@ -265,6 +372,21 @@ class CrmSeeder extends Seeder
                         'dados' => [
                             'assunto'   => 'Feliz Aniversário, {{cliente}}! 🎂🎉',
                             'mensagem'  => "Parabéns {{cliente}}!\n\nNeste dia tão especial, toda a equipe da 90 Store deseja a você muita saúde, felicidades e realizações!\n\nComo nosso cliente especial, queremos celebrar com você. Aproveite o seu dia!\n\nCom carinho,\nEquipe 90 Store 🥳",
+                        ]
+                    ]
+                ],
+            ],
+            [
+                'nome'       => 'Fidelidade: Cliente VIP 90 Mais',
+                'descricao'  => 'Envia mensagem especial quando o cliente é promovido à categoria VIP',
+                'gatilho'    => 'vip_upgrade',
+                'delay_dias' => 0,
+                'acoes'      => [
+                    [
+                        'tipo'  => 'enviar_email',
+                        'dados' => [
+                            'assunto'   => 'Você agora é Cliente VIP 90 Mais, {{cliente}}! 👑',
+                            'mensagem'  => "Parabéns, {{cliente}}!\n\nPela sua preferência e relacionamento conosco, você acaba de conquistar o status VIP 90 Store ★ 90 Mais!\n\nAproveite benefícios exclusivos, suporte prioritário e condições diferenciadas em nossa loja.\n\nMuito obrigado pela confiança!\n\nEquipe 90 Store",
                         ]
                     ]
                 ],

@@ -15,18 +15,7 @@ return new class extends Migration
             $table->string('nome', 191);
             $table->text('descricao')->nullable();
             $table->boolean('ativa')->default(true);
-            $table->enum('gatilho', [
-                'apos_entrega',          // X dias após entrega do pedido
-                'dias_sem_compra',       // X dias sem nenhuma compra
-                'aniversario',           // No aniversário do cliente
-                'etapa_pipeline',        // Ao entrar em determinada etapa
-                'pagamento_aprovado',    // Após pagamento aprovado
-                'carrinho_abandonado',   // Carrinho abandonado por X horas
-                'primeira_compra',       // Após a primeira compra
-                'cliente_inativo',       // Cliente sem contato há X dias
-                'nps_baixo',             // NPS respondido com nota <= 6
-                'custom'
-            ])->default('apos_entrega');
+            $table->string('gatilho', 50)->default('apos_entrega');
             $table->unsignedSmallInteger('delay_dias')->nullable()
                 ->comment('Quantos dias após o gatilho executar a automação');
             $table->unsignedSmallInteger('delay_horas')->nullable()
