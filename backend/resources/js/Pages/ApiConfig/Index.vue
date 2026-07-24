@@ -4,11 +4,14 @@
       <span>Configurações / APIs e Gateways</span>
     </template>
 
-    <div class="page-header mb-6">
+    <div class="page-header mb-6 flex justify-between items-center flex-wrap gap-4">
       <div>
         <h1 class="page-title">🔗 Integrações & APIs</h1>
         <p class="text-secondary mt-1">Configure chaves de gateways de pagamento, CEP, transportadoras e regras gerais de frete.</p>
       </div>
+      <button @click="syncSystem" class="btn btn-primary" :disabled="syncing">
+        {{ syncing ? '⚡ Sincronizando...' : '⚡ Sincronizar Banco e Caches' }}
+      </button>
     </div>
 
     <div class="grid-3 gap-6">
@@ -264,6 +267,16 @@ const props = defineProps({
 const showConfigModal = ref(false)
 const showCreateModal = ref(false)
 const activeApi = ref(null)
+const syncing = ref(false)
+
+function syncSystem() {
+  syncing.value = true
+  router.post(route('admin.security.run-migrations'), {}, {
+    onFinish: () => {
+      syncing.value = false
+    }
+  })
+}
 
 const paymentApis = computed(() => props.apis.filter(a => a.tipo === 'gateway'))
 const cepApis = computed(() => props.apis.filter(a => a.tipo === 'cep'))
