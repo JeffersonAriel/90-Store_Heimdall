@@ -192,101 +192,79 @@ class CrmSeeder extends Seeder
             );
         }
 
-        // ─── 4. Automações Padrão ──────────────────────────────────────
+        // ─── 4. Automações Padrão (Voltadas Diretamente ao Cliente) ──────
         $automacoes = [
             [
                 'nome'       => 'Pós-venda: Confirmação de Entrega',
-                'descricao'  => 'Cria tarefa de contato 5 dias após a entrega do pedido',
+                'descricao'  => 'Envia e-mail automático ao cliente 5 dias após a entrega para saber como foi o recebimento',
                 'gatilho'    => 'apos_entrega',
                 'delay_dias' => 5,
                 'acoes'      => [
                     [
-                        'tipo'  => 'criar_tarefa',
+                        'tipo'  => 'enviar_email',
                         'dados' => [
-                            'titulo'    => 'Confirmar recebimento do pedido com {{cliente}}',
-                            'tipo'      => 'pos_venda',
-                            'prioridade'=> 'media',
-                            'descricao' => 'Entrar em contato para confirmar se o cliente recebeu corretamente o pedido e perguntar se está satisfeito.',
+                            'assunto'   => 'Seu pedido chegou certinho, {{cliente}}? 📦',
+                            'mensagem'  => "Olá {{cliente}}!\n\nPassando para confirmar se seu último pedido chegou perfeitamente e se deu tudo certo com a entrega.\n\nSua satisfação é a nossa prioridade! Caso precise de qualquer suporte ou tenha dúvidas sobre o produto, estamos à inteira disposição.\n\nAbraços,\nEquipe 90 Store",
                         ]
                     ]
                 ],
             ],
             [
                 'nome'       => 'Pós-venda: Pesquisa de Satisfação',
-                'descricao'  => 'Envia pesquisa de satisfação 15 dias após entrega',
+                'descricao'  => 'Envia pesquisa de avaliação ao cliente 15 dias após a entrega do produto',
                 'gatilho'    => 'apos_entrega',
                 'delay_dias' => 15,
                 'acoes'      => [
                     [
-                        'tipo'  => 'criar_tarefa',
+                        'tipo'  => 'enviar_email',
                         'dados' => [
-                            'titulo'    => 'Enviar pesquisa de satisfação para {{cliente}}',
-                            'tipo'      => 'pesquisa',
-                            'prioridade'=> 'baixa',
+                            'assunto'   => 'Como está sendo sua experiência com a 90 Store, {{cliente}}? ⭐',
+                            'mensagem'  => "Olá {{cliente}}!\n\nEsperamos que esteja aproveitando muito sua compra!\n\nSua opinião vale muito para nós. Como você avalia sua experiência de compra conosco?\n\nSe puder responder a este e-mail ou deixar sua avaliação, ficaremos imensamente gratos!\n\nAtenciosamente,\nEquipe 90 Store",
                         ]
                     ]
                 ],
             ],
             [
                 'nome'       => 'Reativação: Cliente 60 dias sem compra',
-                'descricao'  => 'Alerta o vendedor quando cliente fica 60 dias sem comprar',
+                'descricao'  => 'Envia e-mail de saudades com mensagem personalizada quando o cliente fica 60 dias sem comprar',
                 'gatilho'    => 'dias_sem_compra',
                 'delay_dias' => 60,
                 'acoes'      => [
                     [
-                        'tipo'  => 'criar_alerta',
+                        'tipo'  => 'enviar_email',
                         'dados' => [
-                            'tipo'      => 'sem_compra_60',
-                            'prioridade'=> 'media',
-                            'titulo'    => 'Cliente {{cliente}} há 60 dias sem comprar',
-                        ]
-                    ],
-                    [
-                        'tipo'  => 'criar_tarefa',
-                        'dados' => [
-                            'titulo'    => 'Reativar cliente {{cliente}} (60 dias sem compra)',
-                            'tipo'      => 'contato',
-                            'prioridade'=> 'alta',
+                            'assunto'   => 'Sentimos sua falta, {{cliente}}! 🎁',
+                            'mensagem'  => "Olá {{cliente}}!\n\nFaz um tempinho que não nos falamos! Queremos te ver por aqui novamente.\n\nPreparamos novidades incríveis e reposições exclusivas em nossa loja.\n\nDê uma olhadinha no site e aproveite para garantir seus favoritos!\n\nCom carinho,\nEquipe 90 Store",
                         ]
                     ]
                 ],
             ],
             [
                 'nome'       => 'Reativação: Cliente 90 dias sem compra',
-                'descricao'  => 'Cria campanha de recuperação após 90 dias sem compra',
+                'descricao'  => 'Envia e-mail de recuperação especial para clientes inativos há 90 dias',
                 'gatilho'    => 'dias_sem_compra',
                 'delay_dias' => 90,
                 'acoes'      => [
                     [
-                        'tipo'  => 'criar_alerta',
+                        'tipo'  => 'enviar_email',
                         'dados' => [
-                            'tipo'      => 'sem_compra_90',
-                            'prioridade'=> 'alta',
-                            'titulo'    => 'URGENTE: Cliente {{cliente}} há 90 dias sem comprar',
+                            'assunto'   => '{{cliente}}, temos um presente especial para o seu retorno! 🌟',
+                            'mensagem'  => "Olá {{cliente}}!\n\nQue saudades de você na 90 Store! Para celebrar a sua volta, preparamos uma condição especial exclusiva para o seu próximo pedido.\n\nAcesse nosso site e confira os lançamentos que acabaram de chegar!\n\nUm grande abraço,\nEquipe 90 Store",
                         ]
                     ]
                 ],
             ],
             [
                 'nome'       => 'Aniversário do Cliente',
-                'descricao'  => 'Lembra o vendedor sobre o aniversário do cliente',
+                'descricao'  => 'Envia e-mail de felicitações automático no dia do aniversário do cliente',
                 'gatilho'    => 'aniversario',
                 'delay_dias' => 0,
                 'acoes'      => [
                     [
-                        'tipo'  => 'criar_tarefa',
+                        'tipo'  => 'enviar_email',
                         'dados' => [
-                            'titulo'    => 'Parabenizar {{cliente}} pelo aniversário 🎂',
-                            'tipo'      => 'whatsapp',
-                            'prioridade'=> 'alta',
-                        ]
-                    ],
-                    [
-                        'tipo'  => 'criar_alerta',
-                        'dados' => [
-                            'tipo'      => 'aniversario',
-                            'prioridade'=> 'media',
-                            'titulo'    => '🎂 Aniversário: {{cliente}} faz aniversário hoje!',
+                            'assunto'   => 'Feliz Aniversário, {{cliente}}! 🎂🎉',
+                            'mensagem'  => "Parabéns {{cliente}}!\n\nNeste dia tão especial, toda a equipe da 90 Store deseja a você muita saúde, felicidades e realizações!\n\nComo nosso cliente especial, queremos celebrar com você. Aproveite o seu dia!\n\nCom carinho,\nEquipe 90 Store 🥳",
                         ]
                     ]
                 ],
