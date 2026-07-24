@@ -383,8 +383,13 @@ class SecurityController extends Controller
             // Tenta puxar as últimas atualizações do GitHub se o ambiente permitir
             $gitLog = '';
             try {
-                if (function_exists('exec')) {
-                    @exec('git pull origin main 2>&1', $gitOutput);
+                $cmd = 'cd ' . escapeshellarg(base_path()) . ' && git pull origin main 2>&1';
+                if (function_exists('shell_exec')) {
+                    $out = @shell_exec($cmd);
+                    if ($out) $gitLog = trim($out);
+                }
+                if (empty($gitLog) && function_exists('exec')) {
+                    @exec($cmd, $gitOutput);
                     if (is_array($gitOutput)) {
                         $gitLog = implode(' | ', $gitOutput);
                     }

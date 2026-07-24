@@ -80,6 +80,7 @@ class MailConfigService
             Config::set('mail.mailers.smtp.username', $username);
             Config::set('mail.mailers.smtp.password', $password);
             Config::set('mail.mailers.smtp.encryption', $encryption === 'none' ? null : $encryption);
+            Config::set('mail.mailers.smtp.local_domain', 'www.90store.com.br');
             
             if ($port === 465 || $encryption === 'ssl') {
                 Config::set('mail.mailers.smtp.scheme', 'smtps');
