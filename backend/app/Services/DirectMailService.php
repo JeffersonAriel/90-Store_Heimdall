@@ -34,6 +34,9 @@ class DirectMailService
             $isTls
         );
 
+        // Define o domínio HELO/EHLO explícito para validar com os servidores anti-spam da Titan Mail HostGator
+        $transport->setLocalDomain('www.90store.com.br');
+
         if (!empty($creds['username'])) {
             $transport->setUsername($creds['username']);
         }

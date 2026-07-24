@@ -380,6 +380,17 @@ class SecurityController extends Controller
     public function runMigrations()
     {
         try {
+            // Tenta puxar as últimas atualizações do GitHub se o ambiente permitir
+            $gitLog = '';
+            try {
+                if (function_exists('exec')) {
+                    @exec('git pull origin main 2>&1', $gitOutput);
+                    if (is_array($gitOutput)) {
+                        $gitLog = implode(' | ', $gitOutput);
+                    }
+                }
+            } catch (\Throwable $e) {}
+
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
             $migrateOutput = \Illuminate\Support\Facades\Artisan::output();
 
