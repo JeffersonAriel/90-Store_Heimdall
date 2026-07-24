@@ -6,15 +6,15 @@ use App\Models\ApiConfiguracao;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Symfony\Component\Mailer\Mailer as SymfonyMailer;
-use Symfony\Component\Mailer\Transport;
+use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Address;
 
 class DirectMailService
 {
     /**
-     * Envia um e-mail usando Symfony Mailer diretamente com as credenciais do Titan Mail,
-     * sem passar pelo sistema de cache do Laravel (MailManager).
+     * Envia um e-mail usando Symfony EsmtpTransport diretamente com as credenciais do Titan Mail,
+     * sem passar pelo sistema de cache do MailManager do Laravel.
      */
     public static function sendDirect(
         string $toEmail,
@@ -24,19 +24,30 @@ class DirectMailService
     ): void {
         $creds = self::getCredentials();
 
-        $dsn = sprintf(
-            'smtps://%s:%s@%s:%d',
-            rawurlencode($creds['username']),
-            rawurlencode($creds['password']),
+        $port  = (int) ($creds['port'] ?? 465);
+        $enc   = strtolower((string) ($creds['encryption'] ?? 'ssl'));
+        $isTls = ($port === 465 || $enc === 'ssl');
+
+        $transport = new EsmtpTransport(
             $creds['host'],
-            $creds['port']
+            $port,
+            $isTls
         );
 
-        $transport = Transport::fromDsn($dsn);
-        $mailer    = new SymfonyMailer($transport);
+        if (!empty($creds['username'])) {
+            $transport->setUsername($creds['username']);
+        }
+        if (!empty($creds['password'])) {
+            $transport->setPassword($creds['password']);
+        }
+
+        $mailer = new SymfonyMailer($transport);
+
+        $fromAddress = !empty($creds['from_address']) ? $creds['from_address'] : 'noreply@90store.com.br';
+        $fromName    = !empty($creds['from_name']) ? $creds['from_name'] : '90 Store';
 
         $email = (new Email())
-            ->from(new Address($creds['from_address'], $creds['from_name']))
+            ->from(new Address($fromAddress, $fromName))
             ->to(new Address($toEmail, $toName))
             ->subject($subject)
             ->html($htmlBody);
@@ -84,6 +95,7 @@ class DirectMailService
             'password'     => $password,
             'from_address' => $from_address,
             'from_name'    => $from_name,
+            'encryption'   => $creds['encryption'] ?? 'ssl',
         ];
     }
 }
