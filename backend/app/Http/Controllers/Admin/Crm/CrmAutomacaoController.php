@@ -127,6 +127,8 @@ class CrmAutomacaoController extends Controller
         );
 
         try {
+            \App\Services\MailConfigService::apply();
+            
             \Illuminate\Support\Facades\Mail::to($emailTest)
                 ->send(new \App\Mail\CrmEmailMail($nomeTest, "[TESTE ADMIN] " . $assunto, $mensagem, $pedidoAmostra));
 

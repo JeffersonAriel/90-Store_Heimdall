@@ -88,14 +88,19 @@ class MailConfigService
             Config::set('mail.from.address', $fromAddress);
             Config::set('mail.from.name', $fromName);
 
-            // Reseta completamente as instâncias do Mailer no container do Laravel
+            // Purga total de instâncias do Mailer no Laravel para forçar a nova autenticação
             try {
-                Mail::purge('smtp');
+                $mailManager = app('mail.manager');
+                if (method_exists($mailManager, 'forgetMailers')) {
+                    $mailManager->forgetMailers();
+                }
+                if (method_exists($mailManager, 'purge')) {
+                    $mailManager->purge('smtp');
+                }
             } catch (\Throwable $e) {}
 
             try {
                 app()->forgetInstance('mailer');
-                app()->forgetInstance('mail.manager');
             } catch (\Throwable $e) {}
 
             return true;
