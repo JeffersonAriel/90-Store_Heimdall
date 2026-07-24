@@ -29,7 +29,12 @@ class MailConfigService
             $host = !empty($creds['host']) ? $creds['host'] : env('MAIL_HOST', 'smtp.titan.email');
             $port = !empty($creds['port']) ? (int) $creds['port'] : (int) env('MAIL_PORT', 465);
             $username = !empty($creds['username']) ? $creds['username'] : env('MAIL_USERNAME', 'noreply@90store.com.br');
-            $password = !empty($creds['password']) ? $creds['password'] : env('MAIL_PASSWORD', 'Store90Mais1910!');
+            
+            // Se o valor vindo do modal/banco for '********' ou vazio, utiliza a variável de ambiente MAIL_PASSWORD
+            $password = (!empty($creds['password']) && $creds['password'] !== '********')
+                ? $creds['password'] 
+                : env('MAIL_PASSWORD');
+
             $encryption = !empty($creds['encryption']) ? strtolower($creds['encryption']) : env('MAIL_ENCRYPTION', 'ssl');
             $fromAddress = !empty($creds['from_address']) ? $creds['from_address'] : env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br');
             $fromName = !empty($creds['from_name']) ? $creds['from_name'] : env('MAIL_FROM_NAME', '90 Store');

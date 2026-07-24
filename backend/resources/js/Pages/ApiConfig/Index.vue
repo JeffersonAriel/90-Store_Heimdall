@@ -218,6 +218,14 @@
     <div v-if="showTestEmailModal" class="modal-backdrop" @click.self="showTestEmailModal = false">
       <div class="modal-box">
         <h2 class="modal-title">🚀 Disparar E-mail de Teste</h2>
+
+        <div v-if="$page.props.flash?.error" class="p-3 mb-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          <strong>⚠️ Falha no Envio:</strong> {{ $page.props.flash.error }}
+        </div>
+        <div v-if="$page.props.flash?.success" class="p-3 mb-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm">
+          <strong>✅ Sucesso:</strong> {{ $page.props.flash.success }}
+        </div>
+
         <form @submit.prevent="sendTestEmail">
           <div class="form-group mb-4">
             <label class="form-label">E-mail de Destino *</label>
@@ -232,9 +240,9 @@
             <textarea v-model="testEmailForm.mensagem" rows="3" class="form-control" placeholder="Mensagem de teste..."></textarea>
           </div>
           <div class="flex gap-3 mt-6" style="justify-content: flex-end;">
-            <button type="button" class="btn btn-secondary" @click="showTestEmailModal = false">Cancelar</button>
+            <button type="button" class="btn btn-secondary" @click="showTestEmailModal = false">Fechar</button>
             <button type="submit" class="btn btn-primary" :disabled="sendingTest">
-              {{ sendingTest ? 'Enviando...' : 'Enviar E-mail de Teste' }}
+              {{ sendingTest ? 'Enviando via HostGator Titan...' : 'Enviar E-mail de Teste' }}
             </button>
           </div>
         </form>

@@ -36,7 +36,7 @@ class ApiConfigController extends Controller
                     'port'         => env('MAIL_PORT', '465'),
                     'encryption'   => env('MAIL_ENCRYPTION', 'ssl'),
                     'username'     => env('MAIL_USERNAME', 'noreply@90store.com.br'),
-                    'password'     => env('MAIL_PASSWORD', 'Store90Mais1910!'),
+                    'password'     => env('MAIL_PASSWORD', ''),
                     'from_address' => env('MAIL_FROM_ADDRESS', 'noreply@90store.com.br'),
                     'from_name'    => env('MAIL_FROM_NAME', '90 Store'),
                 ],
