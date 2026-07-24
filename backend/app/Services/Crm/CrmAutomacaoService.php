@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Mail;
 /**
  * CrmAutomacaoService
  *
- * Processa automações por gatilho e manualmente.
+ * Processa automações por gatilho e manualmente com registro detalhado de logs.
  */
 class CrmAutomacaoService
 {
@@ -50,8 +50,21 @@ class CrmAutomacaoService
             try {
                 self::executarAcoes($automacao, $cliente);
                 $total++;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error("CRM Automação #{$automacao->id} erro cliente #{$cliente->id}: " . $e->getMessage());
+
+                CrmAutomacaoLog::create([
+                    'automacao_id'   => $automacao->id,
+                    'cliente_id'     => $cliente->id,
+                    'acao_executada' => 'erro',
+                    'status'         => 'erro',
+                    'erro_msg'       => $e->getMessage(),
+                    'detalhes'       => [
+                        'cliente_nome'  => $cliente->nome_social ?: $cliente->nome_completo,
+                        'cliente_email' => $cliente->email ?? null,
+                    ],
+                    'executado_em'   => now(),
+                ]);
             }
         }
 
@@ -103,7 +116,6 @@ class CrmAutomacaoService
                 break;
 
             default:
-                // Se gatilho for customizado ou sem filtro estrito, retorna clientes com pedidos
                 $query->whereNotNull('email');
                 break;
         }
@@ -131,22 +143,20 @@ class CrmAutomacaoService
     {
         $acoes = $automacao->acoes ?? [];
 
-        // Garante aplicação do SMTP para envios de e-mail
+        // Aplica credenciais do Titan Mail
         MailConfigService::apply();
 
         foreach ($acoes as $acao) {
-            $tipo  = $acao['tipo'] ?? null;
+            $tipo  = $acao['tipo'] ?? 'enviar_email';
             $dados = $acao['dados'] ?? [];
 
             $nomeCliente = $cliente->nome_social ?: $cliente->nome_completo;
-            $titulo = str_replace('{{cliente}}', $nomeCliente, $dados['titulo'] ?? $dados['assunto'] ?? 'Automação CRM 90 Store');
+            $assunto = str_replace('{{cliente}}', $nomeCliente, $dados['assunto'] ?? $dados['titulo'] ?? 'Mensagem 90 Store');
+            $mensagem = str_replace('{{cliente}}', $nomeCliente, $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá {{cliente}}, temos novidades!');
 
             switch ($tipo) {
                 case 'enviar_email':
                     if (!empty($cliente->email)) {
-                        $assunto = str_replace('{{cliente}}', $nomeCliente, $dados['assunto'] ?? 'Mensagem Especial 90 Store');
-                        $mensagem = str_replace('{{cliente}}', $nomeCliente, $dados['mensagem'] ?? $dados['descricao'] ?? 'Olá {{cliente}}, temos novidades para você!');
-
                         Mail::to($cliente->email)->send(new CrmEmailMail($nomeCliente, $assunto, $mensagem));
                     }
                     break;
@@ -155,8 +165,8 @@ class CrmAutomacaoService
                     CrmTarefa::create([
                         'cliente_id'   => $cliente->id,
                         'responsavel_id'=> $cliente->vendedor_id,
-                        'titulo'       => $titulo,
-                        'descricao'    => $dados['descricao'] ?? null,
+                        'titulo'       => $assunto,
+                        'descricao'    => $mensagem,
                         'tipo'         => $dados['tipo'] ?? 'contato',
                         'prioridade'   => $dados['prioridade'] ?? 'media',
                         'status'       => 'pendente',
@@ -169,20 +179,26 @@ class CrmAutomacaoService
                         'cliente_id'    => $cliente->id,
                         'responsavel_id'=> $cliente->vendedor_id,
                         'tipo'          => $dados['tipo'] ?? 'custom',
-                        'titulo'        => $titulo,
-                        'descricao'     => $dados['descricao'] ?? null,
+                        'titulo'        => $assunto,
+                        'descricao'     => $mensagem,
                         'prioridade'    => $dados['prioridade'] ?? 'media',
                     ]);
                     break;
             }
 
-            // Registra log de execução
+            // Registra log completo da mensagem enviada
             CrmAutomacaoLog::create([
                 'automacao_id'   => $automacao->id,
                 'cliente_id'     => $cliente->id,
                 'acao_executada' => $tipo,
                 'status'         => 'sucesso',
-                'detalhes'       => ['dados' => $dados, 'cliente' => $nomeCliente],
+                'detalhes'       => [
+                    'cliente_nome'  => $nomeCliente,
+                    'cliente_email' => $cliente->email ?? null,
+                    'assunto'       => $assunto,
+                    'mensagem'      => $mensagem,
+                    'dados'         => $dados,
+                ],
                 'executado_em'   => now(),
             ]);
         }
@@ -191,7 +207,7 @@ class CrmAutomacaoService
         $automacao->increment('total_execucoes');
         $automacao->increment('total_sucesso');
 
-        // Registra na timeline
+        // Registra na timeline do cliente
         CrmTimelineService::registrar('automacao_executada', $cliente->id,
             "Automação executada: {$automacao->nome}",
             ['origem' => 'automacao', 'metadata' => ['automacao_id' => $automacao->id]]

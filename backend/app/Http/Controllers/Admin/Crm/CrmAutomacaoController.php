@@ -20,8 +20,17 @@ class CrmAutomacaoController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        $logs = \App\Models\Crm\CrmAutomacaoLog::with([
+                'automacao:id,nome,gatilho',
+                'cliente:id,nome_completo,nome_social,email,whatsapp'
+            ])
+            ->orderByDesc('executado_em')
+            ->limit(150)
+            ->get();
+
         return Inertia::render('Crm/Automacoes/Index', [
             'automacoes' => $automacoes,
+            'logs'       => $logs,
             'gatilhos'   => self::getGatilhos(),
         ]);
     }

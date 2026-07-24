@@ -8,6 +8,24 @@
       <button @click="openCreateModal" class="crm-btn btn-primary">+ Criar Automação</button>
     </div>
 
+    <!-- Navegação por Abas -->
+    <div class="flex gap-4 mb-6 border-b border-white/10 pb-2">
+      <button 
+        @click="activeTab = 'automacoes'" 
+        class="tab-btn" 
+        :class="{ active: activeTab === 'automacoes' }"
+      >
+        🤖 Automações Configuradas ({{ automacoes.length }})
+      </button>
+      <button 
+        @click="activeTab = 'historico'" 
+        class="tab-btn" 
+        :class="{ active: activeTab === 'historico' }"
+      >
+        📜 Histórico de Execuções e Disparos ({{ logs?.length || 0 }})
+      </button>
+    </div>
+
     <!-- Modal Criar / Editar Automação -->
     <div v-if="openModal" class="crm-modal-overlay" @click.self="openModal = false">
       <div class="crm-modal-body">
@@ -90,8 +108,60 @@
       </div>
     </div>
 
-    <!-- Lista de Automações -->
-    <div class="crm-card">
+    <!-- Modal Detalhes do Log de Execução -->
+    <div v-if="selectedLog" class="crm-modal-overlay" @click.self="selectedLog = null">
+      <div class="crm-modal-body" style="max-width: 650px;">
+        <div class="modal-header">
+          <h2>📜 Detalhes do Disparo / Execução</h2>
+          <button @click="selectedLog = null" class="close-btn">&times;</button>
+        </div>
+        <div class="p-6 flex flex-col gap-4 text-sm">
+          <div class="grid grid-cols-2 gap-4 p-3 rounded-lg bg-black/20 border border-white/10">
+            <div>
+              <span class="text-xs text-slate-400 block">Horário do Disparo</span>
+              <strong>{{ formatDate(selectedLog.executado_em || selectedLog.created_at) }}</strong>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 block">Automação</span>
+              <strong>{{ selectedLog.automacao?.nome || 'Automação CRM' }}</strong>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 block">Cliente / Destinatário</span>
+              <strong>{{ selectedLog.cliente?.nome_social || selectedLog.cliente?.nome_completo || selectedLog.detalhes?.cliente_nome || 'Cliente' }}</strong>
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 block">E-mail de Destino</span>
+              <strong class="font-mono text-indigo-400">{{ selectedLog.cliente?.email || selectedLog.detalhes?.cliente_email || 'Não informado' }}</strong>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-xs text-slate-400 block font-semibold mb-1">Assunto / Título</span>
+            <div class="p-2.5 rounded-md bg-white/5 border border-white/10 font-bold">
+              {{ selectedLog.detalhes?.assunto || 'Sem assunto' }}
+            </div>
+          </div>
+
+          <div>
+            <span class="text-xs text-slate-400 block font-semibold mb-1">Conteúdo da Mensagem Enviada</span>
+            <div class="p-3 rounded-md bg-white/5 border border-white/10 font-mono text-xs whitespace-pre-wrap leading-relaxed" style="max-height: 180px; overflow-y: auto;">
+              {{ selectedLog.detalhes?.mensagem || selectedLog.detalhes?.dados?.descricao || 'Sem conteúdo cadastrado.' }}
+            </div>
+          </div>
+
+          <div v-if="selectedLog.status === 'erro'" class="p-3 rounded-md bg-red-500/10 border border-red-500/30 text-red-400">
+            <strong>❌ Mensagem de Erro:</strong> {{ selectedLog.erro_msg || 'Falha na execução' }}
+          </div>
+
+          <div class="flex justify-end mt-2">
+            <button @click="selectedLog = null" class="crm-btn btn-secondary">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 1: Lista de Automações -->
+    <div v-if="activeTab === 'automacoes'" class="crm-card">
       <div v-if="!automacoes.length" class="empty-msg">Nenhuma automação configurada.</div>
       <table v-else class="crm-table">
         <thead>
@@ -142,6 +212,55 @@
         </tbody>
       </table>
     </div>
+
+    <!-- TAB 2: Histórico de Execuções e Disparos -->
+    <div v-if="activeTab === 'historico'" class="crm-card">
+      <div v-if="!logs?.length" class="empty-msg">Nenhum disparo ou automação executada ainda.</div>
+      <table v-else class="crm-table">
+        <thead>
+          <tr>
+            <th>Horário do Disparo</th>
+            <th>Automação</th>
+            <th>Destinatário (Cliente)</th>
+            <th>Tipo de Ação</th>
+            <th>Assunto / Título enviado</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="log in logs" :key="log.id">
+            <td class="font-mono text-xs text-slate-300">
+              {{ formatDate(log.executado_em || log.created_at) }}
+            </td>
+            <td>
+              <span class="font-bold text-slate-200 block text-xs">{{ log.automacao?.nome || 'Automação' }}</span>
+              <span class="text-xs text-indigo-400">{{ log.automacao?.gatilho ? (gatilhos[log.automacao.gatilho] || log.automacao.gatilho) : '' }}</span>
+            </td>
+            <td>
+              <strong class="block text-slate-200 text-xs">{{ log.cliente?.nome_social || log.cliente?.nome_completo || log.detalhes?.cliente_nome || 'Cliente' }}</strong>
+              <span class="text-xs font-mono text-slate-400">{{ log.cliente?.email || log.detalhes?.cliente_email || '-' }}</span>
+            </td>
+            <td>
+              <span class="badge-action" :class="log.acao_executada || 'enviar_email'">
+                {{ getLogActionLabel(log.acao_executada) }}
+              </span>
+            </td>
+            <td class="max-w-xs truncate text-xs text-slate-300">
+              {{ log.detalhes?.assunto || log.detalhes?.dados?.titulo || 'Envio Automático' }}
+            </td>
+            <td>
+              <span class="px-2 py-0.5 rounded text-xs font-bold" :class="log.status === 'sucesso' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'">
+                {{ log.status === 'sucesso' ? '✅ Sucesso' : '❌ Falha' }}
+              </span>
+            </td>
+            <td>
+              <button @click="selectedLog = log" class="crm-btn btn-secondary small">🔍 Ver Detalhes</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </AdminLayout>
 </template>
 
@@ -150,10 +269,12 @@ import { ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
 import AdminLayout from '@/Layouts/AdminLayout.vue'
 
-const props = defineProps({ automacoes: Array, gatilhos: Object })
+const props = defineProps({ automacoes: Array, logs: Array, gatilhos: Object })
+const activeTab = ref('automacoes')
 const openModal = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
+const selectedLog = ref(null)
 
 const form = useForm({
   nome: '',
@@ -281,13 +402,29 @@ function getActionLabel(a) {
   return '⚙️ Ação Geral'
 }
 
+function getLogActionLabel(tipo) {
+  if (tipo === 'enviar_email') return '📧 E-mail Enviado'
+  if (tipo === 'criar_alerta') return '🔔 Alerta Criado'
+  if (tipo === 'criar_tarefa') return '📋 Tarefa Criada'
+  return '⚙️ Ação Automática'
+}
+
 function getTaxaSucesso(a) {
   if (!a.total_execucoes) return 100
   return Math.round(((a.total_sucesso || 0) / a.total_execucoes) * 100)
 }
+
+function formatDate(dateStr) {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'medium' })
+}
 </script>
 
 <style scoped>
+.tab-btn { background: transparent; border: none; color: #94a3b8; font-weight: 600; font-size: 0.9rem; padding: 0.5rem 1rem; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+.tab-btn.active { color: #818cf8; border-bottom-color: #818cf8; }
+
 .crm-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
 .crm-modal-body { background: linear-gradient(135deg, #111827, #1e1b4b); border: 1px solid rgba(99,102,241,0.25); border-radius: 16px; width: 90%; max-width: 600px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; overflow: hidden; max-height: 90vh; overflow-y: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,.05); }
@@ -306,7 +443,7 @@ function getTaxaSucesso(a) {
 .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,.1); color: #cbd5e1; }
 .btn-outline:hover { background: rgba(255,255,255,.03); }
 
-.header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .page-title { font-size: 1.8rem; font-weight: 800; color: #f1f5f9; margin: 0; }
 .page-sub { color: #64748b; margin-top: 0.25rem; }
 

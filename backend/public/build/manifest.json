@@ -119,7 +119,7 @@
     ]
   },
   "resources/js/Pages/Crm/Automacoes/Index.vue": {
-    "file": "assets/Index-BwqH8_H8.js",
+    "file": "assets/Index-BNlSnack.js",
     "name": "Index",
     "src": "resources/js/Pages/Crm/Automacoes/Index.vue",
     "isDynamicEntry": true,
@@ -129,7 +129,7 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/Index-D4BvfWQc.css"
+      "assets/Index-CLj9NFfb.css"
     ]
   },
   "resources/js/Pages/Crm/Campanhas/Index.vue": {
@@ -593,7 +593,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DEbrINMh.js",
+    "file": "assets/app-DxxhzaSq.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
