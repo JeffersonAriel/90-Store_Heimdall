@@ -362,7 +362,7 @@
     ]
   },
   "resources/js/Pages/Marketing/Banners.vue": {
-    "file": "assets/Banners-DrFJmHtk.js",
+    "file": "assets/Banners-C8hVH2-n.js",
     "name": "Banners",
     "src": "resources/js/Pages/Marketing/Banners.vue",
     "isDynamicEntry": true,
@@ -372,7 +372,7 @@
       "__plugin-vue_export-helper-DlAUqK2U.js"
     ],
     "css": [
-      "assets/Banners-BAbRfQGY.css"
+      "assets/Banners-DS3FCFb_.css"
     ]
   },
   "resources/js/Pages/Marketing/Benefits.vue": {
@@ -593,7 +593,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-BGVxEDrY.js",
+    "file": "assets/app-BbY-OoUy.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
